@@ -9,12 +9,17 @@ import java.util.UUID;
 public class Bark implements Serializable {
     // constants
 
-    // stores the maximum number of characters allowed in a "Bark".
+    // stores the maximum number of characters allowed in a Bark.
     public static final int MAX_MESSAGE_SIZE = 160;
+    // stores the maximum number of retransmissions allowed for a Bark.  Tweak this value to increase number allowed.
+    public static final int MAX_RETRANSMISSIONS = 5;
+
 
     // class variables
     private final String contents;
     private final UUID uniqueId;
+    private int retransmissionsLeft = MAX_RETRANSMISSIONS;
+
 
     /**
      * Constructs a new Bark.
@@ -40,6 +45,18 @@ public class Bark implements Serializable {
 
     public UUID getUniqueId() {
         return this.uniqueId;
+    }
+
+    public boolean canRetransmit() {
+        return this.retransmissionsLeft != 0;
+    }
+
+    public void decrementRetransmissionsLeft() {
+        this.retransmissionsLeft = Math.max(this.retransmissionsLeft - 1, 0);
+    }
+
+    public int getRetransmissionsLeft() {
+        return this.retransmissionsLeft;
     }
 
     // overrides

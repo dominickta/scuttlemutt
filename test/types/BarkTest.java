@@ -12,19 +12,19 @@ public class BarkTest {
     private static final String validMessage = RandomStringUtils.random(MAX_MESSAGE_SIZE);
 
     @Test
-    public void testConstructor_contentsTooLarge_throwsRuntimeException(){
+    public void testConstructor_contentsTooLarge_throwsRuntimeException() {
         // attempt to create a Bark object with the invalid message String and assert that the RuntimeException is thrown.
         assertThrows(RuntimeException.class, () -> new Bark(oversizedMessage));
     }
 
     @Test
-    public void testConstructor_contentsSafeSize_createsObjectSuccessfully(){
+    public void testConstructor_contentsSafeSize_createsObjectSuccessfully() {
         // Successfully reate a Bark object with the valid message String.
         final Bark b = new Bark(validMessage);
     }
 
     @Test
-    public void testEquals_sameObject_returnsTrue(){
+    public void testEquals_sameObject_returnsTrue() {
         // Create a Bark object with the valid message String.
         final Bark b = new Bark(validMessage);
 
@@ -33,7 +33,41 @@ public class BarkTest {
     }
 
     @Test
-    public void testEquals_sameContentsDifferentObjects_returnsFalse(){
+    public void testCanRetransmit_noRetransmissionsRemaining_returnFalse() {
+        // Create a Bark object with the valid message String.
+        final Bark b = new Bark(validMessage);
+
+        // decrement the retransmissions such that none are left.
+        for (int i = 0; i < Bark.MAX_RETRANSMISSIONS; i++) {
+            b.decrementRetransmissionsLeft();
+        }
+
+        // assert that no retransmissions remain.
+        assertEquals(0, b.getRetransmissionsLeft());
+
+        // assert that canRetransmit() returns false.
+        assertFalse(b.canRetransmit());
+    }
+
+    @Test
+    public void testCanRetransmit_retransmissionsRemaining_returnTrue() {
+        // Create a Bark object with the valid message String.
+        final Bark b = new Bark(validMessage);
+
+        // decrement the retransmissions such that none are left.
+        for (int i = 0; i < Bark.MAX_RETRANSMISSIONS - 1; i++) {
+            b.decrementRetransmissionsLeft();
+        }
+
+        // assert that no retransmissions remain.
+        assertEquals(1, b.getRetransmissionsLeft());
+
+        // assert that canRetransmit() returns false.
+        assertTrue(b.canRetransmit());
+    }
+
+    @Test
+    public void testEquals_sameContentsDifferentObjects_returnsFalse() {
         // Create two Bark objects with the same message String.
         final Bark b1 = new Bark(validMessage);
         final Bark b2 = new Bark(validMessage);

@@ -9,8 +9,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConversationInfoTest {
     // test variables
@@ -43,13 +42,27 @@ public class ConversationInfoTest {
     }
 
     @Test
+    public void testGetUserUUIDList_returnsCorrectList(){
+        // Successfully create a ConversationInfo object.
+        final ConversationInfo c = new ConversationInfo(userList1);
+
+        // Get the UUID List from the method.
+        final List<UUID> uuidList = c.getUserUUIDList();
+
+        // Verify that all UUIDs are present in the UUID List.
+        for (MuttIdentifier m : userList1) {
+            assertTrue(uuidList.contains(m.getUniqueId()));
+        }
+    }
+
+    @Test
     public void testEquals_differentObjectsButSameList_returnsTrue(){
         // Create two ConversationInfo objects with the same List.
         final ConversationInfo c1 = new ConversationInfo(userList1);
         final ConversationInfo c2 = new ConversationInfo(userList1);
 
 
-        // verify that the two ConversationInfo objects are equal.
+        // Verify that the two ConversationInfo objects are equal.
         assertEquals(c1, c2);
     }
 
@@ -60,7 +73,7 @@ public class ConversationInfoTest {
         final ConversationInfo c2 = new ConversationInfo(userList2);
 
 
-        // verify that the two ConversationInfo objects are not equal.
+        // Verify that the two ConversationInfo objects are not equal.
         assertNotEquals(c1, c2);
     }
 

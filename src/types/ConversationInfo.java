@@ -1,6 +1,7 @@
 package types;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Contains the information for a given conversation.
@@ -18,6 +19,12 @@ public class ConversationInfo {
 
     public List<MuttIdentifier> getUserList() {
         return List.copyOf(userList);
+    }
+
+    public List<UUID> getUserUUIDList() {
+        return userList.stream()
+                .map(MuttIdentifier::getUniqueId)
+                .toList();
     }
 
     // overrides
