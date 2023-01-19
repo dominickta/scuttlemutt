@@ -1,5 +1,6 @@
 package backend.iomanager;
 
+import backend.simulation.PipedStreamHelper;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
@@ -10,6 +11,7 @@ import types.BarkPacket;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,18 +42,18 @@ public class StreamIOManagerTest {
     @BeforeEach
     public void setup() {
         // generate the stream pairs.
-        this.streamPairList = Stream.generate(this::getPipedStreamPair)
+        this.streamPairList = Stream.generate(PipedStreamHelper::getPipedStreamPair)
                 .limit(NUM_STREAM_PAIRS)
                 .collect(Collectors.toList());
 
         // get an array of the non-manager PipedInputStreams.
-        final PipedInputStream[] nonManagerInputStreams = new PipedInputStream[NUM_STREAM_PAIRS - 1];
+        final List<PipedInputStream> nonManagerInputStreamsList = new ArrayList<PipedInputStream>();
         for (int i = 1; i < NUM_STREAM_PAIRS; i++) {
-            nonManagerInputStreams[i - 1] = streamPairList.get(i).getLeft();
+            nonManagerInputStreamsList.add(streamPairList.get(i).getLeft());
         }
 
         // create the StreamIOManager using the streams.
-        this.streamIOManager = new StreamIOManager(nonManagerInputStreams, streamPairList.get(MANAGER_STREAM_PAIR).getRight());
+        this.streamIOManager = new StreamIOManager(nonManagerInputStreamsList, streamPairList.get(MANAGER_STREAM_PAIR).getRight());
 
         // create the BarkPackets used in testing.
         final byte[] packet1Contents = RandomStringUtils.randomAlphanumeric(15).getBytes();
@@ -136,44 +138,5 @@ public class StreamIOManagerTest {
         receivedBarkPackets.add(this.streamIOManager.receive());
         assertTrue(receivedBarkPackets.contains(barkPacket1));
         assertTrue(receivedBarkPackets.contains(barkPacket2));
-    }
-
-    /**
-     * Returns a Pair containing connected PipedInputStream + PipedOutputStream objects.
-     *
-     * Make sure to use this helper method:  in order to use either of these objects, they must be connected in the
-     * first place.  Otherwise, an IOException is thrown during execution.
-     *
-     * @return  a Pair containing connected PipedInputStream + PipedOutputStream objects.
-     */
-    private Pair<PipedInputStream, PipedOutputStream> getPipedStreamPair() {
-        // create the streams.
-        final PipedInputStream inputStream = new PipedInputStream();
-        final PipedOutputStream outputStream = new PipedOutputStream();
-
-        // connect the streams.
-        try {
-            inputStream.connect(outputStream);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // return the Pair of streams.
-        return new Pair<PipedInputStream, PipedOutputStream>() {
-            @Override
-            public PipedInputStream getLeft() {
-                return inputStream;
-            }
-
-            @Override
-            public PipedOutputStream getRight() {
-                return outputStream;
-            }
-
-            @Override
-            public PipedOutputStream setValue(PipedOutputStream value) {
-                return null;
-            }
-        };
     }
 }
