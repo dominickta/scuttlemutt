@@ -12,17 +12,23 @@ import java.util.UUID;
  */
 public interface StorageManager {
     // lookup*() methods
-    public Bark lookupBark(final UUID barkId);
+    //
+    // returns "null" if not found.
+    public Bark lookupBark(final UUID barkUuid);
     public MuttIdentifier lookupMuttIdentifier(final UUID muttIdentifierUuid);
     public ConversationInfo lookupConversationInfo(final List<UUID> userUuidList);
 
     // store*() methods
+    //
+    // if there are any preexisting objects, they are overwritten.
     public void storeBark(final Bark bark);
     public void storeMuttIdentifier(final MuttIdentifier muttIdentifier);
     public void storeConversationInfo(final ConversationInfo conversationInfo);
 
     // delete*() methods
-    public Bark deleteBark(final UUID barkId);
+    //
+    // returns the object which was deleted.  if no object was found, returns null.
+    public Bark deleteBark(final UUID barkUuid);
     public MuttIdentifier deleteMuttIdentifier(final UUID muttIdentifierUuid);
     public ConversationInfo deleteConversationInfo(final List<UUID> userUuidList);
 }

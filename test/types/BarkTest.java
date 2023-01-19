@@ -8,8 +8,8 @@ import static types.Bark.MAX_MESSAGE_SIZE;
 
 public class BarkTest {
     // test variables
-    private static final String oversizedMessage = RandomStringUtils.random(MAX_MESSAGE_SIZE + 1);
-    private static final String validMessage = RandomStringUtils.random(MAX_MESSAGE_SIZE);
+    private static final String oversizedMessage = RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE + 1);
+    private static final String validMessage = RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE);
 
     @Test
     public void testConstructor_contentsTooLarge_throwsRuntimeException() {

@@ -1,5 +1,6 @@
 package types;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,7 +10,7 @@ import java.util.UUID;
  * NOTE:  This class is currently rather sparse.  We likely still want this class for tracking message conversation
  * metadata though.  In the future, we can add more to this class as necessary.
  */
-public class ConversationInfo {
+public class ConversationInfo implements Serializable {
     // class variables
     private final List<MuttIdentifier> userList;
 

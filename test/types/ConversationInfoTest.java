@@ -20,9 +20,9 @@ public class ConversationInfoTest {
     public void setup() {
         // create a Supplier which generates randomized MuttIdentifiers.
         final Supplier<MuttIdentifier> muttIdentifierSupplier = () -> {
-            final String userName = RandomStringUtils.random(15);
+            final String userName = RandomStringUtils.randomAlphanumeric(15);
             final UUID uuid = UUID.randomUUID();
-            final String publicKey = RandomStringUtils.random(15);
+            final String publicKey = RandomStringUtils.randomAlphanumeric(15);
             return new MuttIdentifier(userName, uuid, publicKey);
         };
 

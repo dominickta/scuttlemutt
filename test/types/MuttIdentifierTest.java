@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MuttIdentifierTest {
     // test variables
-    private static final String userName1 = RandomStringUtils.random(15);
-    private static final String userName2 = RandomStringUtils.random(15);
+    private static final String userName1 = RandomStringUtils.randomAlphanumeric(15);
+    private static final String userName2 = RandomStringUtils.randomAlphanumeric(15);
     private static final UUID uuid1 = UUID.randomUUID();
     private static final UUID uuid2 = UUID.randomUUID();
-    private static final String publicKey1 = RandomStringUtils.random(15);
-    private static final String publicKey2 = RandomStringUtils.random(15);
+    private static final String publicKey1 = RandomStringUtils.randomAlphanumeric(15);
+    private static final String publicKey2 = RandomStringUtils.randomAlphanumeric(15);
 
     @Test
     public void testConstructor_createsObjectSuccessfully(){
