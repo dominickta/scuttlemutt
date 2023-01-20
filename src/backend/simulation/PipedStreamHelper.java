@@ -32,6 +32,20 @@ public class PipedStreamHelper {
         }
 
         // return the Pair of streams.
+        return buildStreamPair(inputStream, outputStream);
+    }
+
+    /**
+     * Returns a Pair object containing the passed streams.
+     *
+     * The left value is the PipedInputStream, whereas the right value is the PipedOutputStream.
+     *
+     * @param inputStream  The PipedInputStream to be stored in the pair.
+     * @param outputStream  The PipedOutputStream to be stored in the pair.
+     * @return  a Pair containing the passed streams.
+     */
+    public static Pair<PipedInputStream, PipedOutputStream> buildStreamPair(final PipedInputStream inputStream,
+                                                                            final PipedOutputStream outputStream) {
         return new Pair<PipedInputStream, PipedOutputStream>() {
             @Override
             public PipedInputStream getLeft() {

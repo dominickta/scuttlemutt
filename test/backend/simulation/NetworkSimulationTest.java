@@ -2,12 +2,8 @@ package backend.simulation;
 
 import backend.iomanager.StreamIOManager;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.shadow.com.univocity.parsers.common.fields.FieldSet;
-import org.mockito.Mockito;
-import org.mockito.internal.util.reflection.FieldSetter;
 import org.powermock.reflect.Whitebox;
 import types.BarkPacket;
 
@@ -52,7 +48,6 @@ public class NetworkSimulationTest {
 
         // verify that all other StreamIOManagers successfully received the message.
         for (int i = 1; i < deviceLabels.size(); i++) {
-            System.err.println(i);
             final StreamIOManager receiver = simulation.getStreamIOManager(deviceLabels.get(i));
             assertEquals(barkPacket, receiver.receive());
         }
@@ -63,9 +58,8 @@ public class NetworkSimulationTest {
         // get the StreamIOManagers for the devices.
         final String device1Label = deviceLabels.get(0);
         final String device2Label = deviceLabels.get(1);
-        final StreamIOManager device1 = Mockito.spy(simulation.getStreamIOManager(device1Label));  // we can use Mockito.spy()
-                                                                                                   // to look at the private fields.
-        final StreamIOManager device2 = Mockito.spy(simulation.getStreamIOManager(device2Label));
+        final StreamIOManager device1 = simulation.getStreamIOManager(device1Label);
+        final StreamIOManager device2 = simulation.getStreamIOManager(device2Label);
 
         // disconnect device1 and device2.
         simulation.disconnectDevices(device1Label, device2Label);
@@ -74,8 +68,8 @@ public class NetworkSimulationTest {
         // (the number of input streams is < the number of devices on the network).
         List<PipedInputStream> inputStreams1 = Whitebox.getInternalState(device1, "inputStreams");
         List<PipedInputStream> inputStreams2 = Whitebox.getInternalState(device2, "inputStreams");
-        assertTrue(inputStreams1.size() < NUM_DEVICES);
-        assertTrue(inputStreams2.size() < NUM_DEVICES);
+        assertEquals(NUM_DEVICES - 2, inputStreams1.size());  // there should be <NUM_DEVICES - self - disconnected devices> connections.
+        assertEquals(NUM_DEVICES - 2, inputStreams2.size());
 
         // reconnect device1 and device2.
         simulation.connectDevices(device1Label, device2Label);
@@ -84,8 +78,8 @@ public class NetworkSimulationTest {
         // (the number of input streams is < the number of devices on the network).
         inputStreams1 = Whitebox.getInternalState(device1, "inputStreams");
         inputStreams2 = Whitebox.getInternalState(device2, "inputStreams");
-        assertEquals(NUM_DEVICES, inputStreams1.size());
-        assertEquals(NUM_DEVICES, inputStreams2.size());
+        assertEquals(NUM_DEVICES - 1, inputStreams1.size());  // there should be <NUM_DEVICES - self> connections.
+        assertEquals(NUM_DEVICES - 1, inputStreams2.size());
 
         // assert that we can send messages between device1 and device2
         device1.broadcast(barkPacket);

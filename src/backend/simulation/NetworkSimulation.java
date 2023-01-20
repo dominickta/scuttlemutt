@@ -5,7 +5,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +18,6 @@ import java.util.Map;
 public class NetworkSimulation {
     // class variables
 
-    // maps labels -> an PipedInputStream/PipedOutputStream pair.
-    private Map<String, Pair<PipedInputStream, PipedOutputStream>> streamMap;
     // maps labels -> StreamIOManagers associated with the corresponding PipedOutputStream.
     private Map<String, StreamIOManager> streamIOManagerMap;
 
@@ -30,23 +27,11 @@ public class NetworkSimulation {
      * @param deviceLabels  The labels of the devices on the simulated network.
      */
     public NetworkSimulation(final List<String> deviceLabels) {
-        // TODO:  Setup an InputStream for each device...  Otherwise, one device will pull the message and all others will never see it!
-
-        // setup the streams for each device.
-        this.streamMap = new HashMap<String, Pair<PipedInputStream, PipedOutputStream>>();
-        for (final String deviceLabel : deviceLabels) {
-            // create a stream pair.
-            final Pair<PipedInputStream, PipedOutputStream> streamPair = PipedStreamHelper.getPipedStreamPair();
-
-            // stash the stream pair in the streamMap and allInputStreamsList.
-            streamMap.put(deviceLabel, streamPair);
-        }
-
         // setup the StreamIOManager for each device.
         this.streamIOManagerMap = new HashMap<String, StreamIOManager>();
         for (final String deviceLabel : deviceLabels) {
             // create a StreamIOManager.
-            final StreamIOManager ioManager = new StreamIOManager(new ArrayList<>(), streamMap.get(deviceLabel).getRight());
+            final StreamIOManager ioManager = new StreamIOManager();
 
             // stash the ioManager in the streamIOManagerMap.
             streamIOManagerMap.put(deviceLabel, ioManager);
@@ -81,26 +66,22 @@ public class NetworkSimulation {
         }
 
         // get the PipedInputStreams
-        final PipedInputStream inputStream1 = streamMap.get(device1).getLeft();
-        final PipedInputStream inputStream2 = streamMap.get(device2).getLeft();
+        final Pair<PipedInputStream, PipedOutputStream> d1toD2 = PipedStreamHelper.getPipedStreamPair();
+        final Pair<PipedInputStream, PipedOutputStream> d2toD1 = PipedStreamHelper.getPipedStreamPair();
 
         // remove the PipedInputStreams from the StreamIOManagers
-        streamIOManagerMap.get(device1).connect(inputStream2);
-        streamIOManagerMap.get(device2).connect(inputStream1);
+        streamIOManagerMap.get(device1).connect(device2, d2toD1.getLeft(), d1toD2.getRight());
+        streamIOManagerMap.get(device2).connect(device1, d1toD2.getLeft(), d2toD1.getRight());
     }
 
     /**
      * Removes a connection between the two specified devices.
      * @param device1  One of the devices in the connection.
-     * @param device2  The other the device in the connection.
+     * @param device2  The other device in the connection.
      */
     public void disconnectDevices(final String device1, final String device2) {
-        // get the PipedInputStreams
-        final PipedInputStream inputStream1 = streamMap.get(device1).getLeft();
-        final PipedInputStream inputStream2 = streamMap.get(device2).getLeft();
-
         // remove the PipedInputStreams from the StreamIOManagers
-        streamIOManagerMap.get(device1).disconnect(inputStream2);
-        streamIOManagerMap.get(device2).disconnect(inputStream1);
+        streamIOManagerMap.get(device1).disconnect(device2);
+        streamIOManagerMap.get(device2).disconnect(device1);
     }
 }

@@ -11,7 +11,6 @@ import types.BarkPacket;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class StreamIOManagerTest {
     // test constants
     private static final int NUM_STREAM_PAIRS = 3;  // the number of PipedInputStreams generated + stored in
-                                                          // `inputStreams`.  MUST BE >= 2 OR TESTS WILL BREAK.
+                                                    // `streamPairList`.  MUST BE >= 2 OR TESTS WILL BREAK.
+
     // these constants represent the streamPairList indices used to access certain stream pairs for these tests.
     private static final int MANAGER_STREAM_PAIR = 0;
     private static final int NONMANAGER_INPUT_STREAM_PAIR_1 = 1;
@@ -32,7 +32,7 @@ public class StreamIOManagerTest {
     // test variables
     private List<Pair<PipedInputStream, PipedOutputStream>> streamPairList;  // each "Pair" contains connected
                                                                              // PipedInput/OutputStreams.  Whatever is
-                                                                             // fed to the PipedInputStream should be
+                                                                             // fed to the PipedInputStream is
                                                                              // available to read from the connected
                                                                              // PipedOutputStream.
     private StreamIOManager streamIOManager;
@@ -46,14 +46,18 @@ public class StreamIOManagerTest {
                 .limit(NUM_STREAM_PAIRS)
                 .collect(Collectors.toList());
 
-        // get an array of the non-manager PipedInputStreams.
-        final List<PipedInputStream> nonManagerInputStreamsList = new ArrayList<PipedInputStream>();
-        for (int i = 1; i < NUM_STREAM_PAIRS; i++) {
-            nonManagerInputStreamsList.add(streamPairList.get(i).getLeft());
-        }
+        // create the StreamIOManager.
+        this.streamIOManager = new StreamIOManager();
 
-        // create the StreamIOManager using the streams.
-        this.streamIOManager = new StreamIOManager(nonManagerInputStreamsList, streamPairList.get(MANAGER_STREAM_PAIR).getRight());
+        // create the non-manager device strings.
+        final String nonManager1 = RandomStringUtils.randomAlphanumeric(15);
+        final String nonManager2 = RandomStringUtils.randomAlphanumeric(15);
+
+        // hookup the non-manager devices to the streamIOManager.
+        this.streamIOManager.connect(nonManager1, streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_1).getLeft(),
+                streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_1).getRight());
+        this.streamIOManager.connect(nonManager2, streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_2).getLeft(),
+                streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_2).getRight());
 
         // create the BarkPackets used in testing.
         final byte[] packet1Contents = RandomStringUtils.randomAlphanumeric(15).getBytes();
@@ -78,26 +82,36 @@ public class StreamIOManagerTest {
     }
 
     @Test
-    public void testBroadcast_barkPacketSuccessfullyWrittenToOutputStream() {
+    public void testBroadcast_barkPacketSuccessfullyWrittenToAllOutputStreams() {
         // broadcast the packet.
         this.streamIOManager.broadcast(this.barkPacket1);
 
         // obtain the packet bytes from outputStream + verify that they look as expected.
-        final byte[] outputBarkPacketBytes;
+        final byte[] outputBarkPacketBytes1, outputBarkPacketBytes2;
         try {
-            final PipedInputStream inputStream = this.streamPairList.get(MANAGER_STREAM_PAIR)
+            // get the data output to the PipedOutputStream corresponding with nonManager1.
+            final PipedInputStream inputStream1 = this.streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_1)
                     .getLeft();
-            int availableBytes = inputStream.available();
-            outputBarkPacketBytes = inputStream.readNBytes(availableBytes);
+            int availableBytes1 = inputStream1.available();
+            outputBarkPacketBytes1 = inputStream1.readNBytes(availableBytes1);
+
+            // get the data output to the PipedOutputStream corresponding with nonManager2.
+            final PipedInputStream inputStream2 = this.streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_2)
+                    .getLeft();
+            int availableBytes2 = inputStream2.available();
+            outputBarkPacketBytes2 = inputStream2.readNBytes(availableBytes2);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        assertArrayEquals(this.barkPacket1.getPacketContents(), outputBarkPacketBytes);
+
+        // verify that both packet bytes look as expected
+        assertArrayEquals(this.barkPacket1.getPacketContents(), outputBarkPacketBytes1);
+        assertArrayEquals(this.barkPacket1.getPacketContents(), outputBarkPacketBytes2);
     }
 
     @Test
     public void testReceive_sendPacketToOneStream_barkPacketSuccessfullyReceived() {
-        // write a packet to the first PipedInputStream.
+        // write a packet to the PipedInputStream corresponding to the first fake nonManager connection.
         try {
             final PipedOutputStream outputStream = this.streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_1)
                     .getRight();
@@ -114,7 +128,7 @@ public class StreamIOManagerTest {
 
     @Test
     public void testReceive_sendPacketsToTwoStreams_bothPacketSuccessfullyReceivedInRandomOrder() {
-        // write a packet to the first and second PipedInputStream.
+        // write a packet to the PipedInputStreams corresponding to the fake nonManager connections.
         try {
             final PipedOutputStream outputStream = this.streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_1)
                     .getRight();
