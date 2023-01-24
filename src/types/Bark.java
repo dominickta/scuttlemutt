@@ -1,5 +1,7 @@
 package types;
 
+import storagemanager.SerializationHelper;
+
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -10,16 +12,14 @@ public class Bark implements Serializable {
     // constants
 
     // stores the maximum number of characters allowed in a Bark.
+    public static final int UUID_SIZE = UUID.randomUUID().toString().getBytes().length;
     public static final int MAX_MESSAGE_SIZE = 160;
-    // stores the maximum number of retransmissions allowed for a Bark.  Tweak this value to increase number allowed.
-    public static final int MAX_RETRANSMISSIONS = 5;
+    public static final int PACKET_SIZE = UUID_SIZE + MAX_MESSAGE_SIZE;
 
 
     // class variables
-    private final String contents;
     private final UUID uniqueId;
-    private int retransmissionsLeft = MAX_RETRANSMISSIONS;
-
+    private final String contents;
 
     /**
      * Constructs a new Bark.
@@ -32,9 +32,8 @@ public class Bark implements Serializable {
             throw new RuntimeException("Attempted to create a Bark object with a message larger than the maximum size!" +
                     "\tBark message length:  " + contents.length() +"\tMaximum size:  " + MAX_MESSAGE_SIZE);
         }
-
-        this.contents = contents;
         this.uniqueId = UUID.randomUUID();
+        this.contents = contents;
     }
 
     // public methods
@@ -47,16 +46,25 @@ public class Bark implements Serializable {
         return this.uniqueId;
     }
 
-    public boolean canRetransmit() {
-        return this.retransmissionsLeft != 0;
+    /**
+     * Returns a byte[] containing the bytes which represent the Bark.
+     * @return a byte[] containing the bytes which represent the Bark.
+     */
+    public byte[] toNetworkBytes() {
+        // TODO:  Add encryption here.
+
+        return SerializationHelper.serializeObjectToString(this).getBytes();
     }
 
-    public void decrementRetransmissionsLeft() {
-        this.retransmissionsLeft = Math.max(this.retransmissionsLeft - 1, 0);
-    }
 
-    public int getRetransmissionsLeft() {
-        return this.retransmissionsLeft;
+    /**
+     * Returns a Bark derived from the passed byte[].
+     * @return a Bark derived from the passed byte[].
+     */
+    public static Bark fromNetworkBytes(final byte[] barkBytes) {
+        // TODO:  Add decrypted here.
+
+        return (Bark) SerializationHelper.deserializeStringToObject(new String(barkBytes));
     }
 
     // overrides

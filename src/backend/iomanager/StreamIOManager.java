@@ -39,7 +39,7 @@ public class StreamIOManager implements IOManager {
         // write the packet to each PipedOutputStream.
         this.outputStreams.forEach(os -> {
             try {
-                os.write(packet.getPacketContents());
+                os.write(packet.toNetworkBytes());
                 os.flush();
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -114,7 +114,7 @@ public class StreamIOManager implements IOManager {
                     if (inputStream.available() > 0) {
                         final int inputSize = inputStream.available();
                         final byte[] inputContents = inputStream.readNBytes(inputSize);
-                        return new BarkPacket(inputContents);
+                        return BarkPacket.fromNetworkBytes(inputContents);
                     }
                 }
 

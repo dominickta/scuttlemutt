@@ -1,51 +1,84 @@
 package types;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BarkPacketTest {
     // test variables
-    private final byte[] packetContents1 = RandomStringUtils.randomAlphanumeric(15).getBytes();
-    private final byte[] packetContents2 = RandomStringUtils.randomAlphanumeric(15).getBytes();
+    private List<Bark> barkList1;
+    private List<Bark> barkList2;
 
-    @Test
-    public void testConstructor_createsObjectSuccessfully(){
-        // Successfully create a BarkPacket object.
-        final BarkPacket bp = new BarkPacket(packetContents1);
+    @BeforeEach
+    public void setup() {
+        // create the Barks used for testing.
+        final Supplier<Bark> barkSupplier = () -> new Bark(RandomStringUtils.randomAlphanumeric(15));
+        barkList1 = Stream.generate(barkSupplier)
+                .limit(10)
+                .toList();
+        barkList2 = Stream.generate(barkSupplier)
+                .limit(10)
+                .toList();
     }
 
     @Test
-    public void testGetUserUUIDList_returnsCorrectList(){
+    public void testConstructor_createsObjectSuccessfully() {
         // Successfully create a BarkPacket object.
-        final BarkPacket bp = new BarkPacket(packetContents1);
+        final BarkPacket bp = new BarkPacket(barkList1);
+    }
+
+    @Test
+    public void testGetPacketContents_returnsContents(){
+        // Successfully create a BarkPacket object.
+        final BarkPacket bp = new BarkPacket(barkList1);
 
         // Obtain the packet contents.
-        final byte[] bpContents = bp.getPacketContents();
+        final List<Bark> bpContents = bp.getPacketContents();
 
         // Assert that the contents are as expected.
-        assertArrayEquals(packetContents1, bpContents);
+        assertEquals(barkList1, bpContents);
     }
 
     @Test
-    public void testEquals_differentObjectsButSameBytes_returnsTrue(){
+    public void testEquals_differentObjectsButSameBarks_returnsTrue() {
         // Create two BarkPacket objects with the same List.
-        final BarkPacket bp1 = new BarkPacket(packetContents1);
-        final BarkPacket bp2 = new BarkPacket(packetContents1);
+        final BarkPacket bp1 = new BarkPacket(barkList1);
+        final BarkPacket bp2 = new BarkPacket(barkList2);
 
         // Verify that the two BarkPacket objects are equal.
         assertEquals(bp1, bp2);
     }
 
     @Test
-    public void testEquals_differentObjectsAndDifferentBytes_returnsFalse(){
+    public void testEquals_differentObjectsAndDifferentBytes_returnsFalse() {
         // Create two BarkPacket objects with the same List.
-        final BarkPacket bp1 = new BarkPacket(packetContents1);
-        final BarkPacket bp2 = new BarkPacket(packetContents2);
+        final BarkPacket bp1 = new BarkPacket(barkList1);
+        final BarkPacket bp2 = new BarkPacket(barkList2);
 
         // Verify that the two BarkPacket objects are equal.
         assertNotEquals(bp1, bp2);
+    }
+
+    // add getPacketContents tests, toNetworkBytes, fromNetworkBytes
+    @Test
+    public void testNetworkByteConversion_convertsToBytes_convertsFromBytes_identicalObject() {
+        // Successfully create a BarkPacket object.
+        final BarkPacket bp = new BarkPacket(barkList1);
+
+        // Convert the Bark object to a byte[] for sending over the network.
+        final byte[] byteArray = bp.toNetworkBytes();
+
+        // Convert the byteArray back to a BarkPacket object.
+        final BarkPacket rebuiltBarkPacket = BarkPacket.fromNetworkBytes(byteArray);
+
+        // Verify that they're equal.
+        assertEquals(bp, rebuiltBarkPacket);
     }
 
 }

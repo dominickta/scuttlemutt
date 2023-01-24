@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ConversationInfoTest {
+public class ConversationTest {
     // test variables
     private List<MuttIdentifier> userList1;
     private List<MuttIdentifier> userList2;
@@ -38,13 +38,13 @@ public class ConversationInfoTest {
     @Test
     public void testConstructor_createsObjectSuccessfully(){
         // Successfully create a ConversationInfo object.
-        final ConversationInfo c = new ConversationInfo(userList1);
+        final Conversation c = new Conversation(userList1);
     }
 
     @Test
     public void testGetUserUUIDList_returnsCorrectList(){
         // Successfully create a ConversationInfo object.
-        final ConversationInfo c = new ConversationInfo(userList1);
+        final Conversation c = new Conversation(userList1);
 
         // Get the UUID List from the method.
         final List<UUID> uuidList = c.getUserUUIDList();
@@ -58,8 +58,8 @@ public class ConversationInfoTest {
     @Test
     public void testEquals_differentObjectsButSameList_returnsTrue(){
         // Create two ConversationInfo objects with the same List.
-        final ConversationInfo c1 = new ConversationInfo(userList1);
-        final ConversationInfo c2 = new ConversationInfo(userList1);
+        final Conversation c1 = new Conversation(userList1);
+        final Conversation c2 = new Conversation(userList1);
 
 
         // Verify that the two ConversationInfo objects are equal.
@@ -69,8 +69,8 @@ public class ConversationInfoTest {
     @Test
     public void testEquals_differentLists_returnsFalse(){
         // Create two ConversationInfo objects with the same List.
-        final ConversationInfo c1 = new ConversationInfo(userList1);
-        final ConversationInfo c2 = new ConversationInfo(userList2);
+        final Conversation c1 = new Conversation(userList1);
+        final Conversation c2 = new Conversation(userList2);
 
 
         // Verify that the two ConversationInfo objects are not equal.

@@ -4,7 +4,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import types.Bark;
-import types.ConversationInfo;
+import types.Conversation;
 import types.MuttIdentifier;
 
 import java.util.Collections;
@@ -18,7 +18,7 @@ public class MapStorageManagerTest {
     // runtime-defined test objects
     private Bark b;
     private MuttIdentifier m;
-    private ConversationInfo c;
+    private Conversation c;
     private MapStorageManager mapStorageManager;
     
     @BeforeEach
@@ -27,33 +27,8 @@ public class MapStorageManagerTest {
         m = new MuttIdentifier(RandomStringUtils.randomAlphanumeric(15),
                 UUID.randomUUID(),
                 RandomStringUtils.randomAlphanumeric(15));
-        c = new ConversationInfo(Collections.singletonList(m));
+        c = new Conversation(Collections.singletonList(m));
         this.mapStorageManager = new MapStorageManager();
-    }
-    
-    @Test
-    public void testBarkStorageLifecycle() {
-        // create the object in the storage manager.
-        this.mapStorageManager.storeBark(b);
-        
-        // lookup the object in the storage manager.
-        final Bark obtainedBark = this.mapStorageManager.lookupBark(b.getUniqueId());
-        assertEquals(b, obtainedBark);
-        
-        // update the object in the storage manager.
-        b.decrementRetransmissionsLeft();
-        this.mapStorageManager.storeBark(b);
-        
-        // verify that the updated object was stored by looking it up.
-        final Bark obtainedUpdatedBark = this.mapStorageManager.lookupBark(b.getUniqueId());
-        assertNotEquals(obtainedUpdatedBark.getRetransmissionsLeft(), obtainedBark.getRetransmissionsLeft());
-        assertEquals(b.getRetransmissionsLeft(), obtainedUpdatedBark.getRetransmissionsLeft());
-        
-        // successfully delete the object.
-        this.mapStorageManager.deleteBark(b.getUniqueId());
-        
-        // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupBark(b.getUniqueId()));
     }
 
     @Test
@@ -87,8 +62,8 @@ public class MapStorageManagerTest {
         this.mapStorageManager.storeConversationInfo(c);
 
         // lookup the object in the storage manager.
-        final ConversationInfo obtainedConversationInfo = this.mapStorageManager.lookupConversationInfo(c.getUserUUIDList());
-        assertEquals(c, obtainedConversationInfo);
+        final Conversation obtainedConversation = this.mapStorageManager.lookupConversationInfo(c.getUserUUIDList());
+        assertEquals(c, obtainedConversation);
 
         // successfully delete the object.
         this.mapStorageManager.deleteConversationInfo(c.getUserUUIDList());

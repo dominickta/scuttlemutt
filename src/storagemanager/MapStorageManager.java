@@ -1,7 +1,7 @@
 package storagemanager;
 
 import types.Bark;
-import types.ConversationInfo;
+import types.Conversation;
 import types.MuttIdentifier;
 
 import java.util.HashMap;
@@ -47,12 +47,12 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public ConversationInfo lookupConversationInfo(final List<UUID> userUuidList) {
+    public Conversation lookupConversationInfo(final List<UUID> userUuidList) {
         final String serializedObject = this.conversationInfoMap.getOrDefault(userUuidList, null);
         if (serializedObject == null) {
             return null;
         }
-        return (ConversationInfo) SerializationHelper.deserializeStringToObject(serializedObject);
+        return (Conversation) SerializationHelper.deserializeStringToObject(serializedObject);
     }
 
     @Override
@@ -66,8 +66,8 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public void storeConversationInfo(final ConversationInfo conversationInfo) {
-        this.conversationInfoMap.put(conversationInfo.getUserUUIDList(), SerializationHelper.serializeObjectToString(conversationInfo));
+    public void storeConversationInfo(final Conversation conversation) {
+        this.conversationInfoMap.put(conversation.getUserUUIDList(), SerializationHelper.serializeObjectToString(conversation));
     }
 
     @Override
@@ -89,11 +89,11 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public ConversationInfo deleteConversationInfo(final List<UUID> userUuidList) {
+    public Conversation deleteConversationInfo(final List<UUID> userUuidList) {
         final String serializedObject = this.conversationInfoMap.remove(userUuidList);
         if (serializedObject == null) {
             return null;
         }
-        return (ConversationInfo) SerializationHelper.deserializeStringToObject(serializedObject);
+        return (Conversation) SerializationHelper.deserializeStringToObject(serializedObject);
     }
 }

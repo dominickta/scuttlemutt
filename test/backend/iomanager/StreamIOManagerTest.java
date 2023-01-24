@@ -6,11 +6,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import types.Bark;
 import types.BarkPacket;
 
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,11 +62,11 @@ public class StreamIOManagerTest {
                 streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_2).getRight());
 
         // create the BarkPackets used in testing.
-        final byte[] packet1Contents = RandomStringUtils.randomAlphanumeric(15).getBytes();
-        this.barkPacket1 = new BarkPacket(packet1Contents);
+        final List<Bark> packet1Barks = Collections.singletonList(new Bark(RandomStringUtils.randomAlphanumeric(15)));
+        this.barkPacket1 = new BarkPacket(packet1Barks);
 
-        final byte[] packet2Contents = RandomStringUtils.randomAlphanumeric(15).getBytes();
-        this.barkPacket2 = new BarkPacket(packet2Contents);
+        final List<Bark> packet2Barks = Collections.singletonList(new Bark(RandomStringUtils.randomAlphanumeric(15)));
+        this.barkPacket2 = new BarkPacket(packet2Barks);
 
     }
 
@@ -105,8 +107,8 @@ public class StreamIOManagerTest {
         }
 
         // verify that both packet bytes look as expected
-        assertArrayEquals(this.barkPacket1.getPacketContents(), outputBarkPacketBytes1);
-        assertArrayEquals(this.barkPacket1.getPacketContents(), outputBarkPacketBytes2);
+        assertArrayEquals(this.barkPacket1.toNetworkBytes(), outputBarkPacketBytes1);
+        assertArrayEquals(this.barkPacket1.toNetworkBytes(), outputBarkPacketBytes2);
     }
 
     @Test
@@ -115,7 +117,7 @@ public class StreamIOManagerTest {
         try {
             final PipedOutputStream outputStream = this.streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_1)
                     .getRight();
-            outputStream.write(barkPacket1.getPacketContents());
+            outputStream.write(barkPacket1.toNetworkBytes());
             outputStream.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -132,7 +134,7 @@ public class StreamIOManagerTest {
         try {
             final PipedOutputStream outputStream = this.streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_1)
                     .getRight();
-            outputStream.write(barkPacket1.getPacketContents());
+            outputStream.write(barkPacket1.toNetworkBytes());
             outputStream.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -140,7 +142,7 @@ public class StreamIOManagerTest {
         try {
             final PipedOutputStream outputStream = this.streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_2)
                     .getRight();
-            outputStream.write(barkPacket2.getPacketContents());
+            outputStream.write(barkPacket2.toNetworkBytes());
             outputStream.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);

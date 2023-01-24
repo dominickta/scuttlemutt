@@ -5,9 +5,11 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
+import types.Bark;
 import types.BarkPacket;
 
 import java.io.PipedInputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,8 +33,8 @@ public class NetworkSimulationTest {
                 .collect(Collectors.toList());
 
         // setup a BarkPacket we can use for testing.
-        final String message = RandomStringUtils.randomAlphanumeric(15);
-        barkPacket = new BarkPacket(message.getBytes());
+        final Bark bark = new Bark(RandomStringUtils.randomAlphanumeric(15));
+        barkPacket = new BarkPacket(Collections.singletonList(bark));
 
         // initialize the simulation.
         simulation = new NetworkSimulation(deviceLabels);

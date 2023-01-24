@@ -33,40 +33,6 @@ public class BarkTest {
     }
 
     @Test
-    public void testCanRetransmit_noRetransmissionsRemaining_returnFalse() {
-        // Create a Bark object with the valid message String.
-        final Bark b = new Bark(validMessage);
-
-        // decrement the retransmissions such that none are left.
-        for (int i = 0; i < Bark.MAX_RETRANSMISSIONS; i++) {
-            b.decrementRetransmissionsLeft();
-        }
-
-        // assert that no retransmissions remain.
-        assertEquals(0, b.getRetransmissionsLeft());
-
-        // assert that canRetransmit() returns false.
-        assertFalse(b.canRetransmit());
-    }
-
-    @Test
-    public void testCanRetransmit_retransmissionsRemaining_returnTrue() {
-        // Create a Bark object with the valid message String.
-        final Bark b = new Bark(validMessage);
-
-        // decrement the retransmissions such that none are left.
-        for (int i = 0; i < Bark.MAX_RETRANSMISSIONS - 1; i++) {
-            b.decrementRetransmissionsLeft();
-        }
-
-        // assert that no retransmissions remain.
-        assertEquals(1, b.getRetransmissionsLeft());
-
-        // assert that canRetransmit() returns false.
-        assertTrue(b.canRetransmit());
-    }
-
-    @Test
     public void testEquals_sameContentsDifferentObjects_returnsFalse() {
         // Create two Bark objects with the same message String.
         final Bark b1 = new Bark(validMessage);
@@ -76,4 +42,18 @@ public class BarkTest {
         assertNotEquals(b1, b2);
     }
 
+    @Test
+    public void testNetworkByteConversion_convertsToBytes_convertsFromBytes_identicalObject() {
+        // Create a Bark object for the test.
+        final Bark b = new Bark(validMessage);
+
+        // Convert the Bark object to a byte[] for sending over the network.
+        final byte[] byteArray = b.toNetworkBytes();
+
+        // Convert the byteArray back to a Bark object.
+        final Bark rebuiltBark = Bark.fromNetworkBytes(byteArray);
+
+        // Verify that they're equal.
+        assertEquals(b, rebuiltBark);
+    }
 }
