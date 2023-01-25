@@ -18,11 +18,10 @@ public class BarkPacketTest {
     @BeforeEach
     public void setup() {
         // create the Barks used for testing.
-        final Supplier<Bark> barkSupplier = () -> new Bark(RandomStringUtils.randomAlphanumeric(15));
-        barkList1 = Stream.generate(barkSupplier)
+        barkList1 = Stream.generate(TestUtils::generateRandomizedBark)
                 .limit(10)
                 .toList();
-        barkList2 = Stream.generate(barkSupplier)
+        barkList2 = Stream.generate(TestUtils::generateRandomizedBark)
                 .limit(10)
                 .toList();
     }

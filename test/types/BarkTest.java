@@ -14,19 +14,28 @@ public class BarkTest {
     @Test
     public void testConstructor_contentsTooLarge_throwsRuntimeException() {
         // attempt to create a Bark object with the invalid message String and assert that the RuntimeException is thrown.
-        assertThrows(RuntimeException.class, () -> new Bark(oversizedMessage));
+        assertThrows(RuntimeException.class, () -> new Bark(oversizedMessage,
+                TestUtils.generateRandomizedMuttIdentifier(),
+                TestUtils.generateRandomizedMuttIdentifier(),
+                0L));
     }
 
     @Test
     public void testConstructor_contentsSafeSize_createsObjectSuccessfully() {
         // Successfully reate a Bark object with the valid message String.
-        final Bark b = new Bark(validMessage);
+        final Bark b = new Bark(validMessage,
+                TestUtils.generateRandomizedMuttIdentifier(),
+                TestUtils.generateRandomizedMuttIdentifier(),
+                0L);
     }
 
     @Test
     public void testEquals_sameObject_returnsTrue() {
         // Create a Bark object with the valid message String.
-        final Bark b = new Bark(validMessage);
+        final Bark b = new Bark(validMessage,
+                TestUtils.generateRandomizedMuttIdentifier(),
+                TestUtils.generateRandomizedMuttIdentifier(),
+                0L);
 
         // verify that it is equal to itself.
         assertEquals(b, b);
@@ -35,8 +44,14 @@ public class BarkTest {
     @Test
     public void testEquals_sameContentsDifferentObjects_returnsFalse() {
         // Create two Bark objects with the same message String.
-        final Bark b1 = new Bark(validMessage);
-        final Bark b2 = new Bark(validMessage);
+        final Bark b1 = new Bark(validMessage,
+                TestUtils.generateRandomizedMuttIdentifier(),
+                TestUtils.generateRandomizedMuttIdentifier(),
+                0L);
+        final Bark b2 = new Bark(validMessage,
+                b1.getSender(),
+                b1.getReceiver(),
+                0L);
 
         // verify that they are not equal since they don't have the same unique ID.
         assertNotEquals(b1, b2);
@@ -45,7 +60,10 @@ public class BarkTest {
     @Test
     public void testNetworkByteConversion_convertsToBytes_convertsFromBytes_identicalObject() {
         // Create a Bark object for the test.
-        final Bark b = new Bark(validMessage);
+        final Bark b = new Bark(validMessage,
+                TestUtils.generateRandomizedMuttIdentifier(),
+                TestUtils.generateRandomizedMuttIdentifier(),
+                0L);
 
         // Convert the Bark object to a byte[] for sending over the network.
         final byte[] byteArray = b.toNetworkBytes();

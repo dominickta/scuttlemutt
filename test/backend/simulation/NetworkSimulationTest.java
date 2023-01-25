@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
 import types.Bark;
 import types.BarkPacket;
+import types.TestUtils;
 
 import java.io.PipedInputStream;
 import java.util.Collections;
@@ -33,7 +34,7 @@ public class NetworkSimulationTest {
                 .collect(Collectors.toList());
 
         // setup a BarkPacket we can use for testing.
-        final Bark bark = new Bark(RandomStringUtils.randomAlphanumeric(15));
+        final Bark bark = TestUtils.generateRandomizedBark();
         barkPacket = new BarkPacket(Collections.singletonList(bark));
 
         // initialize the simulation.

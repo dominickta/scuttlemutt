@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import types.Bark;
 import types.BarkPacket;
+import types.TestUtils;
 
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -62,10 +63,10 @@ public class StreamIOManagerTest {
                 streamPairList.get(NONMANAGER_INPUT_STREAM_PAIR_2).getRight());
 
         // create the BarkPackets used in testing.
-        final List<Bark> packet1Barks = Collections.singletonList(new Bark(RandomStringUtils.randomAlphanumeric(15)));
+        final List<Bark> packet1Barks = Collections.singletonList(TestUtils.generateRandomizedBark());
         this.barkPacket1 = new BarkPacket(packet1Barks);
 
-        final List<Bark> packet2Barks = Collections.singletonList(new Bark(RandomStringUtils.randomAlphanumeric(15)));
+        final List<Bark> packet2Barks = Collections.singletonList(TestUtils.generateRandomizedBark());
         this.barkPacket2 = new BarkPacket(packet2Barks);
 
     }

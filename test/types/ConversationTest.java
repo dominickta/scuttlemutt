@@ -37,13 +37,13 @@ public class ConversationTest {
 
     @Test
     public void testConstructor_createsObjectSuccessfully(){
-        // Successfully create a ConversationInfo object.
+        // Successfully create a Conversation object.
         final Conversation c = new Conversation(userList1);
     }
 
     @Test
     public void testGetUserUUIDList_returnsCorrectList(){
-        // Successfully create a ConversationInfo object.
+        // Successfully create a Conversation object.
         final Conversation c = new Conversation(userList1);
 
         // Get the UUID List from the method.
@@ -57,23 +57,23 @@ public class ConversationTest {
 
     @Test
     public void testEquals_differentObjectsButSameList_returnsTrue(){
-        // Create two ConversationInfo objects with the same List.
+        // Create two Conversation objects with the same List.
         final Conversation c1 = new Conversation(userList1);
         final Conversation c2 = new Conversation(userList1);
 
 
-        // Verify that the two ConversationInfo objects are equal.
+        // Verify that the two Conversation objects are equal.
         assertEquals(c1, c2);
     }
 
     @Test
     public void testEquals_differentLists_returnsFalse(){
-        // Create two ConversationInfo objects with the same List.
+        // Create two Conversation objects with the same List.
         final Conversation c1 = new Conversation(userList1);
         final Conversation c2 = new Conversation(userList2);
 
 
-        // Verify that the two ConversationInfo objects are not equal.
+        // Verify that the two Conversation objects are not equal.
         assertNotEquals(c1, c2);
     }
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="types.BarkTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2023-01-25T03:12:05" hostname="Johns-MacBook-Pro-8.local" time="0.034">
+  <properties/>
+  <testcase name="testEquals_sameObject_returnsTrue()" classname="types.BarkTest" time="0.002"/>
+  <testcase name="testNetworkByteConversion_convertsToBytes_convertsFromBytes_identicalObject()" classname="types.BarkTest" time="0.006"/>
+  <testcase name="testConstructor_contentsTooLarge_throwsRuntimeException()" classname="types.BarkTest" time="0.016"/>
+  <testcase name="testConstructor_contentsSafeSize_createsObjectSuccessfully()" classname="types.BarkTest" time="0.001"/>
+  <testcase name="testEquals_sameContentsDifferentObjects_returnsFalse()" classname="types.BarkTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

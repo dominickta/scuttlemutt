@@ -23,23 +23,37 @@ public class Bark {
     private final String contents;
     private final int fillerCount;  // stores the number of "filler" (dummy) chars filling up the buf.  This is always
                                     // at the end of the String.
+    private final MuttIdentifier sender;
+    private final MuttIdentifier receiver;
+    private final Long orderNum;
 
     /**
      * Constructs a new Bark.
-     * @param contents  The contents of the message.
+     *
+     * @param contents The contents of the message.
+     * @param sender The MuttIdentifier of the sender of the message.
+     * @param receiver The MuttIdentifier of the receiver of the message.
+     * @param orderNum The number of the message in the conversation order.
      */
-    public Bark(final String contents) {
+    public Bark(final String contents,
+                final MuttIdentifier sender,
+                final MuttIdentifier receiver,
+                final Long orderNum) {
 
         // verify that the contents are less than the max message size.
         if (contents.length() > MAX_MESSAGE_SIZE) {
-            throw new RuntimeException("Attempted to create a Bark object with a message larger than the maximum size!" +
-                    "\tBark message length:  " + contents.length() +"\tMaximum size:  " + MAX_MESSAGE_SIZE);
+            throw new RuntimeException(
+                    "Attempted to create a Bark object with a message larger than the maximum size!" +
+                            "\tBark message length:  " + contents.length() + "\tMaximum size:  " + MAX_MESSAGE_SIZE);
         }
         this.uniqueId = UUID.randomUUID();
 
         // setup the filler chars.
         this.fillerCount = MAX_MESSAGE_SIZE - contents.length();
         this.contents = contents + RandomStringUtils.randomAlphanumeric(this.fillerCount);
+        this.sender = sender;
+        this.receiver = receiver;
+        this.orderNum = orderNum;
     }
 
     // public methods
@@ -49,12 +63,25 @@ public class Bark {
         return this.contents.substring(0, this.contents.length() - this.fillerCount);
     }
 
+    public MuttIdentifier getSender() {
+        return this.sender;
+    }
+
+    public MuttIdentifier getReceiver() {
+        return this.receiver;
+    }
+
+    public Long getOrderNum() {
+        return this.orderNum;
+    }
+
     public UUID getUniqueId() {
         return this.uniqueId;
     }
 
     /**
      * Returns a byte[] containing the bytes which represent the Bark.
+     *
      * @return a byte[] containing the bytes which represent the Bark.
      */
     public byte[] toNetworkBytes() {
@@ -63,9 +90,9 @@ public class Bark {
         return GSON.toJson(this).getBytes();
     }
 
-
     /**
      * Returns a Bark derived from the passed byte[].
+     *
      * @return a Bark derived from the passed byte[].
      */
     public static Bark fromNetworkBytes(final byte[] barkBytes) {

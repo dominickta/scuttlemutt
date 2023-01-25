@@ -6,12 +6,9 @@ import org.junit.jupiter.api.Test;
 import types.Bark;
 import types.Conversation;
 import types.MuttIdentifier;
-
-import java.util.Collections;
-import java.util.UUID;
+import types.TestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static types.Bark.MAX_MESSAGE_SIZE;
 
 public class MapStorageManagerTest {
     
@@ -23,11 +20,9 @@ public class MapStorageManagerTest {
     
     @BeforeEach
     public void setup() {
-        b = new Bark(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE));
-        m = new MuttIdentifier(RandomStringUtils.randomAlphanumeric(15),
-                UUID.randomUUID(),
-                RandomStringUtils.randomAlphanumeric(15));
-        c = new Conversation(Collections.singletonList(m));
+        b = TestUtils.generateRandomizedBark();
+        m = TestUtils.generateRandomizedMuttIdentifier();
+        c = TestUtils.generateRandomizedConversation();
         this.mapStorageManager = new MapStorageManager();
     }
 
@@ -57,7 +52,7 @@ public class MapStorageManagerTest {
     }
 
     @Test
-    public void testConversationInfoStorageLifecycle() {
+    public void testConversationStorageLifecycle() {
         // create the object in the storage manager.
         this.mapStorageManager.storeConversation(c);
 
