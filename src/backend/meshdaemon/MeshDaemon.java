@@ -1,12 +1,12 @@
 package backend.meshdaemon;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import backend.iomanager.IOManager;
 import storagemanager.StorageManager;
 import types.Bark;
 import types.MuttIdentifier;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Controls input/output logic and an internal Bark queue.

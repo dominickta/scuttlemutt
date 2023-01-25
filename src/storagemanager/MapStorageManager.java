@@ -21,9 +21,9 @@ public class MapStorageManager implements StorageManager {
     private static final Gson GSON = new Gson();
 
     // maps
-    private Map<UUID, String> barkMap;
-    private Map<UUID, String> muttIdentifierMap;
-    private Map<List<UUID>, String> conversationMap;
+    private final Map<UUID, String> barkMap;
+    private final Map<UUID, String> muttIdentifierMap;
+    private final Map<List<UUID>, String> conversationMap;
 
     public MapStorageManager() {
         this.barkMap = new HashMap<UUID, String>();

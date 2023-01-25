@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="storagemanager.MapStorageManagerTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2023-01-25T03:12:05" hostname="Johns-MacBook-Pro-8.local" time="0.011">
+<testsuite name="storagemanager.MapStorageManagerTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2023-01-25T03:13:07" hostname="Johns-MacBook-Pro-8.local" time="0.012">
   <properties/>
-  <testcase name="testConversationStorageLifecycle()" classname="storagemanager.MapStorageManagerTest" time="0.007"/>
+  <testcase name="testConversationStorageLifecycle()" classname="storagemanager.MapStorageManagerTest" time="0.008"/>
   <testcase name="testMuttIdentifierStorageLifecycle()" classname="storagemanager.MapStorageManagerTest" time="0.003"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

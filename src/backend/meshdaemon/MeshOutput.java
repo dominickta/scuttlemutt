@@ -1,11 +1,11 @@
 package backend.meshdaemon;
 
-import java.util.Arrays;
-import java.util.concurrent.BlockingQueue;
-
 import backend.iomanager.IOManager;
 import types.Bark;
 import types.BarkPacket;
+
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Controlls outbound messages from the mesh daemon.
@@ -34,7 +34,7 @@ public class MeshOutput implements Runnable {
         while (true) {
             try {
                 Bark bark = this.queue.take(); // throws InterruptedException
-                BarkPacket barkPacket = new BarkPacket(Arrays.asList(bark));
+                BarkPacket barkPacket = new BarkPacket(List.of(bark));
                 ioManager.broadcast(barkPacket);
             } catch (InterruptedException e) {
                 // interrupted while waiting on take()

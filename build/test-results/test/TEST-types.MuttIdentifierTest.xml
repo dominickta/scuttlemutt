@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="types.MuttIdentifierTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2023-01-25T03:12:05" hostname="Johns-MacBook-Pro-8.local" time="0.001">
+<testsuite name="types.MuttIdentifierTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2023-01-25T03:13:08" hostname="Johns-MacBook-Pro-8.local" time="0.001">
   <properties/>
-  <testcase name="testEquals_differentUsernameAndKeyButSameUUID_returnsTrue()" classname="types.MuttIdentifierTest" time="0.0"/>
+  <testcase name="testEquals_differentUsernameAndKeyButSameUUID_returnsTrue()" classname="types.MuttIdentifierTest" time="0.001"/>
   <testcase name="testEquals_differentUUID_returnsFalse()" classname="types.MuttIdentifierTest" time="0.0"/>
   <testcase name="testConstructor_createsObjectSuccessfully()" classname="types.MuttIdentifierTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>

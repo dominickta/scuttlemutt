@@ -14,21 +14,21 @@ public interface StorageManager {
     // lookup*() methods
     //
     // returns "null" if not found.
-    public Bark lookupBark(final UUID barkUuid);
-    public MuttIdentifier lookupMuttIdentifier(final UUID muttIdentifierUuid);
-    public Conversation lookupConversation(final List<UUID> userUuidList);
+    Bark lookupBark(final UUID barkUuid);
+    MuttIdentifier lookupMuttIdentifier(final UUID muttIdentifierUuid);
+    Conversation lookupConversation(final List<UUID> userUuidList);
 
     // store*() methods
     //
     // if there are any preexisting objects, they are overwritten.
-    public void storeBark(final Bark bark);
-    public void storeMuttIdentifier(final MuttIdentifier muttIdentifier);
-    public void storeConversation(final Conversation conversation);
+    void storeBark(final Bark bark);
+    void storeMuttIdentifier(final MuttIdentifier muttIdentifier);
+    void storeConversation(final Conversation conversation);
 
     // delete*() methods
     //
     // returns the object which was deleted.  if no object was found, returns null.
-    public Bark deleteBark(final UUID barkUuid);
-    public MuttIdentifier deleteMuttIdentifier(final UUID muttIdentifierUuid);
-    public Conversation deleteConversation(final List<UUID> userUuidList);
+    Bark deleteBark(final UUID barkUuid);
+    MuttIdentifier deleteMuttIdentifier(final UUID muttIdentifierUuid);
+    Conversation deleteConversation(final List<UUID> userUuidList);
 }

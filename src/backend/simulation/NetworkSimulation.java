@@ -19,7 +19,7 @@ public class NetworkSimulation {
     // class variables
 
     // maps labels -> StreamIOManagers associated with the corresponding PipedOutputStream.
-    private Map<String, StreamIOManager> streamIOManagerMap;
+    private final Map<String, StreamIOManager> streamIOManagerMap;
 
     /**
      * Creates a new NetworkSimulation where all devices are fully interconnected.

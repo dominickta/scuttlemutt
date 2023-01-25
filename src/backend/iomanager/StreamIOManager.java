@@ -4,9 +4,9 @@ import backend.simulation.PipedStreamHelper;
 import org.apache.commons.lang3.tuple.Pair;
 import types.BarkPacket;
 
+import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 
