@@ -3,7 +3,7 @@ package storagemanager;
 import com.google.gson.Gson;
 import types.Bark;
 import types.Conversation;
-import types.MuttIdentifier;
+import types.DawgIdentifier;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,12 +22,12 @@ public class MapStorageManager implements StorageManager {
 
     // maps
     private final Map<UUID, String> barkMap;
-    private final Map<UUID, String> muttIdentifierMap;
+    private final Map<UUID, String> dawgIdentifierMap;
     private final Map<List<UUID>, String> conversationMap;
 
     public MapStorageManager() {
         this.barkMap = new HashMap<UUID, String>();
-        this.muttIdentifierMap = new HashMap<UUID, String>();
+        this.dawgIdentifierMap = new HashMap<UUID, String>();
         this.conversationMap = new HashMap<List<UUID>, String>();
     }
 
@@ -41,12 +41,12 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public MuttIdentifier lookupMuttIdentifier(final UUID muttIdentifierUuid) {
-        final String serializedObject = this.muttIdentifierMap.getOrDefault(muttIdentifierUuid, null);
+    public DawgIdentifier lookupDawgIdentifier(final UUID dawgIdentifierUuid) {
+        final String serializedObject = this.dawgIdentifierMap.getOrDefault(dawgIdentifierUuid, null);
         if (serializedObject == null) {
             return null;
         }
-        return GSON.fromJson(serializedObject, MuttIdentifier.class);
+        return GSON.fromJson(serializedObject, DawgIdentifier.class);
     }
 
     @Override
@@ -64,8 +64,8 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public void storeMuttIdentifier(final MuttIdentifier muttIdentifier) {
-        this.muttIdentifierMap.put(muttIdentifier.getUniqueId(), GSON.toJson(muttIdentifier));
+    public void storeDawgIdentifier(final DawgIdentifier dawgIdentifier) {
+        this.dawgIdentifierMap.put(dawgIdentifier.getUniqueId(), GSON.toJson(dawgIdentifier));
     }
 
     @Override
@@ -83,12 +83,12 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public MuttIdentifier deleteMuttIdentifier(final UUID muttIdentifierUuid) {
-        final String serializedObject = this.muttIdentifierMap.remove(muttIdentifierUuid);
+    public DawgIdentifier deleteDawgIdentifier(final UUID dawgIdentifierUuid) {
+        final String serializedObject = this.dawgIdentifierMap.remove(dawgIdentifierUuid);
         if (serializedObject == null) {
             return null;
         }
-        return GSON.fromJson(serializedObject, MuttIdentifier.class);
+        return GSON.fromJson(serializedObject, DawgIdentifier.class);
     }
 
     @Override

@@ -16,18 +16,18 @@ public class TestUtils {
 
     public static Bark generateRandomizedBark() {
         return new Bark(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE),
-                generateRandomizedMuttIdentifier(),
-                generateRandomizedMuttIdentifier(),
+                generateRandomizedDawgIdentifier(),
+                generateRandomizedDawgIdentifier(),
                 r.nextLong());
     }
 
-    public static MuttIdentifier generateRandomizedMuttIdentifier() {
-        return new MuttIdentifier(RandomStringUtils.random(15),
+    public static DawgIdentifier generateRandomizedDawgIdentifier() {
+        return new DawgIdentifier(RandomStringUtils.random(15),
                 UUID.randomUUID(),
                 RandomStringUtils.randomAlphabetic(15));
     }
 
     public static Conversation generateRandomizedConversation() {
-        return new Conversation(Collections.singletonList(generateRandomizedMuttIdentifier()));
+        return new Conversation(Collections.singletonList(generateRandomizedDawgIdentifier()));
     }
 }

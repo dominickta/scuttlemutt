@@ -13,24 +13,24 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ConversationTest {
     // test variables
-    private List<MuttIdentifier> userList1;
-    private List<MuttIdentifier> userList2;
+    private List<DawgIdentifier> userList1;
+    private List<DawgIdentifier> userList2;
 
     @BeforeEach
     public void setup() {
-        // create a Supplier which generates randomized MuttIdentifiers.
-        final Supplier<MuttIdentifier> muttIdentifierSupplier = () -> {
+        // create a Supplier which generates randomized DawgIdentifiers.
+        final Supplier<DawgIdentifier> dawgIdentifierSupplier = () -> {
             final String userName = RandomStringUtils.randomAlphanumeric(15);
             final UUID uuid = UUID.randomUUID();
             final String publicKey = RandomStringUtils.randomAlphanumeric(15);
-            return new MuttIdentifier(userName, uuid, publicKey);
+            return new DawgIdentifier(userName, uuid, publicKey);
         };
 
         // create the userLists using the Supplier.
-        userList1 = Stream.generate(muttIdentifierSupplier)
+        userList1 = Stream.generate(dawgIdentifierSupplier)
                 .limit(15)
                 .toList();
-        userList2 = Stream.generate(muttIdentifierSupplier)
+        userList2 = Stream.generate(dawgIdentifierSupplier)
                 .limit(15)
                 .toList();
     }
@@ -50,7 +50,7 @@ public class ConversationTest {
         final List<UUID> uuidList = c.getUserUUIDList();
 
         // Verify that all UUIDs are present in the UUID List.
-        for (MuttIdentifier m : userList1) {
+        for (DawgIdentifier m : userList1) {
             assertTrue(uuidList.contains(m.getUniqueId()));
         }
     }

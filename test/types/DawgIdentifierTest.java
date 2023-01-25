@@ -8,7 +8,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-public class MuttIdentifierTest {
+public class DawgIdentifierTest {
     // test variables
     private static final String userName1 = RandomStringUtils.randomAlphanumeric(15);
     private static final String userName2 = RandomStringUtils.randomAlphanumeric(15);
@@ -19,29 +19,29 @@ public class MuttIdentifierTest {
 
     @Test
     public void testConstructor_createsObjectSuccessfully(){
-        // Successfully create a MuttIdentifier object.
-        final MuttIdentifier m = new MuttIdentifier(userName1, uuid1, publicKey1);
+        // Successfully create a DawgIdentifier object.
+        final DawgIdentifier m = new DawgIdentifier(userName1, uuid1, publicKey1);
     }
 
     @Test
     public void testEquals_differentUsernameAndKeyButSameUUID_returnsTrue(){
-        // Create two MuttIdentifier objects with the same UUID but different usernames.
-        final MuttIdentifier m1 = new MuttIdentifier(userName1, uuid1, publicKey1);
-        final MuttIdentifier m2 = new MuttIdentifier(userName2, uuid1, publicKey2);
+        // Create two DawgIdentifier objects with the same UUID but different usernames.
+        final DawgIdentifier m1 = new DawgIdentifier(userName1, uuid1, publicKey1);
+        final DawgIdentifier m2 = new DawgIdentifier(userName2, uuid1, publicKey2);
 
 
-        // verify that the two MuttIdentifier objects are equal.
+        // verify that the two DawgIdentifier objects are equal.
         assertEquals(m1, m2);
     }
 
     @Test
     public void testEquals_differentUUID_returnsFalse(){
-        // Create two MuttIdentifier objects with the same UUID but different usernames.
-        final MuttIdentifier m1 = new MuttIdentifier(userName1, uuid1, publicKey1);
-        final MuttIdentifier m2 = new MuttIdentifier(userName2, uuid2, publicKey2);
+        // Create two DawgIdentifier objects with the same UUID but different usernames.
+        final DawgIdentifier m1 = new DawgIdentifier(userName1, uuid1, publicKey1);
+        final DawgIdentifier m2 = new DawgIdentifier(userName2, uuid2, publicKey2);
 
 
-        // verify that the two MuttIdentifier objects are not equal.
+        // verify that the two DawgIdentifier objects are not equal.
         assertNotEquals(m1, m2);
     }
 

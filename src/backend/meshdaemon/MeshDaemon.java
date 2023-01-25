@@ -3,7 +3,7 @@ package backend.meshdaemon;
 import backend.iomanager.IOManager;
 import storagemanager.StorageManager;
 import types.Bark;
-import types.MuttIdentifier;
+import types.DawgIdentifier;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -16,7 +16,7 @@ public class MeshDaemon {
     private final BlockingQueue<Bark> queue;
     private final MeshInput input;
     private final MeshOutput output;
-    private final MuttIdentifier currentUser;
+    private final DawgIdentifier currentUser;
 
     /**
      * Constructs a new MeshDaemon.
@@ -24,7 +24,7 @@ public class MeshDaemon {
      * @param ioManager The underlying IOManager.
      * @param storage   The place to store messages meant for us.
      */
-    public MeshDaemon(final IOManager ioManager, final StorageManager storage, final MuttIdentifier currentUser) {
+    public MeshDaemon(final IOManager ioManager, final StorageManager storage, final DawgIdentifier currentUser) {
         this.currentUser = currentUser;
         this.queue = new LinkedBlockingQueue<>();
         this.input = new MeshInput(ioManager, queue, storage, currentUser);
@@ -41,10 +41,10 @@ public class MeshDaemon {
      * Adds the given message to the outbound queue.
      * 
      * @param contents  The message contents.
-     * @param recipient The MuttIdentifier of who is receiving the message.
+     * @param recipient The DawgIdentifier of who is receiving the message.
      * @param seqId     The sequence number for this message.
      */
-    public void sendMessage(String contents, MuttIdentifier recipient, Long seqId) {
+    public void sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
         queue.add(new Bark(contents, this.currentUser, recipient, seqId));
     }
 }

@@ -23,21 +23,21 @@ public class Bark {
     private final String contents;
     private final int fillerCount;  // stores the number of "filler" (dummy) chars filling up the buf.  This is always
                                     // at the end of the String.
-    private final MuttIdentifier sender;
-    private final MuttIdentifier receiver;
+    private final DawgIdentifier sender;
+    private final DawgIdentifier receiver;
     private final Long orderNum;
 
     /**
      * Constructs a new Bark.
      *
      * @param contents The contents of the message.
-     * @param sender The MuttIdentifier of the sender of the message.
-     * @param receiver The MuttIdentifier of the receiver of the message.
+     * @param sender The DawgIdentifier of the sender of the message.
+     * @param receiver The DawgIdentifier of the receiver of the message.
      * @param orderNum The number of the message in the conversation order.
      */
     public Bark(final String contents,
-                final MuttIdentifier sender,
-                final MuttIdentifier receiver,
+                final DawgIdentifier sender,
+                final DawgIdentifier receiver,
                 final Long orderNum) {
 
         // verify that the contents are less than the max message size.
@@ -63,11 +63,11 @@ public class Bark {
         return this.contents.substring(0, this.contents.length() - this.fillerCount);
     }
 
-    public MuttIdentifier getSender() {
+    public DawgIdentifier getSender() {
         return this.sender;
     }
 
-    public MuttIdentifier getReceiver() {
+    public DawgIdentifier getReceiver() {
         return this.receiver;
     }
 

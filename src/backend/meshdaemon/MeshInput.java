@@ -4,7 +4,7 @@ import backend.iomanager.IOManager;
 import storagemanager.StorageManager;
 import types.Bark;
 import types.BarkPacket;
-import types.MuttIdentifier;
+import types.DawgIdentifier;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -17,7 +17,7 @@ public class MeshInput implements Runnable {
     private final IOManager ioManager;
     private final StorageManager storage;
     private final BlockingQueue<Bark> queue;
-    private final MuttIdentifier currentUser;
+    private final DawgIdentifier currentUser;
 
     /**
      * Constructs a new MeshInput.
@@ -25,10 +25,10 @@ public class MeshInput implements Runnable {
      * @param ioManager   The underlying IOManager.
      * @param queue       The queue of outgoing barks to forward
      * @param storage     A StorageManager to store Barks addressed to us.
-     * @param currentUser The MuttIdentifier for the current user.
+     * @param currentUser The DawgIdentifier for the current user.
      */
     public MeshInput(final IOManager ioManager, final BlockingQueue<Bark> queue,
-            final StorageManager storage, final MuttIdentifier currentUser) {
+            final StorageManager storage, final DawgIdentifier currentUser) {
         this.ioManager = ioManager;
         this.queue = queue;
         this.storage = storage;
