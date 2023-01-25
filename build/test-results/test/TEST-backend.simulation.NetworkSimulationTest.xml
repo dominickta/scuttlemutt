@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="backend.simulation.NetworkSimulationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2023-01-25T03:14:43" hostname="Johns-MacBook-Pro-8.local" time="0.031">
-  <properties/>
-  <testcase name="testGetStreamIOManager_sendMessage_verifyAllDevicesReceivedMessage()" classname="backend.simulation.NetworkSimulationTest" time="0.008"/>
-  <testcase name="testDisconnect_verifyDisconnect_thenReconnect_verifyReconnect()" classname="backend.simulation.NetworkSimulationTest" time="0.012"/>
-  <testcase name="testConnect_connectDeviceToItself_throwsUnsupportedOperationException()" classname="backend.simulation.NetworkSimulationTest" time="0.006"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
