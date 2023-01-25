@@ -1,12 +1,11 @@
 package types;
 
-import java.io.Serializable;
 import java.util.UUID;
 
 /**
  * Represents a unique identifier for users on the network.
  */
-public class MuttIdentifier implements Serializable {  // <-- TODO:  Make this a "DawgIdentifier" (makes dom happy :) )
+public class MuttIdentifier {  // <-- TODO:  Make this a "DawgIdentifier" (makes dom happy :) )
     // class variables
     private final String userContact;
     private final UUID muttNetworkUUID;

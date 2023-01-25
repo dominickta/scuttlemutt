@@ -1,5 +1,6 @@
 package storagemanager;
 
+import com.google.gson.Gson;
 import types.Bark;
 import types.Conversation;
 import types.MuttIdentifier;
@@ -17,15 +18,17 @@ import java.util.UUID;
  * adding extra constructors/classes/methods/etc.
  */
 public class MapStorageManager implements StorageManager {
+    private static final Gson GSON = new Gson();
+
     // maps
     private Map<UUID, String> barkMap;
     private Map<UUID, String> muttIdentifierMap;
-    private Map<List<UUID>, String> conversationInfoMap;
+    private Map<List<UUID>, String> conversationMap;
 
     public MapStorageManager() {
         this.barkMap = new HashMap<UUID, String>();
         this.muttIdentifierMap = new HashMap<UUID, String>();
-        this.conversationInfoMap = new HashMap<List<UUID>, String>();
+        this.conversationMap = new HashMap<List<UUID>, String>();
     }
 
     @Override
@@ -34,7 +37,7 @@ public class MapStorageManager implements StorageManager {
         if (serializedObject == null) {
             return null;
         }
-        return (Bark) SerializationHelper.deserializeStringToObject(serializedObject);
+        return GSON.fromJson(serializedObject, Bark.class);
     }
 
     @Override
@@ -43,31 +46,31 @@ public class MapStorageManager implements StorageManager {
         if (serializedObject == null) {
             return null;
         }
-        return (MuttIdentifier) SerializationHelper.deserializeStringToObject(serializedObject);
+        return GSON.fromJson(serializedObject, MuttIdentifier.class);
     }
 
     @Override
-    public Conversation lookupConversationInfo(final List<UUID> userUuidList) {
-        final String serializedObject = this.conversationInfoMap.getOrDefault(userUuidList, null);
+    public Conversation lookupConversation(final List<UUID> userUuidList) {
+        final String serializedObject = this.conversationMap.getOrDefault(userUuidList, null);
         if (serializedObject == null) {
             return null;
         }
-        return (Conversation) SerializationHelper.deserializeStringToObject(serializedObject);
+        return GSON.fromJson(serializedObject, Conversation.class);
     }
 
     @Override
     public void storeBark(final Bark bark) {
-        this.barkMap.put(bark.getUniqueId(), SerializationHelper.serializeObjectToString(bark));
+        this.barkMap.put(bark.getUniqueId(), GSON.toJson(bark));
     }
 
     @Override
     public void storeMuttIdentifier(final MuttIdentifier muttIdentifier) {
-        this.muttIdentifierMap.put(muttIdentifier.getUniqueId(), SerializationHelper.serializeObjectToString(muttIdentifier));
+        this.muttIdentifierMap.put(muttIdentifier.getUniqueId(), GSON.toJson(muttIdentifier));
     }
 
     @Override
-    public void storeConversationInfo(final Conversation conversation) {
-        this.conversationInfoMap.put(conversation.getUserUUIDList(), SerializationHelper.serializeObjectToString(conversation));
+    public void storeConversation(final Conversation conversation) {
+        this.conversationMap.put(conversation.getUserUUIDList(), GSON.toJson(conversation));
     }
 
     @Override
@@ -76,7 +79,7 @@ public class MapStorageManager implements StorageManager {
         if (serializedObject == null) {
             return null;
         }
-        return (Bark) SerializationHelper.deserializeStringToObject(serializedObject);
+        return GSON.fromJson(serializedObject, Bark.class);
     }
 
     @Override
@@ -85,15 +88,15 @@ public class MapStorageManager implements StorageManager {
         if (serializedObject == null) {
             return null;
         }
-        return (MuttIdentifier) SerializationHelper.deserializeStringToObject(serializedObject);
+        return GSON.fromJson(serializedObject, MuttIdentifier.class);
     }
 
     @Override
-    public Conversation deleteConversationInfo(final List<UUID> userUuidList) {
-        final String serializedObject = this.conversationInfoMap.remove(userUuidList);
+    public Conversation deleteConversation(final List<UUID> userUuidList) {
+        final String serializedObject = this.conversationMap.remove(userUuidList);
         if (serializedObject == null) {
             return null;
         }
-        return (Conversation) SerializationHelper.deserializeStringToObject(serializedObject);
+        return GSON.fromJson(serializedObject, Conversation.class);
     }
 }

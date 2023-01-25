@@ -39,7 +39,7 @@ public class BarkPacketTest {
         final BarkPacket bp = new BarkPacket(barkList1);
 
         // Obtain the packet contents.
-        final List<Bark> bpContents = bp.getPacketContents();
+        final List<Bark> bpContents = bp.getPacketBarks();
 
         // Assert that the contents are as expected.
         assertEquals(barkList1, bpContents);
@@ -49,7 +49,7 @@ public class BarkPacketTest {
     public void testEquals_differentObjectsButSameBarks_returnsTrue() {
         // Create two BarkPacket objects with the same List.
         final BarkPacket bp1 = new BarkPacket(barkList1);
-        final BarkPacket bp2 = new BarkPacket(barkList2);
+        final BarkPacket bp2 = new BarkPacket(barkList1);
 
         // Verify that the two BarkPacket objects are equal.
         assertEquals(bp1, bp2);
@@ -65,7 +65,6 @@ public class BarkPacketTest {
         assertNotEquals(bp1, bp2);
     }
 
-    // add getPacketContents tests, toNetworkBytes, fromNetworkBytes
     @Test
     public void testNetworkByteConversion_convertsToBytes_convertsFromBytes_identicalObject() {
         // Successfully create a BarkPacket object.

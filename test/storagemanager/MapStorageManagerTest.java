@@ -59,16 +59,16 @@ public class MapStorageManagerTest {
     @Test
     public void testConversationInfoStorageLifecycle() {
         // create the object in the storage manager.
-        this.mapStorageManager.storeConversationInfo(c);
+        this.mapStorageManager.storeConversation(c);
 
         // lookup the object in the storage manager.
-        final Conversation obtainedConversation = this.mapStorageManager.lookupConversationInfo(c.getUserUUIDList());
+        final Conversation obtainedConversation = this.mapStorageManager.lookupConversation(c.getUserUUIDList());
         assertEquals(c, obtainedConversation);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteConversationInfo(c.getUserUUIDList());
+        this.mapStorageManager.deleteConversation(c.getUserUUIDList());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupConversationInfo(c.getUserUUIDList()));
+        assertNull(this.mapStorageManager.lookupConversation(c.getUserUUIDList()));
     }
 }

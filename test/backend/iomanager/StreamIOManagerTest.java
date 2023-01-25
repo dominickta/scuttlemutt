@@ -152,7 +152,11 @@ public class StreamIOManagerTest {
         final Set<BarkPacket> receivedBarkPackets = new HashSet<BarkPacket>();
         receivedBarkPackets.add(this.streamIOManager.receive());
         receivedBarkPackets.add(this.streamIOManager.receive());
-        assertTrue(receivedBarkPackets.contains(barkPacket1));
-        assertTrue(receivedBarkPackets.contains(barkPacket2));
+
+        final Set<BarkPacket> expectedSet = new HashSet<BarkPacket>();
+        expectedSet.add(barkPacket1);
+        expectedSet.add(barkPacket2);
+
+        assertEquals(expectedSet, receivedBarkPackets);
     }
 }

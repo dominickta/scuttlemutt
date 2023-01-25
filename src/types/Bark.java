@@ -1,18 +1,19 @@
 package types;
 
-import storagemanager.SerializationHelper;
+import com.google.gson.Gson;
+import org.apache.commons.lang3.RandomStringUtils;
 
-import java.io.Serializable;
 import java.util.UUID;
 
 /**
  * Represents a "bark" (message) sent by the user.
  */
-public class Bark implements Serializable {
+public class Bark {
+    private static final Gson GSON = new Gson();
     // constants
 
     // stores the maximum number of characters allowed in a Bark.
-    public static final int UUID_SIZE = UUID.randomUUID().toString().getBytes().length;
+    public static final int UUID_SIZE = 36;
     public static final int MAX_MESSAGE_SIZE = 160;
     public static final int PACKET_SIZE = UUID_SIZE + MAX_MESSAGE_SIZE;
 
@@ -20,6 +21,8 @@ public class Bark implements Serializable {
     // class variables
     private final UUID uniqueId;
     private final String contents;
+    private final int fillerCount;  // stores the number of "filler" (dummy) chars filling up the buf.  This is always
+                                    // at the end of the String.
 
     /**
      * Constructs a new Bark.
@@ -33,13 +36,17 @@ public class Bark implements Serializable {
                     "\tBark message length:  " + contents.length() +"\tMaximum size:  " + MAX_MESSAGE_SIZE);
         }
         this.uniqueId = UUID.randomUUID();
-        this.contents = contents;
+
+        // setup the filler chars.
+        this.fillerCount = MAX_MESSAGE_SIZE - contents.length();
+        this.contents = contents + RandomStringUtils.randomAlphanumeric(this.fillerCount);
     }
 
     // public methods
 
     public String getContents() {
-        return this.contents;
+        // when returning the contents, trim off the filler chars.
+        return this.contents.substring(0, this.contents.length() - this.fillerCount);
     }
 
     public UUID getUniqueId() {
@@ -53,7 +60,7 @@ public class Bark implements Serializable {
     public byte[] toNetworkBytes() {
         // TODO:  Add encryption here.
 
-        return SerializationHelper.serializeObjectToString(this).getBytes();
+        return GSON.toJson(this).getBytes();
     }
 
 
@@ -62,9 +69,8 @@ public class Bark implements Serializable {
      * @return a Bark derived from the passed byte[].
      */
     public static Bark fromNetworkBytes(final byte[] barkBytes) {
-        // TODO:  Add decrypted here.
-
-        return (Bark) SerializationHelper.deserializeStringToObject(new String(barkBytes));
+        // TODO:  Add decryption here.
+        return GSON.fromJson(new String(barkBytes), Bark.class);
     }
 
     // overrides
@@ -74,6 +80,11 @@ public class Bark implements Serializable {
             return false;
         }
         return this.getUniqueId().equals(((Bark) o).getUniqueId());
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getUniqueId().hashCode();
     }
 
     @Override
