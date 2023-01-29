@@ -58,6 +58,12 @@ public class StreamIOManager implements IOManager {
         }
     }
 
+
+    @Override
+    public int numConnections(){
+        return inputStreams.size();
+    }
+
     /**
      * Stores the passed PipedInputStream in the StreamIOManager's list of incoming connections.  This is equivalent
      * to creating the connection between the two devices.
