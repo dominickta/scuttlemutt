@@ -57,7 +57,6 @@ public class ScuttlemuttNetworkSimulationTest {
 
         // get recipient Scuttlemutt UUID
         UUID recipientId = recipient.getDawgIdentifier().getUniqueId(); 
-        System.out.println("Intended for " + recipientId);
        
         // Ensure network has been fully set up/connected
         boolean connected = false;
@@ -75,22 +74,22 @@ public class ScuttlemuttNetworkSimulationTest {
     public void testGetScuttlemutt_sendMessage_verifyCorrectDeviceRecievedCorrectMessage() {
         // get the sender Scuttlemutt
         // verify that intendedRecipient recieved a message
-        UUID recipientId = recipient.getDawgIdentifier().getUniqueId(); 
-        System.err.println("Looking up Bark " + recipientId);
-        assertTimeoutPreemptively(Duration.ofMillis(20000), () -> {
-            while(recipient.lookupBark(recipientId) == null);
+        assertTimeoutPreemptively(Duration.ofMillis(5000), () -> {
+            while(recipient.lookupBark(messageUuid) == null);
         });
-        Bark recievedMessage = recipient.lookupBark(recipientId);
+        Bark recievedMessage = recipient.lookupBark(messageUuid);
+        //Check that message has same UUID as original message
         assertEquals(messageUuid, recievedMessage.getUniqueId());
+        //Check that message has same contents as original message
+        assertEquals(this.message, recievedMessage.getContents());
     }
 
     @Test
     public void testGetScuttlemutt_sendMessage_verifyNonRecipientDevicesDidNotStoreMessage() {
-        UUID recipientId = recipient.getDawgIdentifier().getUniqueId(); 
         // verify that intendedRecipient recieved a message
         for(int i = 2; i < NUM_DEVICES; i++){
             final Scuttlemutt curDevice = simulation.getScuttlemutt(deviceLabels.get(i));
-            Bark recievedMessage = curDevice.lookupBark(recipientId);
+            Bark recievedMessage = curDevice.lookupBark(messageUuid);
             assertEquals(null, recievedMessage);
         }
         

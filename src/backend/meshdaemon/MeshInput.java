@@ -40,18 +40,13 @@ public class MeshInput implements Runnable {
     public void run() {
         while (true) {
             // Check if ioManager is connected so .call function in Iomanager doesn't fail
-            System.out.println(ioManager.numConnections());
             if(ioManager.numConnections() > 1){
-                System.err.print("WAITING FOR MESSAGE " + this.currentUser.getUniqueId());
                 BarkPacket barkPacket = ioManager.receive();
-                System.err.print("GOT MESSAGE");
                 List<Bark> barkList = barkPacket.getPacketBarks();
                 for (Bark bark : barkList) {
-                    System.out.println("RECIEVED MESSAGE " + this.currentUser.getUniqueId());
                     if (bark.getReceiver().equals(this.currentUser)) {
                         storage.storeBark(bark); // this is for us, store for later
-                    } else {
-                        System.err.println("NOT FOR ME");
+                    } else if(!bark.getSender().equals(this.currentUser)) {
                         this.queue.add(bark); // put it on output buffer
                     }
                 }

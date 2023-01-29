@@ -57,7 +57,6 @@ public class Scuttlemutt {
      */
     public UUID sendMessage(String message, UUID recipientUUID){
         DawgIdentifier recipientDawgId = this.lookupDawgIdentifier(recipientUUID);
-        System.out.println("RECEPUUID: " + recipientDawgId + "FROM " + this.dawgIdentifier.getUniqueId());
         return this.meshDaemon.sendMessage(message, recipientDawgId, seqId);
     }
 
@@ -108,8 +107,6 @@ public class Scuttlemutt {
     public void connect(final PipedInputStream inputStreamFromDevice, final PipedOutputStream outputStreamToDevice, final DawgIdentifier otherDawgIdentifier) {
         this.ioManager.connect(otherDawgIdentifier.getUserContact(), inputStreamFromDevice, outputStreamToDevice);
         this.storageManager.storeDawgIdentifier(otherDawgIdentifier);
-        System.out.println("Added to " + this.dawgIdentifier.getUniqueId() +  " list: " + otherDawgIdentifier.getUniqueId());
-        
     }
 
     /**
