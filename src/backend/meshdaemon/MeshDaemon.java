@@ -5,6 +5,7 @@ import storagemanager.StorageManager;
 import types.Bark;
 import types.DawgIdentifier;
 
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -43,8 +44,11 @@ public class MeshDaemon {
      * @param contents  The message contents.
      * @param recipient The DawgIdentifier of who is receiving the message.
      * @param seqId     The sequence number for this message.
+     * @returns UUID of sent bark
      */
-    public void sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
-        queue.add(new Bark(contents, this.currentUser, recipient, seqId));
+    public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
+        Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId);
+        queue.add(barkMessage);
+        return barkMessage.getUniqueId();
     }
 }

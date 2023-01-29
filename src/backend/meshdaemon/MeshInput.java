@@ -1,6 +1,7 @@
 package backend.meshdaemon;
 
 import backend.iomanager.IOManager;
+import backend.iomanager.StreamIOManager;
 import storagemanager.StorageManager;
 import types.Bark;
 import types.BarkPacket;
@@ -38,13 +39,21 @@ public class MeshInput implements Runnable {
     @Override
     public void run() {
         while (true) {
-            BarkPacket barkPacket = ioManager.receive();
-            List<Bark> barkList = barkPacket.getPacketBarks();
-            for (Bark bark : barkList) {
-                if (bark.getReceiver().equals(this.currentUser)) {
-                    storage.storeBark(bark); // this is for us, store for later
-                } else {
-                    this.queue.add(bark); // put it on output buffer
+            // Check if ioManager is connected so .call function in Iomanager doesn't fail
+            System.out.println(ioManager.numConnections());
+            if(ioManager.numConnections() > 1){
+                System.err.print("WAITING FOR MESSAGE " + this.currentUser.getUniqueId());
+                BarkPacket barkPacket = ioManager.receive();
+                System.err.print("GOT MESSAGE");
+                List<Bark> barkList = barkPacket.getPacketBarks();
+                for (Bark bark : barkList) {
+                    System.out.println("RECIEVED MESSAGE " + this.currentUser.getUniqueId());
+                    if (bark.getReceiver().equals(this.currentUser)) {
+                        storage.storeBark(bark); // this is for us, store for later
+                    } else {
+                        System.err.println("NOT FOR ME");
+                        this.queue.add(bark); // put it on output buffer
+                    }
                 }
             }
         }

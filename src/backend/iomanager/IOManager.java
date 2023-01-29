@@ -18,4 +18,11 @@ public interface IOManager {
      * @return a BarkPacket received by the device.
      */
     BarkPacket receive();
+
+    /*
+     * Returns how many connections a device has
+     * 
+     * @return a int of how many connections there are
+     */
+    int numConnections();
 }
