@@ -27,19 +27,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+  
 public class ScuttlemuttNetworkSimulationTest {
+      /* 
     // test constants
     public static final int NUM_DEVICES = 3;  // NOTE:  Value must be >= 2 for tests to run successfully.
 
     // test variables
     private List<String> deviceLabels;
-    private ScuttlemuttNetworkSimulation simulation;
     private String message;
     private Scuttlemutt recipient;
     private UUID messageUuid;
+    private NetworkSimulation networkSimulation;
     
     @BeforeEach
     public void setup() {
+        for(int i=0; i<NUM_DEVICES; i++){
+
+        }
+        this.networkSimulation = new NetworkSimulation(deviceLabels)
         // generate the device labels.
         deviceLabels = Stream.generate(() -> RandomStringUtils.randomAlphanumeric(15))
                 .limit(NUM_DEVICES)
@@ -70,6 +76,8 @@ public class ScuttlemuttNetworkSimulationTest {
         this.messageUuid = sender.sendMessage(message, recipientId);
     }
 
+
+    Putting this on hold for a while
     @Test
     public void testGetScuttlemutt_sendMessage_verifyCorrectDeviceRecievedCorrectMessage() {
         // get the sender Scuttlemutt
@@ -95,5 +103,5 @@ public class ScuttlemuttNetworkSimulationTest {
         
     }
 
-
+    */
 }

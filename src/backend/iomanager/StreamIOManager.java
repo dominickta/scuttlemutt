@@ -103,29 +103,34 @@ public class StreamIOManager implements IOManager {
 
         /**
          * Iterates over the stored PipedInputStreams to find a packet to return.  Returns the packet once it is found.
-         * @return  A BarkPacket from one of the PipedInputStreams.
+         * @return  A BarkPacket from one of the PipedInputStreams or null if there are no connections.
          * @throws IOException  if there are issues using the PipedInputStreams.
          */
         @Override
         public BarkPacket call() throws IOException {
-            // to ensure that we don't over poll the earlier input streams in the array, we start from a random index.
-            int i = new Random().nextInt(inputStreams.size() - 1);
+            // Check that there is at least one connection
+            if(inputStreams.size() == 0){
+                 // to ensure that we don't over poll the earlier input streams in the array, we start from a random index.
+                int i = new Random().nextInt(inputStreams.size() - 1);
 
-            // iterate over the streams, checking for input.
-            while (true) {
-                for (; i < inputStreams.size(); i++) {
-                    final PipedInputStream inputStream = inputStreams.get(i);
+                // iterate over the streams, checking for input.
+                while (true) {
+                    for (; i < inputStreams.size(); i++) {
+                        final PipedInputStream inputStream = inputStreams.get(i);
 
-                    // if there is available input, turn it into a BarkPacket and return it.
-                    if (inputStream.available() > 0) {
-                        final int inputSize = inputStream.available();
-                        final byte[] inputContents = inputStream.readNBytes(inputSize);
-                        return BarkPacket.fromNetworkBytes(inputContents);
+                        // if there is available input, turn it into a BarkPacket and return it.
+                        if (inputStream.available() > 0) {
+                            final int inputSize = inputStream.available();
+                            final byte[] inputContents = inputStream.readNBytes(inputSize);
+                            return BarkPacket.fromNetworkBytes(inputContents);
+                        }
                     }
-                }
 
-                // reset i to zero, allowing future loops to start at the beginning of the input stream array.
-                i = 0;
+                    // reset i to zero, allowing future loops to start at the beginning of the input stream array.
+                    i = 0;
+                }
+            }else{
+                return null;
             }
         }
     }

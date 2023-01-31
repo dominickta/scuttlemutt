@@ -6,6 +6,7 @@ import java.util.*;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
+import backend.iomanager.IOManager;
 import backend.iomanager.StreamIOManager;
 import backend.meshdaemon.MeshDaemon;
 import storagemanager.MapStorageManager;
@@ -22,13 +23,11 @@ public class Scuttlemutt {
     // Identifier object of user
     private final DawgIdentifier dawgIdentifier;
     // I/O manager
-    private final StreamIOManager ioManager;
+    private final IOManager ioManager;
     // Database of connected users, previous conversations, and previous messages
     private final StorageManager storageManager;
     // Daemon controlling recieving and broadcasting of messages
     private final MeshDaemon meshDaemon;
-    // Long representing number of messages user has sent for ordering purposes
-    private Long seqId;
 
     /*
      * Constructs a new Scuttlemutt object
@@ -38,8 +37,24 @@ public class Scuttlemutt {
         this.ioManager = new StreamIOManager();
         this.storageManager = new MapStorageManager();
         this.meshDaemon = new MeshDaemon(ioManager, storageManager, dawgIdentifier);
-        this.seqId = 0L;
     }
+
+
+    public Scuttlemutt(String userContact, IOManager inputIoManager){
+        this.dawgIdentifier = generateDawgIdentifier(userContact);
+        this.ioManager = inputIoManager;
+        this.storageManager = new MapStorageManager();
+        this.meshDaemon = new MeshDaemon(this.ioManager, storageManager, dawgIdentifier);
+    }
+
+
+    public Scuttlemutt(String userContact, IOManager inputIoManager, DawgIdentifier dawgIdentifier, StorageManager storageManager){
+        this.dawgIdentifier = dawgIdentifier;
+        this.ioManager = inputIoManager;
+        this.storageManager = storageManager;
+        this.meshDaemon = new MeshDaemon(this.ioManager, this.storageManager, this.dawgIdentifier);
+    }
+
 
     /**
      * Returns user's DawgIdentifier
@@ -56,20 +71,15 @@ public class Scuttlemutt {
      * @return UUID of sent message
      */
     public UUID sendMessage(String message, UUID recipientUUID){
-        DawgIdentifier recipientDawgId = this.lookupDawgIdentifier(recipientUUID);
+        DawgIdentifier recipientDawgId = this.storageManager.lookupDawgIdentifier(recipientUUID);
+        // TODO : Implement seq ID in conversations
+        // Placeholder for now
+        Long seqId = 0L;
         return this.meshDaemon.sendMessage(message, recipientDawgId, seqId);
     }
 
-    public Bark lookupBark(final UUID barkUuid){
-        return this.storageManager.lookupBark(barkUuid);
-    }
-
-    public DawgIdentifier lookupDawgIdentifier(final UUID dawgUuid){
-        return this.storageManager.lookupDawgIdentifier(dawgUuid);
-    }
-
-    public Conversation lookupConversation(final List<UUID> userUuidList){
-        return this.storageManager.lookupConversation(userUuidList);
+    public StorageManager getStorageManager(){
+        return this.storageManager;
     }
 
     /*
@@ -93,35 +103,6 @@ public class Scuttlemutt {
         
     }
 
-    /**
-     * Stores the passed PipedInputStream in the StreamIOManager's list of incoming connections.  This is equivalent
-     * to creating the connection between the two devices.
-     * 
-     * NOTE:  This method should solely be used by the Scuttlemutt NetworkSimulation.  To connect StreamIOManagers, please use the
-     * methods inside the ScuttlemuttNetworkSimulation.
-     *
-     * @param inputStreamFromDevice  A PipedInputStream feeding bytes from the other device.
-     * @param outputStreamToDevice  A PipedOutputStream to send bytes to the other device.
-     * @param dawgIdentifier A DawgIdentifier of the device we are connecting to
-     */
-    public void connect(final PipedInputStream inputStreamFromDevice, final PipedOutputStream outputStreamToDevice, final DawgIdentifier otherDawgIdentifier) {
-        this.ioManager.connect(otherDawgIdentifier.getUserContact(), inputStreamFromDevice, outputStreamToDevice);
-        this.storageManager.storeDawgIdentifier(otherDawgIdentifier);
-    }
-
-    /**
-     * Removes the passed PipedInputStream from the StreamIOManager's incoming connections.  This is equivalent
-     * to cutting the connection between the two devices.
-     *
-     * NOTE:  This method should solely be used by the Scuttlemutt NetworkSimulation.  To connect StreamIOManagers, please use the
-     * methods inside the ScuttlemuttNetworkSimulation.
-     *
-     * @param dawgIdentifier The device we're disconnecting from.
-     */
-    public void disconnect(final DawgIdentifier otherDawgIdentifier) {
-        this.ioManager.disconnect(otherDawgIdentifier.getUserContact());
-        this.storageManager.deleteDawgIdentifier(otherDawgIdentifier.getUniqueId());
-    }
 
 
 }
