@@ -32,13 +32,16 @@ public class MeshOutput implements Runnable {
     @Override
     public void run() {
         while (true) {
-            try {
-                Bark bark = this.queue.take(); // throws InterruptedException
-                BarkPacket barkPacket = new BarkPacket(List.of(bark));
-                ioManager.broadcast(barkPacket);
-            } catch (InterruptedException e) {
-                // interrupted while waiting on take()
-                e.printStackTrace();
+            // Don't broadcast something if there's no one connected to broadcast to
+            if(ioManager.numConnections() > 0){
+                try {
+                    Bark bark = this.queue.take(); // throws InterruptedException
+                    BarkPacket barkPacket = new BarkPacket(List.of(bark));
+                    ioManager.broadcast(barkPacket);
+                } catch (InterruptedException e) {
+                    // interrupted while waiting on take()
+                    e.printStackTrace();
+                }
             }
         }
     }
