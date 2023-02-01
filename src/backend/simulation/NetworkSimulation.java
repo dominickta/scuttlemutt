@@ -1,25 +1,23 @@
 package backend.simulation;
 
-import backend.iomanager.StreamIOManager;
-import org.apache.commons.lang3.tuple.Pair;
+import backend.iomanager.IOManagerException;
+import backend.iomanager.QueueIOManager;
+import types.BarkPacket;
 
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Sets up and stores StreamIOManager objects to simulate a network.
- *
- * TODO: At the moment, this class interconnects all objects at construction.  In the future, we should modify the code
- *   to allow us to easily make the network less dense.
+ * Sets up and stores QueueIOManager objects to simulate a network.
  */
 public class NetworkSimulation {
-    // class variables
-
-    // maps labels -> StreamIOManagers associated with the corresponding PipedOutputStream.
-    private final Map<String, StreamIOManager> streamIOManagerMap;
+    // Maps device ID to QueueIOManager
+    private final Map<String, QueueIOManager> queueIOManagerMap;
 
     /**
      * Creates a new NetworkSimulation where all devices are fully interconnected.
@@ -27,31 +25,47 @@ public class NetworkSimulation {
      * @param deviceLabels  The labels of the devices on the simulated network.
      */
     public NetworkSimulation(final List<String> deviceLabels) {
-        // setup the StreamIOManager for each device.
-        this.streamIOManagerMap = new HashMap<String, StreamIOManager>();
+        // setup the QueueIOManager for each device.
+        this.queueIOManagerMap = new HashMap<String, QueueIOManager>();
         for (final String deviceLabel : deviceLabels) {
-            // create a StreamIOManager.
-            final StreamIOManager ioManager = new StreamIOManager();
+            // create a QueueIOManager.
+            final QueueIOManager ioManager = new QueueIOManager();
 
-            // stash the ioManager in the streamIOManagerMap.
-            streamIOManagerMap.put(deviceLabel, ioManager);
+            // stash the ioManager in the QueueIOManager.
+            queueIOManagerMap.put(deviceLabel, ioManager);
         }
+    }
 
-        // connect the StreamIOManagers.
+
+    public void connectAll() {
+        List<String> deviceLabels = new ArrayList<>();
+        deviceLabels.addAll(this.queueIOManagerMap.keySet());
+        // connect the QueueIOManagers.
         for (int device1 = 0; device1 < deviceLabels.size(); device1++) {
-            for (int device2 = device1 + 1; device2 < deviceLabels.size(); device2++) {
-                this.connectDevices(deviceLabels.get(device1), deviceLabels.get(device2));
+            try {
+                String label1 = deviceLabels.get(device1);
+                Set<String> connections = this.queueIOManagerMap.get(label1).availableConnections();
+
+                for (int device2 = device1 + 1; device2 < deviceLabels.size(); device2++) {
+                    String label2 = deviceLabels.get(device2);
+
+                    if (!connections.contains(label2)) {
+                        this.connectDevices(label1, label2);
+                    }
+                }
+            } catch (IOManagerException e) {
+                throw new RuntimeException(e);
             }
         }
     }
 
     /**
-     * Obtains the StreamIOManager associated with the passed deviceLabel.
-     * @param deviceLabel  The label associated with the desired StreamIOManager.
-     * @return  The StreamIOManager associated with the passed label.
+     * Obtains the QueueIOManager associated with the passed deviceLabel.
+     * @param deviceLabel  The label associated with the desired QueueIOManager.
+     * @return  The QueueIOManager associated with the passed label.
      */
-    public StreamIOManager getStreamIOManager(final String deviceLabel) {
-        return this.streamIOManagerMap.get(deviceLabel);
+    public QueueIOManager getQueueIOManager(final String deviceLabel) {
+        return this.queueIOManagerMap.get(deviceLabel);
     }
 
     /**
@@ -65,13 +79,12 @@ public class NetworkSimulation {
             throw new UnsupportedOperationException("Cannot connect a device to itself!");
         }
 
-        // get the PipedInputStreams
-        final Pair<PipedInputStream, PipedOutputStream> d1toD2 = PipedStreamHelper.getPipedStreamPair();
-        final Pair<PipedInputStream, PipedOutputStream> d2toD1 = PipedStreamHelper.getPipedStreamPair();
+        // Build queues to connect devices
+        final BlockingQueue<BarkPacket> q1to2 = new LinkedBlockingQueue<BarkPacket>();
+        final BlockingQueue<BarkPacket> q2to1 = new LinkedBlockingQueue<BarkPacket>();
 
-        // remove the PipedInputStreams from the StreamIOManagers
-        streamIOManagerMap.get(device1).connect(device2, d2toD1.getLeft(), d1toD2.getRight());
-        streamIOManagerMap.get(device2).connect(device1, d1toD2.getLeft(), d2toD1.getRight());
+        queueIOManagerMap.get(device1).connect(device2, q1to2, q2to1);
+        queueIOManagerMap.get(device2).connect(device1, q2to1, q1to2);
     }
 
     /**
@@ -80,8 +93,7 @@ public class NetworkSimulation {
      * @param device2  The other device in the connection.
      */
     public void disconnectDevices(final String device1, final String device2) {
-        // remove the PipedInputStreams from the StreamIOManagers
-        streamIOManagerMap.get(device1).disconnect(device2);
-        streamIOManagerMap.get(device2).disconnect(device1);
+        queueIOManagerMap.get(device1).disconnect(device2);
+        queueIOManagerMap.get(device2).disconnect(device1);
     }
 }

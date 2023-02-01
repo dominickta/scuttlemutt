@@ -56,6 +56,20 @@ public class Bark {
         this.orderNum = orderNum;
     }
 
+    /**
+     * Constructs a copy of a Bark.
+     *
+     * @param bark The Bark to copy.
+     */
+    public Bark(Bark bark) {
+        this.uniqueId = bark.uniqueId;
+        this.fillerCount = bark.fillerCount;
+        this.contents = bark.contents;
+        this.sender = bark.sender;
+        this.receiver = bark.receiver;
+        this.orderNum = bark.orderNum;
+    }
+
     // public methods
 
     public String getContents() {

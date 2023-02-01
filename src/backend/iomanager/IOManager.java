@@ -1,5 +1,7 @@
 package backend.iomanager;
 
+import java.util.Set;
+
 import types.BarkPacket;
 
 /**
@@ -8,21 +10,22 @@ import types.BarkPacket;
 public interface IOManager {
     /**
      * Broadcasts the passed BarkPacket to all nearby devices which are members of the network.
-     * @param packet  The packet being broadcasted.
+     * @param receiverId The id of the receiver to send to.
+     * @param packet     The packet being broadcasted.
+     * @throws IOManagerException On any failure to send.
      */
-    void broadcast(final BarkPacket packet);
+    void send(final String receiverId, final BarkPacket packet) throws IOManagerException;
 
     /**
      * Waits for a BarkPacket to be received by the device, then returns it.
+     * Blocks until a packet is received, even if no connections are available.
      *
-     * @return a BarkPacket received by the device.
+     * @return A BarkPacket received by the device.
      */
-    BarkPacket receive();
+    BarkPacket receive() throws IOManagerException;
 
-    /*
-     * Returns how many connections a device has
-     * 
-     * @return a int of how many connections there are
+    /**
+     * @return The list of ids for available connections.
      */
-    int numConnections();
+    Set<String> availableConnections() throws IOManagerException;
 }

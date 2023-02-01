@@ -2,6 +2,7 @@ package types;
 
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,6 +18,18 @@ public class BarkPacket {
      */
     public BarkPacket(final List<Bark> packetBarks) {
         this.packetBarks = packetBarks;
+    }
+
+    /**
+     * Constructs a copy of another packet.
+     * @param barkPacket  The packet to copy.
+     */
+    public BarkPacket(final BarkPacket barkPacket) {
+        this.packetBarks = new ArrayList<>();
+
+        for (Bark bark : barkPacket.packetBarks) {
+            this.packetBarks.add(new Bark(bark));
+        }
     }
 
     /**

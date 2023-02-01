@@ -1,6 +1,6 @@
 package backend.simulation;
 
-import backend.iomanager.StreamIOManager;
+import backend.iomanager.QueueIOManager;
 import scuttlemutt.Scuttlemutt;
 
 import org.apache.commons.lang3.RandomStringUtils;

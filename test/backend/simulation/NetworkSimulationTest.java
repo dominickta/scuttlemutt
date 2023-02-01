@@ -1,6 +1,7 @@
 package backend.simulation;
 
-import backend.iomanager.StreamIOManager;
+import backend.iomanager.IOManagerException;
+import backend.iomanager.QueueIOManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,9 +10,9 @@ import types.Bark;
 import types.BarkPacket;
 import types.TestUtils;
 
-import java.io.PipedInputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,58 +41,74 @@ public class NetworkSimulationTest {
 
         // initialize the simulation.
         simulation = new NetworkSimulation(deviceLabels);
+
+        simulation.connectAll();
     }
 
     @Test
-    public void testGetStreamIOManager_sendMessage_verifyAllDevicesReceivedMessage() {
-        // get the sender StreamIOManager.
-        final StreamIOManager sender = simulation.getStreamIOManager(deviceLabels.get(0));
+    public void testGetQueueIOManager_sendMessage_verifyAllDevicesReceivedMessage() {
+        try {
+            // get the sender QueueIOManager.
+            final QueueIOManager sender = simulation.getQueueIOManager(deviceLabels.get(0));
+    
+            for (int i = 1; i < deviceLabels.size(); i++) {
+                // send the message.
+                sender.send(deviceLabels.get(i), barkPacket);
+            }
+    
+            // verify that all other QueueIOManagers successfully received the message.
+            for (int i = 1; i < deviceLabels.size(); i++) {
+                final QueueIOManager receiver = simulation.getQueueIOManager(deviceLabels.get(i));
+                assertEquals(barkPacket, receiver.receive());
+            }
 
-        // send the message.
-        sender.broadcast(barkPacket);
-
-        // verify that all other StreamIOManagers successfully received the message.
-        for (int i = 1; i < deviceLabels.size(); i++) {
-            final StreamIOManager receiver = simulation.getStreamIOManager(deviceLabels.get(i));
-            assertEquals(barkPacket, receiver.receive());
+        } catch (IOManagerException e) {
+            System.err.println("Unexpected error during test -- " + e);
+            throw new RuntimeException(e);
         }
     }
 
     @Test
     public void testDisconnect_verifyDisconnect_thenReconnect_verifyReconnect() {
-        // get the StreamIOManagers for the devices.
-        final String device1Label = deviceLabels.get(0);
-        final String device2Label = deviceLabels.get(1);
-        final StreamIOManager device1 = simulation.getStreamIOManager(device1Label);
-        final StreamIOManager device2 = simulation.getStreamIOManager(device2Label);
+        try {
+            // get the QueueIOManagers for the devices.
+            final String device1Label = deviceLabels.get(0);
+            final String device2Label = deviceLabels.get(1);
+            final QueueIOManager device1 = simulation.getQueueIOManager(device1Label);
+            final QueueIOManager device2 = simulation.getQueueIOManager(device2Label);
+    
+            // disconnect device1 and device2.
+            simulation.disconnectDevices(device1Label, device2Label);
+    
+            // peek inside device1 and device2 and verify that they are disconnected
+            // (the number of input streams is < the number of devices on the network).
+            Set<String> connections1 = Whitebox.getInternalState(device1, "connections");
+            Set<String> connections2 = Whitebox.getInternalState(device2, "connections");
+            assertEquals(NUM_DEVICES - 2, connections1.size());  // there should be <NUM_DEVICES - self - disconnected devices> connections.
+            assertEquals(NUM_DEVICES - 2, connections2.size());
+    
+            // reconnect device1 and device2.
+            simulation.connectDevices(device1Label, device2Label);
+    
+            // peek inside device1 and device2 and verify that they are disconnected
+            // (the number of input streams is < the number of devices on the network).
+            connections1 = Whitebox.getInternalState(device1, "connections");
+            connections2 = Whitebox.getInternalState(device2, "connections");
+            assertEquals(NUM_DEVICES - 1, connections1.size());  // there should be <NUM_DEVICES - self> connections.
+            assertEquals(NUM_DEVICES - 1, connections2.size());
+    
+            // assert that we can send messages between device1 and device2
+            device1.send(device2Label, barkPacket);
+            device2.send(device1Label, barkPacket);
+            final BarkPacket receivedPacket1 = device1.receive();
+            final BarkPacket receivedPacket2 = device2.receive();
+            assertEquals(this.barkPacket, receivedPacket1);
+            assertEquals(this.barkPacket, receivedPacket2);
 
-        // disconnect device1 and device2.
-        simulation.disconnectDevices(device1Label, device2Label);
-
-        // peek inside device1 and device2 and verify that they are disconnected
-        // (the number of input streams is < the number of devices on the network).
-        List<PipedInputStream> inputStreams1 = Whitebox.getInternalState(device1, "inputStreams");
-        List<PipedInputStream> inputStreams2 = Whitebox.getInternalState(device2, "inputStreams");
-        assertEquals(NUM_DEVICES - 2, inputStreams1.size());  // there should be <NUM_DEVICES - self - disconnected devices> connections.
-        assertEquals(NUM_DEVICES - 2, inputStreams2.size());
-
-        // reconnect device1 and device2.
-        simulation.connectDevices(device1Label, device2Label);
-
-        // peek inside device1 and device2 and verify that they are disconnected
-        // (the number of input streams is < the number of devices on the network).
-        inputStreams1 = Whitebox.getInternalState(device1, "inputStreams");
-        inputStreams2 = Whitebox.getInternalState(device2, "inputStreams");
-        assertEquals(NUM_DEVICES - 1, inputStreams1.size());  // there should be <NUM_DEVICES - self> connections.
-        assertEquals(NUM_DEVICES - 1, inputStreams2.size());
-
-        // assert that we can send messages between device1 and device2
-        device1.broadcast(barkPacket);
-        device2.broadcast(barkPacket);
-        final BarkPacket receivedPacket1 = device1.receive();
-        final BarkPacket receivedPacket2 = device2.receive();
-        assertEquals(this.barkPacket, receivedPacket1);
-        assertEquals(this.barkPacket, receivedPacket2);
+        } catch (IOManagerException e) {
+            System.err.println("Unexpected error during test -- " + e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
