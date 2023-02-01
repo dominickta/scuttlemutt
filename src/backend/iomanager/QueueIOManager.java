@@ -6,9 +6,9 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * This class represents an InputStream + OutputStream-based I/O manager.
+ * This class represents a Queue based I/O manager.
  *
- * This manager can be used to simulate a network via feeding the streams to different devices.
+ * This manager can be used to simulate a network via feeding the queues to different devices.
  */
 public class QueueIOManager implements IOManager {
     // Set of all available connections
@@ -58,7 +58,6 @@ public class QueueIOManager implements IOManager {
             }
         }
     }
-
 
     @Override
     public Set<String> availableConnections() throws IOManagerException {

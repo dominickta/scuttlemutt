@@ -70,7 +70,4 @@ public class Scuttlemutt {
         return new DawgIdentifier(userContact, uuid, publickey);
         
     }
-
-
-
 }
