@@ -1,7 +1,5 @@
-package scuttlemutt;
+package backend.scuttlemutt;
 
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.*;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -11,12 +9,10 @@ import backend.iomanager.StreamIOManager;
 import backend.meshdaemon.MeshDaemon;
 import storagemanager.MapStorageManager;
 import storagemanager.StorageManager;
-import types.Bark;
-import types.Conversation;
 import types.DawgIdentifier;
 
 /*
- * This class represents 
+ * This class contains and organizes the content necessary to run the local device's node on the Scuttlemutt network.
  */
 public class Scuttlemutt {
 
