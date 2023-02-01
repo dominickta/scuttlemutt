@@ -42,9 +42,8 @@ public class QueueIOManager implements IOManager {
             Collections.shuffle(inputs);
 
             for (BlockingQueue<BarkPacket> input : inputs) {
-                // if there is available input, turn it into a BarkPacket and return it.
-                // TODO: read exactly the number of bytes needed, not all available bytes.
                 if (input.size() > 0) {
+                    // Return on the first message received.
                     return input.remove();
                 }
             }
