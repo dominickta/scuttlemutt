@@ -109,7 +109,7 @@ public class StreamIOManager implements IOManager {
         @Override
         public BarkPacket call() throws IOException {
             // Check that there is at least one connection
-            if(inputStreams.size() == 0){
+            while(inputStreams.size() == 0){}
                  // to ensure that we don't over poll the earlier input streams in the array, we start from a random index.
                 int i = new Random().nextInt(inputStreams.size() - 1);
 
@@ -129,9 +129,6 @@ public class StreamIOManager implements IOManager {
                     // reset i to zero, allowing future loops to start at the beginning of the input stream array.
                     i = 0;
                 }
-            }else{
-                return null;
-            }
         }
     }
 }
