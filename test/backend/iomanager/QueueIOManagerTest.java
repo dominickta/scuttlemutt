@@ -227,7 +227,7 @@ public class QueueIOManagerTest {
                 }
             }
 
-            // Check that all messages exists.
+            // Check that all messages exist.
             for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
                 for (int bi = 0; bi < this.NUM_PACKETS_FOR_MULTI; bi++) {
                     assertTrue(barkPackets.remove(m.receive()));
