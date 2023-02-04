@@ -5,9 +5,7 @@ import java.util.*;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import backend.iomanager.IOManager;
-import backend.iomanager.StreamIOManager;
 import backend.meshdaemon.MeshDaemon;
-import storagemanager.MapStorageManager;
 import storagemanager.StorageManager;
 import types.DawgIdentifier;
 
@@ -24,25 +22,6 @@ public class Scuttlemutt {
     private final StorageManager storageManager;
     // Daemon controlling recieving and broadcasting of messages
     private final MeshDaemon meshDaemon;
-
-    /*
-     * Constructs a new Scuttlemutt object
-     */
-    public Scuttlemutt(String userContact){
-        this.dawgIdentifier = generateDawgIdentifier(userContact);
-        this.ioManager = new StreamIOManager();
-        this.storageManager = new MapStorageManager();
-        this.meshDaemon = new MeshDaemon(ioManager, storageManager, dawgIdentifier);
-    }
-
-
-    public Scuttlemutt(String userContact, IOManager inputIoManager){
-        this.dawgIdentifier = generateDawgIdentifier(userContact);
-        this.ioManager = inputIoManager;
-        this.storageManager = new MapStorageManager();
-        this.meshDaemon = new MeshDaemon(this.ioManager, storageManager, dawgIdentifier);
-    }
-
 
     public Scuttlemutt(String userContact, IOManager inputIoManager, DawgIdentifier dawgIdentifier, StorageManager storageManager){
         this.dawgIdentifier = dawgIdentifier;
@@ -78,13 +57,6 @@ public class Scuttlemutt {
         return this.storageManager;
     }
 
-    /*
-     * 
-     * @return an int of the number of connections the device has
-     */
-    public int numConnections(){
-        return this.ioManager.numConnections();
-    }
     /**
      * Generates a DawgIdentifier for user on creation
      * @param userContact User provided identification string
@@ -98,7 +70,4 @@ public class Scuttlemutt {
         return new DawgIdentifier(userContact, uuid, publickey);
         
     }
-
-
-
 }

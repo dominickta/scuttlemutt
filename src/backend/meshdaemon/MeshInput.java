@@ -1,7 +1,7 @@
 package backend.meshdaemon;
 
 import backend.iomanager.IOManager;
-import backend.iomanager.StreamIOManager;
+import backend.iomanager.IOManagerException;
 import storagemanager.StorageManager;
 import types.Bark;
 import types.BarkPacket;
@@ -39,8 +39,7 @@ public class MeshInput implements Runnable {
     @Override
     public void run() {
         while (true) {
-            // Check if ioManager is connected so .call function in Iomanager doesn't fail
-            if(ioManager.numConnections() > 1){
+            try {
                 BarkPacket barkPacket = ioManager.receive();
                 List<Bark> barkList = barkPacket.getPacketBarks();
                 for (Bark bark : barkList) {
@@ -50,6 +49,8 @@ public class MeshInput implements Runnable {
                         this.queue.add(bark); // put it on output buffer
                     }
                 }
+            } catch (IOManagerException e) {
+                System.err.println("Failed to receive message: " + e);
             }
         }
     }
