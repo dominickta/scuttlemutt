@@ -3,11 +3,12 @@ package backend.meshdaemon;
 import backend.iomanager.IOManager;
 import storagemanager.StorageManager;
 import types.Bark;
+import types.Conversation;
 import types.DawgIdentifier;
 
+import java.util.Collections;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 
 /**
  * Controls input/output logic and an internal Bark queue.
@@ -18,24 +19,37 @@ public class MeshDaemon {
     private final MeshInput input;
     private final MeshOutput output;
     private final DawgIdentifier currentUser;
+    private final StorageManager storageManager;
+    private final Thread inputThread, outputThread;
 
     /**
      * Constructs a new MeshDaemon.
      * 
      * @param ioManager The underlying IOManager.
-     * @param storage   The place to store messages meant for us.
+     * @param storageManager   The place to store messages + conversations meant for us.
      */
-    public MeshDaemon(final IOManager ioManager, final StorageManager storage, final DawgIdentifier currentUser) {
+    public MeshDaemon(final IOManager ioManager, final StorageManager storageManager, final DawgIdentifier currentUser) {
         this.currentUser = currentUser;
         this.queue = new LinkedBlockingQueue<>();
-        this.input = new MeshInput(ioManager, queue, storage, currentUser);
+        this.input = new MeshInput(ioManager, queue, storageManager, currentUser);
         this.output = new MeshOutput(ioManager, queue);
+        this.storageManager = storageManager;
 
-        // Spin out two threads, one to block on the IOMonitor's recieve() and
+        // Spin out two threads, one to block on the IOManager's receive() and
         // the other to spin on the queue, and passing them to the IOMonitor's
         // broadcast().
-        new Thread(input).start();
-        new Thread(output).start();
+        this.inputThread = new Thread(input);
+        this.outputThread = new Thread(output);
+        this.inputThread.start();
+        this.outputThread.start();
+    }
+
+    /**
+     * Shuts down the threads which run the MeshDaemon.
+     */
+    public void shutdown() {
+        this.inputThread.interrupt();
+        this.outputThread.interrupt();
     }
 
     /**
@@ -47,7 +61,24 @@ public class MeshDaemon {
      * @returns UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
-        Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId);
+        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId);
+
+        // update the Conversation object stored in the StorageManager to include the Bark.
+        Conversation c = this.storageManager.lookupConversation(Collections.singletonList(recipient.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
+        if (c == null) {
+            // if we've never initiated a conversation with the sender before, create + store a new Conversation.
+            c = new Conversation(Collections.singletonList(recipient),
+                    Collections.singletonList(barkMessage.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
+            this.storageManager.storeConversation(c);
+        } else {
+            // update existing obj
+            c.storeBarkUUID(barkMessage.getUniqueId());
+            this.storageManager.storeConversation(c);
+        }
+
+        // store the Bark in the database.
+        this.storageManager.storeBark(barkMessage);
+
         queue.add(barkMessage);
         return barkMessage.getUniqueId();
     }

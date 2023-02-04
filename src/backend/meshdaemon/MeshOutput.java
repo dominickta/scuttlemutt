@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Controlls outbound messages from the mesh daemon.
+ * Controls outbound messages from the mesh daemon.
  * 
  * This class is runnable and should be run in a separate thread since it might
  * block (it will probably block).
@@ -35,7 +35,7 @@ public class MeshOutput implements Runnable {
 
     @Override
     public void run() {
-        // TODO list: 
+        // TODO list:
         // - Create BarkPackets tailored for each receiver.
         // - Keep track of who successfully got a packet.
         // - Verify valid receivers from the DatabaseManager.

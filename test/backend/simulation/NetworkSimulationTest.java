@@ -1,5 +1,6 @@
 package backend.simulation;
 
+import backend.scuttlemutt.Scuttlemutt;
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
 import types.Bark;
 import types.BarkPacket;
+import types.DawgIdentifier;
 import types.TestUtils;
 
 import java.util.Collections;
@@ -50,12 +52,12 @@ public class NetworkSimulationTest {
         try {
             // get the sender QueueIOManager.
             final QueueIOManager sender = simulation.getQueueIOManager(deviceLabels.get(0));
-    
+
             for (int i = 1; i < deviceLabels.size(); i++) {
                 // send the message.
                 sender.send(deviceLabels.get(i), barkPacket);
             }
-    
+
             // verify that all other QueueIOManagers successfully received the message.
             for (int i = 1; i < deviceLabels.size(); i++) {
                 final QueueIOManager receiver = simulation.getQueueIOManager(deviceLabels.get(i));
@@ -69,6 +71,32 @@ public class NetworkSimulationTest {
     }
 
     @Test
+    public void testScuttlemutt_sendMessage_verifyDestinationScuttlemuttObjectRecievedMessage() {
+        // get the sender Scuttlemutt object.
+        final Scuttlemutt sender = simulation.getScuttlemutt(deviceLabels.get(0));
+
+        // create a message to send to a specific party.
+        // NOTE:  The message should be small enough to fit in a single Bark object.
+        final String msg = RandomStringUtils.randomAlphanumeric(15);
+        final String destinationLabel = deviceLabels.get(1);
+        final Scuttlemutt destinationDevice = simulation.getScuttlemutt(destinationLabel);
+        final DawgIdentifier dstDawgId = destinationDevice.getDawgIdentifier();
+
+        // send the message.
+        sender.sendMessage(msg, dstDawgId);
+
+        // verify that the intended destination device successfully received the message.
+        try {
+            final QueueIOManager destinationIOManager = simulation.getQueueIOManager(destinationLabel);
+            final Bark receivedMsg = destinationIOManager.receive().getPacketBarks().get(0);
+            assertEquals(msg, receivedMsg.getContents());
+        } catch (IOManagerException e) {
+            // this should never happen, print stack trace if it does.
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void testDisconnect_verifyDisconnect_thenReconnect_verifyReconnect() {
         try {
             // get the QueueIOManagers for the devices.
@@ -76,27 +104,27 @@ public class NetworkSimulationTest {
             final String device2Label = deviceLabels.get(1);
             final QueueIOManager device1 = simulation.getQueueIOManager(device1Label);
             final QueueIOManager device2 = simulation.getQueueIOManager(device2Label);
-    
+
             // disconnect device1 and device2.
             simulation.disconnectDevices(device1Label, device2Label);
-    
+
             // peek inside device1 and device2 and verify that they are disconnected
             // (the number of input streams is < the number of devices on the network).
             Set<String> connections1 = Whitebox.getInternalState(device1, "connections");
             Set<String> connections2 = Whitebox.getInternalState(device2, "connections");
             assertEquals(NUM_DEVICES - 2, connections1.size());  // there should be <NUM_DEVICES - self - disconnected devices> connections.
             assertEquals(NUM_DEVICES - 2, connections2.size());
-    
+
             // reconnect device1 and device2.
             simulation.connectDevices(device1Label, device2Label);
-    
+
             // peek inside device1 and device2 and verify that they are disconnected
             // (the number of input streams is < the number of devices on the network).
             connections1 = Whitebox.getInternalState(device1, "connections");
             connections2 = Whitebox.getInternalState(device2, "connections");
             assertEquals(NUM_DEVICES - 1, connections1.size());  // there should be <NUM_DEVICES - self> connections.
             assertEquals(NUM_DEVICES - 1, connections2.size());
-    
+
             // assert that we can send messages between device1 and device2
             device1.send(device2Label, barkPacket);
             device2.send(device1Label, barkPacket);
@@ -115,5 +143,12 @@ public class NetworkSimulationTest {
     public void testConnect_connectDeviceToItself_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class,
                 () -> simulation.connectDevices(deviceLabels.get(0), deviceLabels.get(0)));
+    }
+
+    @Test
+    public void testGetStreamIOManager_invalidManager_throwsRuntimeException() {
+        final String invalidDevice = "ThisIsAnInvalidDevice";
+        assertThrows(IOManagerException.class,
+                () -> simulation.getQueueIOManager(invalidDevice));
     }
 }

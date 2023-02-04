@@ -1,6 +1,7 @@
 package storagemanager;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Implements the StorageManager interface using a Map-based backend.
@@ -18,7 +20,7 @@ import java.util.UUID;
  * adding extra constructors/classes/methods/etc.
  */
 public class MapStorageManager implements StorageManager {
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
 
     // maps
     private final Map<UUID, String> barkMap;
@@ -98,5 +100,13 @@ public class MapStorageManager implements StorageManager {
             return null;
         }
         return GSON.fromJson(serializedObject, Conversation.class);
+    }
+
+    @Override
+    public List<Conversation> listAllConversations() {
+        return this.conversationMap.values()
+                .stream()
+                .map(s -> GSON.fromJson(s, Conversation.class))
+                .collect(Collectors.toList());
     }
 }

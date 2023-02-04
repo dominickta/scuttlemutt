@@ -1,5 +1,7 @@
 package backend.iomanager;
 
+import backend.iomanager.IOManager;
+import backend.iomanager.IOManagerException;
 import types.BarkPacket;
 
 import java.util.*;

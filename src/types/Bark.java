@@ -1,6 +1,7 @@
 package types;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.UUID;
@@ -9,7 +10,7 @@ import java.util.UUID;
  * Represents a "bark" (message) sent by the user.
  */
 public class Bark {
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
     // constants
 
     // stores the maximum number of characters allowed in a Bark.

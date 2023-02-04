@@ -77,4 +77,34 @@ public class ConversationTest {
         assertNotEquals(c1, c2);
     }
 
+    @Test
+    public void testBarkListContructor_storesBarkUUIDs() {
+        // construct a List of Barks.
+        final Supplier<Bark> barkSupplier = TestUtils::generateRandomizedBark;
+        final List<UUID> barkUUIDs = Stream.generate(barkSupplier)
+                .map(Bark::getUniqueId).limit(10)
+                .toList();
+
+        // construct the Conversation object.
+        final Conversation conversationWithBarks = new Conversation(userList1, barkUUIDs);
+
+        // verify that the Bark UUIDs were successfully stored in the Conversation.
+        assertEquals(barkUUIDs, conversationWithBarks.getBarkUUIDList());
+    }
+
+    @Test
+    public void testStoreBark_successfullyStoresBark() {
+        // create Conversation object with empty Bark UUID List.
+        final Conversation c = new Conversation((userList1));
+
+        // create a new Bark.
+        final Bark b = TestUtils.generateRandomizedBark();
+
+        // store a new Bark in the Conversation object.
+        c.storeBarkUUID(b.getUniqueId());
+
+        // assert that the Bark was successfully stored.
+        assertTrue(c.getBarkUUIDList().contains(b.getUniqueId()));
+    }
+
 }
