@@ -48,12 +48,15 @@ import kotlinx.coroutines.launch
  */
 class NavActivity : AppCompatActivity() {
 
-    private val conversationViewModel: ConversationViewModel by viewModels()
     private val viewModel: MainViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+//        val repo: ScuttlemuttRepository by lazy {
+//            RoomScuttlemuttRepository(ScuttlemuttDatabase.getDatabase(this).contactDao())
+//        }
 
         // Turn off the decor fitting system windows, which allows us to handle insets,
         // including IME animations
@@ -100,8 +103,8 @@ class NavActivity : AppCompatActivity() {
                             drawerState = drawerState,
                             onChatClicked = {
                                 viewModel.setChannel(it)
-//                                conversationViewModel.setChannel(it)
                                 val bundle = bundleOf("channel" to it)
+                                Log.d("NavActivity", "Navigating to nav_home")
                                 findNavController().navigate(R.id.nav_home, bundle)
                                 scope.launch {
                                     drawerState.close()
@@ -109,6 +112,7 @@ class NavActivity : AppCompatActivity() {
                             },
                             onProfileClicked = {
                                 val bundle = bundleOf("userId" to it)
+                                Log.d("NavActivity", "Navigating to nav_profile")
                                 findNavController().navigate(R.id.nav_profile, bundle)
                                 scope.launch {
                                     drawerState.close()

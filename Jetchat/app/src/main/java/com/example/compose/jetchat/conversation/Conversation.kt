@@ -18,6 +18,7 @@
 
 package com.example.compose.jetchat.conversation
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
@@ -82,8 +83,11 @@ import androidx.compose.ui.unit.dp
 import com.example.compose.jetchat.FunctionalityNotAvailablePopup
 import com.example.compose.jetchat.R
 import com.example.compose.jetchat.components.JetchatAppBar
+import com.example.compose.jetchat.data.Bark
+import com.example.compose.jetchat.data.ScuttlemuttDatabase
 import com.example.compose.jetchat.data.exampleUiStateDroidConNYC
 import com.example.compose.jetchat.theme.JetchatTheme
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
@@ -97,6 +101,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationContent(
+    conversationViewModel: ConversationViewModel,
     uiState: ConversationUiState,
     navigateToProfile: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -124,10 +129,13 @@ fun ConversationContent(
                     scrollState = scrollState
                 )
                 UserInput(
-                    onMessageSent = { content ->
-                        uiState.addMessage(
-                            Message(authorMe, content, timeNow)
-                        )
+                    onMessageSent = fun(content: String) {
+                        Log.d("Conversation", "Message sent: $content")
+                        GlobalScope.launch {
+                            Log.d("Conversation", "in global scope, calling conversationViewModel.addMessage()")
+                            conversationViewModel.addMessage(content)
+                        }
+                        uiState.addMessage(Message(authorMe, content, timeNow))
                     },
                     resetScroll = {
                         scope.launch {
@@ -487,16 +495,17 @@ fun ClickableMessage(
     )
 }
 
-@Preview
-@Composable
-fun ConversationPreview() {
-    JetchatTheme {
-        ConversationContent(
-            uiState = exampleUiStateDroidConNYC,
-            navigateToProfile = { }
-        )
-    }
-}
+//@Preview
+//@Composable
+//fun ConversationPreview() {
+//    JetchatTheme {
+//        ConversationContent(
+//            conversationViewModel = ConversationViewModelFactory()
+//            uiState = exampleUiStateDroidConNYC,
+//            navigateToProfile = { }
+//        )
+//    }
+//}
 
 @Preview
 @Composable

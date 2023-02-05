@@ -17,6 +17,7 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("com.google.devtools.ksp") version "1.8.0-1.0.9"
 }
 
 android {
@@ -79,6 +80,9 @@ android {
 }
 
 dependencies {
+    implementation("androidx.room:room-common:2.4.2")
+    implementation("androidx.room:room-ktx:2.4.2")
+    ksp(libs.androidx.room.compiler)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)

@@ -39,22 +39,25 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import com.example.compose.jetchat.MainViewModel
 import com.example.compose.jetchat.R
-import com.example.compose.jetchat.data.exampleUiStateComposers
-import com.example.compose.jetchat.data.exampleUiStateDroidConNYC
+import com.example.compose.jetchat.data.ScuttlemuttDatabase
 import com.example.compose.jetchat.theme.JetchatTheme
 
 class ConversationFragment : Fragment() {
 
-    private val conversationViewModel: ConversationViewModel by viewModels()
     private val activityViewModel: MainViewModel by activityViewModels()
+
+    private lateinit var database: ScuttlemuttDatabase
+    private lateinit var conversationViewModel: ConversationViewModel
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Consider using safe args plugin
-        val channel = arguments?.getString("channel")
+        database = ScuttlemuttDatabase.getDatabase(context)
+        conversationViewModel = ViewModelProvider(this, ConversationViewModelFactory(database)).get(ConversationViewModel::class.java)
+        val channel = arguments?.getString("channel") // Consider using safe args plugin
         conversationViewModel.setChannel(channel)
     }
 
@@ -79,6 +82,7 @@ class ConversationFragment : Fragment() {
             ) {
                 JetchatTheme {
                     ConversationContent(
+                        conversationViewModel = conversationViewModel,
                         uiState = currUiState!!,
                         navigateToProfile = { user ->
                             // Click callback
