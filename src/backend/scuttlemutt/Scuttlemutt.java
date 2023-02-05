@@ -3,12 +3,10 @@ package backend.scuttlemutt;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import backend.iomanager.QueueIOManager;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import backend.iomanager.IOManager;
 import backend.meshdaemon.MeshDaemon;
-import storagemanager.MapStorageManager;
 import storagemanager.StorageManager;
 import types.Conversation;
 import types.DawgIdentifier;
