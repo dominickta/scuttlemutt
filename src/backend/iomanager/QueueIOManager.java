@@ -1,7 +1,5 @@
 package backend.iomanager;
 
-import backend.iomanager.IOManager;
-import backend.iomanager.IOManagerException;
 import types.BarkPacket;
 
 import java.util.*;
@@ -66,15 +64,15 @@ public class QueueIOManager implements IOManager {
     }
 
     /**
-     * Stores the passed PipedInputStream in the StreamIOManager's list of incoming connections.  This is equivalent
+     * Stores the passed BlockingQueues in the QueueIOManager's connection Lists.  This is equivalent
      * to creating the connection between the two devices.
      *
      * NOTE:  This method should solely be used by the NetworkSimulation.  To connect StreamIOManagers, please use the
      * methods inside the NetworkSimulation.
      *
      * @param deviceId  The other device (which we are setting up the connection with).
-     * @param inputStreamFromDevice  A PipedInputStream feeding bytes from the other device.
-     * @param outputStreamToDevice  A PipedOutputStream to send bytes to the other device.
+     * @param inputQueue  A BlockingQueue feeding bytes from the other device.
+     * @param outputQueue  A BlockingQueue to send bytes to the other device.
      */
     public void connect(final String deviceId, final BlockingQueue<BarkPacket> inputQueue, final BlockingQueue<BarkPacket> outputQueue) {
         this.connections.add(deviceId);
@@ -83,7 +81,7 @@ public class QueueIOManager implements IOManager {
     }
 
     /**
-     * Removes the passed PipedInputStream from the StreamIOManager's incoming connections.  This is equivalent
+     * Removes all connections with the specified device.  This is equivalent
      * to cutting the connection between the two devices.
      *
      * NOTE:  This method should solely be used by the NetworkSimulation.  To disconnect StreamIOManagers, please use the

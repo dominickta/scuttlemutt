@@ -3,13 +3,12 @@ package backend.simulation;
 import backend.scuttlemutt.Scuttlemutt;
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
+import org.apache.commons.lang3.RandomStringUtils;
+import storagemanager.MapStorageManager;
 import types.BarkPacket;
+import types.DawgIdentifier;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -39,7 +38,9 @@ public class NetworkSimulation {
             queueIOManagerMap.put(deviceLabel, ioManager);
 
             // create a Scuttlemutt object which references the above QueueIOManagers
-            final Scuttlemutt scuttlemutt = new Scuttlemutt(deviceLabel, ioManager);
+            // TODO:  Replace with crypto functionality in the future.
+            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID(), RandomStringUtils.randomAlphabetic(15));
+            final Scuttlemutt scuttlemutt = new Scuttlemutt(ioManager, dawgId, new MapStorageManager());
 
             // stash the ioManager in the scuttlemuttMap.
             scuttlemuttMap.put(deviceLabel, scuttlemutt);

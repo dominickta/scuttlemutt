@@ -30,23 +30,7 @@ public class Scuttlemutt {
     /*
      * Constructs a new Scuttlemutt object
      */
-    public Scuttlemutt(String userContact){
-        this.dawgIdentifier = generateDawgIdentifier(userContact);
-        this.ioManager = new QueueIOManager();
-        this.storageManager = new MapStorageManager();
-        this.meshDaemon = new MeshDaemon(ioManager, storageManager, dawgIdentifier);
-    }
-
-
-    public Scuttlemutt(String userContact, IOManager inputIoManager){
-        this.dawgIdentifier = generateDawgIdentifier(userContact);
-        this.ioManager = inputIoManager;
-        this.storageManager = new MapStorageManager();
-        this.meshDaemon = new MeshDaemon(this.ioManager, storageManager, dawgIdentifier);
-    }
-
-
-    public Scuttlemutt(String userContact, IOManager inputIoManager, DawgIdentifier dawgIdentifier, StorageManager storageManager){
+    public Scuttlemutt(IOManager inputIoManager, DawgIdentifier dawgIdentifier, StorageManager storageManager){
         this.dawgIdentifier = dawgIdentifier;
         this.ioManager = inputIoManager;
         this.storageManager = storageManager;
@@ -153,7 +137,4 @@ public class Scuttlemutt {
         return new DawgIdentifier(userContact, uuid, publickey);
         
     }
-
-
-
 }
