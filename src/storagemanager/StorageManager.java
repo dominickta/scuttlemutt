@@ -31,4 +31,7 @@ public interface StorageManager {
     Bark deleteBark(final UUID barkUuid);
     DawgIdentifier deleteDawgIdentifier(final UUID dawgIdentifierUuid);
     Conversation deleteConversation(final List<UUID> userUuidList);
+
+    // list*() methods
+    List<Conversation> listAllConversations();
 }

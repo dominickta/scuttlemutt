@@ -66,4 +66,14 @@ public class MapStorageManagerTest {
         // verify that the object was deleted.
         assertNull(this.mapStorageManager.lookupConversation(c.getUserUUIDList()));
     }
+
+    @Test
+    public void testListConversations_allConversationsAreListed() {
+        // create the object in the storage manager.
+        this.mapStorageManager.storeConversation(c);
+
+        // lookup the object in the storage manager.
+        final Conversation obtainedConversation = this.mapStorageManager.listAllConversations().get(0);
+        assertEquals(c, obtainedConversation);
+    }
 }

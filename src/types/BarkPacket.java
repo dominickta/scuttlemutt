@@ -1,6 +1,7 @@
 package types;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
  * This class represents the packets sent by the IOManager.
  */
 public class BarkPacket {
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
     public final List<Bark> packetBarks;
 
     /**

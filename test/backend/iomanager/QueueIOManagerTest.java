@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;;
 
 /**
  * Runs tests for the QueueIOManager.
- * 
+ *
  * Tests are a combination of single- and mutli- manager, connection, and packet.
  */
 public class QueueIOManagerTest {
@@ -97,10 +97,10 @@ public class QueueIOManagerTest {
             for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
                 final String connectionLabel = "Connection" + i + "-" + RandomStringUtils.randomAlphanumeric(15);
                 connectionLabels.add(connectionLabel);
-    
+
                 BlockingQueue<BarkPacket> inputQueue = new LinkedBlockingQueue<>();
                 BlockingQueue<BarkPacket> outputQueue = new LinkedBlockingQueue<>();
-    
+
                 outputQueues.add(outputQueue);
                 m.connect(connectionLabel, inputQueue, outputQueue);
             }
@@ -209,10 +209,10 @@ public class QueueIOManagerTest {
             for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
                 final String connectionLabel = "Connection" + i + "-" + RandomStringUtils.randomAlphanumeric(15);
                 connectionLabels.add(connectionLabel);
-    
+
                 BlockingQueue<BarkPacket> inputQueue = new LinkedBlockingQueue<>();
                 BlockingQueue<BarkPacket> outputQueue = new LinkedBlockingQueue<>();
-    
+
                 inputQueues.add(inputQueue);
                 m.connect(connectionLabel, inputQueue, outputQueue);
             }
