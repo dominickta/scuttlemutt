@@ -26,11 +26,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import com.example.compose.jetchat.MainViewModel
+import com.example.compose.jetchat.conversation.ConversationViewModel
 import com.example.compose.jetchat.theme.JetchatTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JetchatDrawer(
+    viewModel: MainViewModel,
     activeChannel: String,
     drawerState: DrawerState = rememberDrawerState(initialValue = Closed),
     onProfileClicked: (String) -> Unit,
@@ -43,6 +45,7 @@ fun JetchatDrawer(
             drawerContent = {
                 ModalDrawerSheet {
                     JetchatDrawerContent(
+                        viewModel = viewModel,
                         activeChannel = activeChannel!!,
                         onProfileClicked = onProfileClicked,
                         onChatClicked = onChatClicked

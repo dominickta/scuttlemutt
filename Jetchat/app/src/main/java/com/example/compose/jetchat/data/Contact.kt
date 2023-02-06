@@ -5,10 +5,11 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Entity datga class representing a Contact database table
+ * Entity data class representing a Contact database table
  *
  * Each instance of this Entity represents a row in the Contact database table
  *
+ * Helps map keys to nicknames
  */
 
 @Entity (tableName = "contacts", primaryKeys = ["publicKey", "nickname"])

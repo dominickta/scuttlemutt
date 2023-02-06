@@ -33,14 +33,19 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.core.os.bundleOf
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.compose.jetchat.components.JetchatDrawer
 import com.example.compose.jetchat.conversation.BackPressHandler
 import com.example.compose.jetchat.conversation.ConversationViewModel
+import com.example.compose.jetchat.conversation.ConversationViewModelFactory
 import com.example.compose.jetchat.conversation.LocalBackPressedDispatcher
+import com.example.compose.jetchat.data.Contact
+import com.example.compose.jetchat.data.ScuttlemuttDatabase
 import com.example.compose.jetchat.databinding.ContentMainBinding
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
@@ -48,14 +53,17 @@ import kotlinx.coroutines.launch
  */
 class NavActivity : AppCompatActivity() {
 
-    private val viewModel: MainViewModel by viewModels()
+    private lateinit var viewModel: MainViewModel
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-//        val repo: ScuttlemuttRepository by lazy {
-//            RoomScuttlemuttRepository(ScuttlemuttDatabase.getDatabase(this).contactDao())
+        val database = ScuttlemuttDatabase.getDatabase(this)
+        viewModel = ViewModelProvider(this, MainViewModelFactory(database)).get(MainViewModel::class.java)
+//        GlobalScope.launch {
+//            database.contactDao().insert(Contact(publicKey = "myPublicKey", nickname = "me"))
+//            database.contactDao().insert(Contact(publicKey = "FriendAPublicKey", nickname = "FriendA"))
+//            database.contactDao().insert(Contact(publicKey = "FriendBPublicKey", nickname = "FriendB"))
 //        }
 
         // Turn off the decor fitting system windows, which allows us to handle insets,
@@ -98,14 +106,16 @@ class NavActivity : AppCompatActivity() {
                         }
 
                         JetchatDrawer(
-//                            mainViewModel = viewModel,
+                            viewModel = viewModel,
                             activeChannel = activeChannel!!,
                             drawerState = drawerState,
-                            onChatClicked = {
-                                viewModel.setChannel(it)
-                                val bundle = bundleOf("channel" to it)
-                                Log.d("NavActivity", "Navigating to nav_home")
-                                findNavController().navigate(R.id.nav_home, bundle)
+                            onChatClicked = fun(channel: String){
+//                                convViewModel.setChat(channel)
+                                viewModel.setChannel(channel)
+//                                val bundle = bundleOf("channel" to it)
+//                                Log.d("NavActivity", "Navigating to nav_home")
+//                                findNavController().navigate(R.id.nav_home, bundle)
+                                findNavController().navigate(R.id.nav_home)
                                 scope.launch {
                                     drawerState.close()
                                 }

@@ -16,23 +16,56 @@
 
 package com.example.compose.jetchat
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
 import com.example.compose.jetchat.conversation.ConversationUiState
+import com.example.compose.jetchat.conversation.ConversationViewModel
+import com.example.compose.jetchat.data.Contact
+import com.example.compose.jetchat.data.ScuttlemuttDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /**
  * Used to communicate between screens.
  */
-class  MainViewModel : ViewModel() {
+
+class MainViewModelFactory (private val database: ScuttlemuttDatabase) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+            return MainViewModel(database) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class MainViewModel(private val database: ScuttlemuttDatabase) : ViewModel() {
+
+    private val _allContactNames : MutableLiveData<List<String>> = MutableLiveData(listOf())
+    val allContactNames: LiveData<List<String>> = _allContactNames
+
+    private val _activeChannel = MutableLiveData<String>("FriendA") // TODO: change to contact
+    val activeChannel: LiveData<String> = _activeChannel
 
     private val _drawerShouldBeOpened = MutableStateFlow(false)
     val drawerShouldBeOpened = _drawerShouldBeOpened.asStateFlow()
 
-    private val _activeChannel = MutableLiveData<String>("#droidcon-nyc")
-    val activeChannel: LiveData<String> = _activeChannel
+    init {
+        viewModelScope.launch {
+            database.contactDao().insert(Contact(publicKey = "myPublicKey", nickname = "me"))
+            database.contactDao().insert(Contact(publicKey = "FriendAPublicKey", nickname = "FriendA"))
+            database.contactDao().insert(Contact(publicKey = "FriendBPublicKey", nickname = "FriendB"))
+            database.contactDao().getAllContacts().collect {
+                val contactNames : MutableList<String> = mutableListOf()
+                for (contact in it) {
+                    contactNames.add(contact.nickname)
+                }
+                _allContactNames.value = contactNames
+                _activeChannel.value = it[0].nickname
+            }
+        }
+    }
 
     fun setChannel(newChan: String) {
         _activeChannel.value = newChan

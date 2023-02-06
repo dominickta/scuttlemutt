@@ -16,16 +16,20 @@
 
 package com.example.compose.jetchat.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.example.compose.jetchat.R
 
 @Composable
@@ -42,15 +46,23 @@ fun JetchatIcon(
         Modifier
     }
     Box(modifier = modifier.then(semantics)) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_jetchat_back),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primaryContainer
+        Image(
+            painter = painterResource(id = R.drawable.husky),
+            modifier = Modifier.size(200.dp),
+            contentScale = ContentScale.Fit,
+            contentDescription = "Scuttlemutt Logo",
         )
-        Icon(
-            painter = painterResource(id = R.drawable.ic_jetchat_front),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
+//        Icon(
+//            painter = painterResource(id = R.drawable.husky),
+////            painter = painterResource(id = R.drawable.ic_jetchat_back),
+//            contentDescription = null,
+////            tint = MaterialTheme.colorScheme.primaryContainer
+//        )
+//        Icon(
+//            painter = painterResource(id = R.drawable.husky),
+////            painter = painterResource(id = R.drawable.ic_jetchat_front),
+//            contentDescription = null,
+////            tint = MaterialTheme.colorScheme.primary
+//        )
     }
 }

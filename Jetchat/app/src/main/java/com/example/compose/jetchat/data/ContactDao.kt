@@ -27,10 +27,10 @@ interface ContactDao {
     suspend fun delete(contact: Contact)
 
     @Query("SELECT * from contacts where publicKey = :publicKey")
-    fun getContactByKey(publicKey: String): Contact
+    suspend fun getContactByKey(publicKey: String): Contact
 
     @Query("SELECT * from contacts where nickname = :nickname")
-    fun getContactByNickname(nickname: String): Contact
+    suspend fun getContactByNickname(nickname: String): Contact
 
     @Query("SELECT * from contacts ORDER BY nickname ASC")
     fun getAllContacts(): Flow<List<Contact>>

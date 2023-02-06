@@ -57,18 +57,19 @@ import com.example.compose.jetchat.theme.JetchatTheme
 import androidx.activity.viewModels
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.compose.jetchat.conversation.ConversationViewModel
 
 @Composable
 fun JetchatDrawerContent(
+    viewModel: MainViewModel,
     activeChannel: String,
     onProfileClicked: (String) -> Unit,
     onChatClicked: (String) -> Unit
 ) {
-
-    val viewModel: MainViewModel = viewModel()
-    val currChan = viewModel.activeChannel.observeAsState()
-
     // Use windowInsetsTopHeight() to add a spacer which pushes the drawer content
     // below the status bar (y-axis)
     Column(modifier = Modifier
@@ -78,29 +79,24 @@ fun JetchatDrawerContent(
         DrawerHeader()
         DividerItem()
         DrawerItemHeader("Chats")
-        chatItems(currChan.value!!, onChatClicked)
-        DividerItem(modifier = Modifier.padding(horizontal = 28.dp))
-        DrawerItemHeader("Recent Profiles")
-        ProfileItem("Ali Conors (you)", meProfile.photo) { onProfileClicked(meProfile.userId) }
-        ProfileItem("Taylor Brooks", colleagueProfile.photo) {
-            onProfileClicked(colleagueProfile.userId)
-        }
+        chatItems(viewModel, onChatClicked)
+//        DividerItem(modifier = Modifier.padding(horizontal = 28.dp))
+//        DrawerItemHeader("Recent Profiles")
+//        ProfileItem("Ali Conors (you)", meProfile.photo) { onProfileClicked(meProfile.userId) }
+//        ProfileItem("Taylor Brooks", colleagueProfile.photo) {
+//            onProfileClicked(colleagueProfile.userId)
+//        }
     }
 }
 
 
 @Composable
-private fun chatItems(activeChannel: String, onChatClicked: (String) -> Unit) {
-    val channelNames = listOf<String>("#composers", "#droidcon-nyc")
+private fun chatItems(viewModel: MainViewModel, onChatClicked: (String) -> Unit) {
+    val channelNames = viewModel.allContactNames.observeAsState().value!!
+    val currChan = viewModel.activeChannel.observeAsState().value!!
     for (channel in channelNames) {
-        if (channel == activeChannel) {
-            ChatItem(channel, true) { onChatClicked(channel) }
-        } else {
-            ChatItem(channel, false) { onChatClicked(channel) }
-        }
+        ChatItem(channel, channel == currChan) { onChatClicked(channel) }
     }
-//    ChatItem("composers", true) { onChatClicked("#composers") }
-//    ChatItem("droidcon-nyc", false) { onChatClicked("#droidcon-nyc") }
 }
 
 @Composable
@@ -108,13 +104,19 @@ private fun DrawerHeader() {
     Row(modifier = Modifier.padding(16.dp), verticalAlignment = CenterVertically) {
         JetchatIcon(
             contentDescription = null,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(50.dp)
         )
-        Image(
-            painter = painterResource(id = R.drawable.jetchat_logo),
-            contentDescription = null,
-            modifier = Modifier.padding(start = 8.dp)
+        Text(
+            text = "Scuttlemutt",
+            fontWeight = FontWeight.Bold,
+            fontSize = 30.sp,
+            modifier = Modifier.padding(horizontal = 5.dp)
         )
+//        Image(
+//            painter = painterResource(id = R.drawable.jetchat_logo),
+//            contentDescription = null,
+//            modifier = Modifier.padding(start = 8.dp)
+//        )
     }
 }
 @Composable
@@ -150,6 +152,7 @@ private fun ChatItem(text: String, selected: Boolean, onChatClicked: () -> Unit)
             .clickable(onClick = onChatClicked),
         verticalAlignment = CenterVertically
     ) {
+        // this displays a default chat item
         val iconTint = if (selected) {
             MaterialTheme.colorScheme.primary
         } else {
@@ -215,25 +218,25 @@ fun DividerItem(modifier: Modifier = Modifier) {
     )
 }
 
-@Composable
-@Preview
-fun DrawerPreview() {
-    JetchatTheme {
-        Surface {
-            Column {
-                JetchatDrawerContent("#droidcon-nyc",{}, {})
-            }
-        }
-    }
-}
-@Composable
-@Preview
-fun DrawerPreviewDark() {
-    JetchatTheme(isDarkTheme = true) {
-        Surface {
-            Column {
-                JetchatDrawerContent("#droidcon-nyc",{}, {})
-            }
-        }
-    }
-}
+//@Composable
+//@Preview
+//fun DrawerPreview() {
+//    JetchatTheme {
+//        Surface {
+//            Column {
+//                JetchatDrawerContent("#droidcon-nyc",{}, {})
+//            }
+//        }
+//    }
+//}
+//@Composable
+//@Preview
+//fun DrawerPreviewDark() {
+//    JetchatTheme(isDarkTheme = true) {
+//        Surface {
+//            Column {
+//                JetchatDrawerContent("#droidcon-nyc",{}, {})
+//            }
+//        }
+//    }
+//}

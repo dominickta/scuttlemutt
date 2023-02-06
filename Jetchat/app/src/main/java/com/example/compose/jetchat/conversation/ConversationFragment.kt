@@ -47,7 +47,7 @@ import com.example.compose.jetchat.data.ScuttlemuttDatabase
 import com.example.compose.jetchat.theme.JetchatTheme
 
 class ConversationFragment : Fragment() {
-
+    private val TAG = "ConversationFragment"
     private val activityViewModel: MainViewModel by activityViewModels()
 
     private lateinit var database: ScuttlemuttDatabase
@@ -55,11 +55,12 @@ class ConversationFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        val channel = arguments?.getString("channel")!! // Consider using safe args plugin
         database = ScuttlemuttDatabase.getDatabase(context)
-        conversationViewModel = ViewModelProvider(this, ConversationViewModelFactory(database, channel)).get(ConversationViewModel::class.java)
-//        conversationViewModel.setChat(channel!!)
+        val channel = activityViewModel.activeChannel.value ?: "" // Consider using safe args plugin
+        conversationViewModel = ViewModelProvider(requireActivity(), ConversationViewModelFactory(database, channel)).get(ConversationViewModel::class.java)
+        conversationViewModel.setChat(channel)
     }
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -67,16 +68,11 @@ class ConversationFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View = ComposeView(inflater.context).apply {
         layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
-
+        Log.d(TAG, "ONCREATEVIEW")
         setContent {
             val currUiState by conversationViewModel.currUiState.observeAsState()
-            Log.d("ConvFrag", "recomposing ${currUiState!!.contactName}")
-//
-//            val currentChannel by conversationViewModel.channelData.observeAsState()
-//            Log.d("CONVFRAGMENT", currentChannel!!)
-//                currUiState = exampleUiStateDroidConNYC
-//            }
-//            if (currentChannel == "#droidcon-nyc") {
+            Log.d(TAG, "recomposing ${currUiState!!.contactName}")
+
             CompositionLocalProvider(
                 LocalBackPressedDispatcher provides requireActivity().onBackPressedDispatcher
             ) {

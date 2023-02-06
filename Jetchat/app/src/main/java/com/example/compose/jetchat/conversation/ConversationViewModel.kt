@@ -2,13 +2,13 @@ package com.example.compose.jetchat.conversation
 
 import android.util.Log
 import androidx.lifecycle.*
-import androidx.room.ColumnInfo
 import com.example.compose.jetchat.data.*
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 private const val DEFAULT_CHANNEL = "#composers"
 
@@ -34,7 +34,7 @@ class ConversationViewModel(private val database: ScuttlemuttDatabase, private v
     val channelData: LiveData<String> = _channel
 
     private val _currUiState = MutableLiveData<ConversationUiState>(
-        ConversationUiState(contactName = initContactName, initialMessages = listOf()))
+        ConversationUiState(contactName = initContactName, messages = listOf()))
     val currUiState: LiveData<ConversationUiState> = _currUiState
 
     var barkUpdater : Job? = null
@@ -44,24 +44,50 @@ class ConversationViewModel(private val database: ScuttlemuttDatabase, private v
     }
 
     fun addMessage(msg: String) {
-        Log.d("ConversationViewModel", "Adding $msg to database")
-        val lastSeqNum = database.barkDao().getLastSeqNum("testKey") ?: 0
         viewModelScope.launch {
-            database.barkDao().insert(Bark(srcPublicKey = "myPublicKey", dstPublicKey = "testDstPublicKey", seqNum = lastSeqNum + 1, msg = msg))
+            val dstPubKey = database.contactDao().getContactByNickname(_contactName.value!!).publicKey
+            val lastSeqNum = database.barkDao().getLastSeqNum(srcPublicKey = "myPublicKey", dstPublicKey = dstPubKey) ?: 0
+            Log.d(TAG, "lastSeqNum is $lastSeqNum, dstPubKey is $dstPubKey")
+            database.barkDao().insert(Bark(srcPublicKey = "myPublicKey", dstPublicKey = dstPubKey, timestamp = SimpleDateFormat(
+                "MM/dd/yyyy hh.mm aa",
+                Locale.getDefault()
+            ).format(Date()), seqNum = lastSeqNum + 1, msg = msg))
+            _currUiState.value
         }
     }
 
     fun setChat(contactName: String) {
         Log.d(TAG, "Changing contact to: $contactName")
         _contactName.value = contactName
-        val con : Contact = database.contactDao().getContactByNickname(contactName)
+        _currUiState.value!!.contactName = contactName
         if (barkUpdater != null) {
             barkUpdater!!.cancel()
         }
         barkUpdater = viewModelScope.launch {
-            // Coroutine that will be canceled when the ViewModel is cleared.
-            database.barkDao().getBarks(con.publicKey).cancellable().collect {
-                currUiState.value!!.messages = it
+            while (isActive) {
+                val con : Contact = database.contactDao().getContactByNickname(contactName)
+                if (con == null) {
+                    // it is possible for con to be null
+                    continue
+                }
+                Log.d(TAG, "con.publickey is: ${con.publicKey}")
+                database.barkDao().getBarks(srcPublicKey = "myPublicKey", dstPublicKey = con.publicKey).cancellable().collect {
+                    Log.d(TAG, "Got some new barks for: $contactName")
+                    var msgs : MutableList<FrontEndMessage> = mutableListOf()
+                    for (bark in it) {
+                        val author = database.contactDao().getContactByKey(bark.srcPublicKey).nickname
+                        msgs.add(FrontEndMessage(
+                            author = author,
+                            content = bark.msg,
+                            timestamp = bark.timestamp
+                        ))
+                    }
+                    // Below is bad example of updating livedata, and does not cause composables to recompose
+//                    _currUiState.value!!.messages = msgs
+//                    Log.d(TAG, "Set new barks for: $contactName")
+                    _currUiState.postValue(ConversationUiState(contactName, msgs))
+                    Log.d(TAG, "Set new barks for (try 2): $contactName")
+                }
             }
         }
     }

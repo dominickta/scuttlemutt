@@ -5,9 +5,11 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Entity datga class representing a Contact database table
+ * Entity data class representing a Bark
  *
- * Each instance of this Entity represents a row in the Contact database table
+ * Barks use public keys as identifiers
+ *
+ * Public keys can be mapped to nicknames with the contact database
  *
  */
 

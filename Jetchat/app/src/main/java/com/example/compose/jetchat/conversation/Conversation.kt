@@ -83,11 +83,7 @@ import androidx.compose.ui.unit.dp
 import com.example.compose.jetchat.FunctionalityNotAvailablePopup
 import com.example.compose.jetchat.R
 import com.example.compose.jetchat.components.JetchatAppBar
-import com.example.compose.jetchat.data.Bark
-import com.example.compose.jetchat.data.ScuttlemuttDatabase
-import com.example.compose.jetchat.data.exampleUiStateDroidConNYC
 import com.example.compose.jetchat.theme.JetchatTheme
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
@@ -107,6 +103,7 @@ fun ConversationContent(
     modifier: Modifier = Modifier,
     onNavIconPressed: () -> Unit = { }
 ) {
+    Log.d("ConversationContent", "recomposing ConversationContent for contact: ${uiState!!.contactName}")
     val authorMe = stringResource(R.string.author_me)
     val timeNow = stringResource(id = R.string.now)
 
@@ -180,12 +177,12 @@ fun ChannelNameBar(
                     text = channelName,
                     style = MaterialTheme.typography.titleMedium
                 )
-                // Number of members
-                Text(
-                    text = stringResource(R.string.members, channelMembers),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+//                // Number of members
+//                Text(
+//                    text = stringResource(R.string.members, channelMembers),
+//                    style = MaterialTheme.typography.bodySmall,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
             }
         },
         actions = {
@@ -217,7 +214,7 @@ const val ConversationTestTag = "ConversationTestTag"
 
 @Composable
 fun Messages(
-    messages: List<Message>,
+    messages: List<FrontEndMessage>,
     navigateToProfile: (String) -> Unit,
     scrollState: LazyListState,
     modifier: Modifier = Modifier
@@ -247,16 +244,16 @@ fun Messages(
                 val isFirstMessageByAuthor = prevAuthor != content.author
                 val isLastMessageByAuthor = nextAuthor != content.author
 
-                // Hardcode day dividers for simplicity
-                if (index == messages.size - 1) {
-                    item {
-                        DayHeader("20 Aug")
-                    }
-                } else if (index == 2) {
-                    item {
-                        DayHeader("Today")
-                    }
-                }
+//                // Hardcode day dividers for simplicity
+//                if (index == messages.size - 1) {
+//                    item {
+//                        DayHeader("20 Aug")
+//                    }
+//                } else if (index == 2) {
+//                    item {
+//                        DayHeader("Today")
+//                    }
+//                }
 
                 item {
                     Message(
@@ -301,7 +298,7 @@ fun Messages(
 @Composable
 fun Message(
     onAuthorClick: (String) -> Unit,
-    msg: Message,
+    msg: FrontEndMessage,
     isUserMe: Boolean,
     isFirstMessageByAuthor: Boolean,
     isLastMessageByAuthor: Boolean
@@ -314,27 +311,41 @@ fun Message(
 
     val spaceBetweenAuthors = if (isLastMessageByAuthor) Modifier.padding(top = 8.dp) else Modifier
     Row(modifier = spaceBetweenAuthors) {
-        // if this is the first message to be displayed for this author, show their image
-        // else, just put an empty filler space next to the text message
-        if (isLastMessageByAuthor) {
-            // Avatar
-            Image(
-                modifier = Modifier
-                    .clickable(onClick = { onAuthorClick(msg.author) })
-                    .padding(horizontal = 16.dp)
-                    .size(42.dp)
-                    .border(1.5.dp, borderColor, CircleShape)
-                    .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape)
-                    .clip(CircleShape)
-                    .align(Alignment.Top),
-                painter = painterResource(id = msg.authorImage),
-                contentScale = ContentScale.Crop,
-                contentDescription = null,
-            )
-        } else {
-            // Space under avatar
-            Spacer(modifier = Modifier.width(74.dp))
-        }
+//        // if this is the first message to be displayed for this author, show their image
+//        // else, just put an empty filler space next to the text message
+//        if (isLastMessageByAuthor) {
+//            // Avatar
+//            Image(
+//                modifier = Modifier
+//                    .clickable(onClick = { onAuthorClick(msg.author) })
+//                    .padding(horizontal = 16.dp)
+//                    .size(42.dp)
+//                    .border(1.5.dp, borderColor, CircleShape)
+//                    .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape)
+//                    .clip(CircleShape)
+//                    .align(Alignment.Top),
+//                painter = painterResource(id = msg.authorImage),
+//                contentScale = ContentScale.Crop,
+//                contentDescription = null,
+//            )
+//        } else {
+//            // Space under avatar
+//            Spacer(modifier = Modifier.width(74.dp))
+//        }
+        // Always show Avatar
+        Image(
+            modifier = Modifier
+                .clickable(onClick = { onAuthorClick(msg.author) })
+                .padding(horizontal = 16.dp)
+                .size(42.dp)
+                .border(1.5.dp, borderColor, CircleShape)
+                .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                .clip(CircleShape)
+                .align(Alignment.Top),
+            painter = painterResource(id = msg.authorImage),
+            contentScale = ContentScale.Crop,
+            contentDescription = null,
+        )
         // showcase the text message
         AuthorAndTextMessage(
             msg = msg,
@@ -352,7 +363,7 @@ fun Message(
 // Displays the chat bubble, message, and metadata
 @Composable
 fun AuthorAndTextMessage(
-    msg: Message,
+    msg: FrontEndMessage,
     isUserMe: Boolean,
     isFirstMessageByAuthor: Boolean,
     isLastMessageByAuthor: Boolean,
@@ -360,9 +371,10 @@ fun AuthorAndTextMessage(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        if (isLastMessageByAuthor) {
-            AuthorNameTimestamp(msg)
-        }
+//        if (isLastMessageByAuthor) {
+//            AuthorNameTimestamp(msg)
+//        }
+        AuthorNameTimestamp(msg)
         ChatItemBubble(msg, isUserMe, authorClicked = authorClicked)
         if (isFirstMessageByAuthor) {
             // Last bubble before next author
@@ -375,7 +387,7 @@ fun AuthorAndTextMessage(
 }
 
 @Composable
-private fun AuthorNameTimestamp(msg: Bark) {
+private fun AuthorNameTimestamp(msg: FrontEndMessage) {
     // Combine author and timestamp for a11y.
     Row(modifier = Modifier.semantics(mergeDescendants = true) {}) {
         Text(
@@ -428,7 +440,7 @@ private fun RowScope.DayHeaderLine() {
 // The actual text bubble surrounding the text message
 @Composable
 fun ChatItemBubble(
-    message: Bark,
+    message: FrontEndMessage,
     isUserMe: Boolean,
     authorClicked: (String) -> Unit
 ) {
@@ -474,14 +486,14 @@ fun ChatItemBubble(
 // If there's an http link, allows you to click and open that hyperlink
 @Composable
 fun ClickableMessage(
-    message: Bark,
+    message: FrontEndMessage,
     isUserMe: Boolean,
     authorClicked: (String) -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
 
     val styledMessage = messageFormatter(
-        text = message.msg,
+        text = message.content,
         primary = isUserMe
     )
 

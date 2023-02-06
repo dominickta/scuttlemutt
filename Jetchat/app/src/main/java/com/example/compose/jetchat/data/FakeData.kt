@@ -18,98 +18,96 @@ package com.example.compose.jetchat.data
 
 import com.example.compose.jetchat.R
 import com.example.compose.jetchat.conversation.ConversationUiState
+import com.example.compose.jetchat.conversation.FrontEndMessage
 import com.example.compose.jetchat.conversation.Message
 import com.example.compose.jetchat.profile.ProfileScreenState
 
-val composersMessages = listOf(
-    Message(
-        "me",
-        "Check it out!",
-        "8:07 PM"
-    ),
-    Message(
-        "me",
-        "Thank you!",
-        "8:06 PM",
-        R.drawable.sticker
-    ),
-    Message(
-        "Taylor Brooks",
-        "You can use all the same stuff",
-        "8:05 PM"
-    ),
-    Message(
-        "Taylor Brooks",
-        "@aliconors Take a look at the `Flow.collectAsStateWithLifecycle()` APIs",
-        "8:05 PM"
-    ),
-    Message(
-        "John Glenn",
-        "Compose newbie as well, have you looked at the JetNews sample? Most blog posts end up " +
-            "out of date pretty fast but this sample is always up to date and deals with async " +
-            "data loading (it's faked but the same idea applies) \uD83D\uDC49" +
-            "https://github.com/android/compose-samples/tree/master/JetNews",
-        "8:04 PM"
-    ),
-    Message(
-        "me",
-        "Compose newbie: I’ve scourged the internet for tutorials about async data loading " +
-            "but haven’t found any good ones. What’s the recommended way to load async " +
-            "data and emit composable widgets?",
-        "8:03 PM"
-    )
-)
-
-val droidconMessages = listOf(
-    Message(
-        "me",
-        "Let's check out droid con!!!!",
-        "8:07 PM"
-    ),
-    Message(
-        "me",
-        "Thank you!",
-        "8:06 PM",
-        R.drawable.sticker
-    ),
-    Message(
-        "Taylor Brooks",
-        "Have you heard of it?",
-        "8:05 PM"
-    ),
-    Message(
-        "Taylor Brooks",
-        "@aliconors Take a look at DroidCon NYC!!!",
-        "8:05 PM"
-    ),
-    Message(
-        "John Glenn",
-        "Compose newbie as well, have you looked at the JetNews sample? Most blog posts end up " +
-                "out of date pretty fast but this sample is always up to date and deals with async " +
-                "data loading (it's faked but the same idea applies) \uD83D\uDC49" +
-                "https://github.com/android/compose-samples/tree/master/JetNews",
-        "8:04 PM"
-    ),
-    Message(
-        "me",
-        "Compose newbie: I’ve scourged the internet for tutorials about async data loading " +
-                "but haven’t found any good ones. What’s the recommended way to load async " +
-                "data and emit composable widgets?",
-        "8:03 PM"
-    )
-)
-
-val exampleUiStateComposers = ConversationUiState(
-    initialMessages = composersMessages,
-    channelName = "#composers",
-    channelMembers = 42
-)
-
-val exampleUiStateDroidConNYC = ConversationUiState(
-    initialMessages = droidconMessages, // would load this in from database
-    channelName = "#droidcon-nyc",
-    channelMembers = 69
-)
+//val composersMessages = listOf(
+//    FrontEndMessage(
+//        "me",
+//        "Check it out!",
+//        "8:07 PM"
+//    ),
+//    FrontEndMessage(
+//        "me",
+//        "Thank you!",
+//        "8:06 PM",
+////        R.drawable.sticker
+//    ),
+//    FrontEndMessage(
+//        "Taylor Brooks",
+//        "You can use all the same stuff",
+//        "8:05 PM"
+//    ),
+//    FrontEndMessage(
+//        "Taylor Brooks",
+//        "@aliconors Take a look at the `Flow.collectAsStateWithLifecycle()` APIs",
+//        "8:05 PM"
+//    ),
+//    FrontEndMessage(
+//        "John Glenn",
+//        "Compose newbie as well, have you looked at the JetNews sample? Most blog posts end up " +
+//            "out of date pretty fast but this sample is always up to date and deals with async " +
+//            "data loading (it's faked but the same idea applies) \uD83D\uDC49" +
+//            "https://github.com/android/compose-samples/tree/master/JetNews",
+//        "8:04 PM"
+//    ),
+//    FrontEndMessage(
+//        "me",
+//        "Compose newbie: I’ve scourged the internet for tutorials about async data loading " +
+//            "but haven’t found any good ones. What’s the recommended way to load async " +
+//            "data and emit composable widgets?",
+//        "8:03 PM"
+//    )
+//)
+//
+//val droidconMessages = listOf(
+//    FrontEndMessage(
+//        "me",
+//        "Let's check out droid con!!!!",
+//        "8:07 PM"
+//    ),
+//    FrontEndMessage(
+//        "me",
+//        "Thank you!",
+//        "8:06 PM",
+//    ),
+//    FrontEndMessage(
+//        "Taylor Brooks",
+//        "Have you heard of it?",
+//        "8:05 PM"
+//    ),
+//    FrontEndMessage(
+//        "Taylor Brooks",
+//        "@aliconors Take a look at DroidCon NYC!!!",
+//        "8:05 PM"
+//    ),
+//    FrontEndMessage(
+//        "John Glenn",
+//        "Compose newbie as well, have you looked at the JetNews sample? Most blog posts end up " +
+//                "out of date pretty fast but this sample is always up to date and deals with async " +
+//                "data loading (it's faked but the same idea applies) \uD83D\uDC49" +
+//                "https://github.com/android/compose-samples/tree/master/JetNews",
+//        "8:04 PM"
+//    ),
+//    FrontEndMessage(
+//        "me",
+//        "Compose newbie: I’ve scourged the internet for tutorials about async data loading " +
+//                "but haven’t found any good ones. What’s the recommended way to load async " +
+//                "data and emit composable widgets?",
+//        "8:03 PM"
+//    )
+//)
+//
+//val exampleUiStateComposers = ConversationUiState(
+//    messages = composersMessages,
+//    contactName = "#composers",
+//)
+//
+//val exampleUiStateDroidConNYC = ConversationUiState(
+//    messages = droidconMessages, // would load this in from database
+//    contactName = "#droidcon-nyc",
+//)
 
 /**
  * Example colleague profile

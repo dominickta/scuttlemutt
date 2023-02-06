@@ -11,12 +11,8 @@ import androidx.room.RoomDatabase
  * It is an abstract class because Room will automatically generate its implementation
  */
 
-@Database(entities = [Contact::class, Bark::class], version = 2, exportSchema = false)
+@Database(entities = [Contact::class, Bark::class], version = 3, exportSchema = false)
 abstract class ScuttlemuttDatabase : RoomDatabase() {
-
-    //TODO:
-    // have a bark table, uses public keys as identifiers
-    // have a contact table, maps public keys for contacts to user-level nicknames
     abstract fun contactDao(): ContactDao
     abstract fun barkDao(): BarkDao
 
