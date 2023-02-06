@@ -7,6 +7,8 @@ import types.Conversation;
 import types.DawgIdentifier;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.*;
 
@@ -14,7 +16,6 @@ import java.util.concurrent.*;
  * Controls input/output logic and an internal Bark queue.
  */
 public class MeshDaemon {
-    // class variables
     private final BlockingQueue<Bark> queue;
     private final MeshInput input;
     private final MeshOutput output;
@@ -29,10 +30,13 @@ public class MeshDaemon {
      * @param storageManager   The place to store messages + conversations meant for us.
      */
     public MeshDaemon(final IOManager ioManager, final StorageManager storageManager, final DawgIdentifier currentUser) {
+        // Shared state between input and output
+        Set<Bark> seenBarks = new HashSet<>();
+
         this.currentUser = currentUser;
         this.queue = new LinkedBlockingQueue<>();
-        this.input = new MeshInput(ioManager, queue, storageManager, currentUser);
-        this.output = new MeshOutput(ioManager, queue);
+        this.input = new MeshInput(ioManager, queue, storageManager, currentUser, seenBarks);
+        this.output = new MeshOutput(ioManager, queue, seenBarks);
         this.storageManager = storageManager;
 
         // Spin out two threads, one to block on the IOManager's receive() and

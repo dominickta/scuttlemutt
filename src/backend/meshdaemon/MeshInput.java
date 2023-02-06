@@ -10,17 +10,19 @@ import types.DawgIdentifier;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 /**
  * Monitors the incoming requests from the IOManager.
  */
 public class MeshInput implements Runnable {
-    // class variables
     private final IOManager ioManager;
     private final StorageManager storage;
     private final BlockingQueue<Bark> queue;
     private final DawgIdentifier currentUser;
+
+    private Set<Bark> seenBarks;
 
     /**
      * Constructs a new MeshInput.
@@ -31,24 +33,28 @@ public class MeshInput implements Runnable {
      * @param currentUser The DawgIdentifier for the current user.
      */
     public MeshInput(final IOManager ioManager, final BlockingQueue<Bark> queue,
-            final StorageManager storage, final DawgIdentifier currentUser) {
+            final StorageManager storage, final DawgIdentifier currentUser,
+            Set<Bark> seenBarks) {
         this.ioManager = ioManager;
         this.queue = queue;
         this.storage = storage;
         this.currentUser = currentUser;
+        this.seenBarks = seenBarks;
     }
 
     @Override
     public void run() {
         while (true) {
             try {
+                // TODO: Add BarkPacket verification (e.g. with signing)
+
                 // Check if ioManager is connected so .call function in Iomanager doesn't fail
                 BarkPacket barkPacket = ioManager.receive();
                 List<Bark> barkList = barkPacket.getPacketBarks();
 
                 for (Bark bark : barkList) {
                     // if we have seen this bark before, ignore it.
-                    if (this.storage.lookupBark(bark.getUniqueId()) != null) {
+                    if (!this.seenBarks.add(bark)) {
                         continue;
                     }
 

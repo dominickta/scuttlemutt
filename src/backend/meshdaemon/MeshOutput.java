@@ -20,6 +20,7 @@ public class MeshOutput implements Runnable {
     private final BlockingQueue<Bark> queue;
 
     private BarkPacket currentBarkPacket;
+    private Set<Bark> seenBarks;
 
     /**
      * Constructs a new MeshOutput.
@@ -27,10 +28,12 @@ public class MeshOutput implements Runnable {
      * @param ioManager The underlying IOManager.
      * @param queue     A queue of barks to send out.
      */
-    public MeshOutput(final IOManager ioManager, final BlockingQueue<Bark> queue) {
+    public MeshOutput(final IOManager ioManager, final BlockingQueue<Bark> queue,
+            Set<Bark> seenBarks) {
         this.ioManager = ioManager;
         this.queue = queue;
         this.currentBarkPacket = null;
+        this.seenBarks = seenBarks;
     }
 
     @Override
@@ -44,7 +47,9 @@ public class MeshOutput implements Runnable {
         while (true) {
             if (this.currentBarkPacket == null) {
                 try {
-                    this.currentBarkPacket = new BarkPacket(List.of(this.queue.take()));
+                    Bark nextBark = this.queue.take();
+                    this.seenBarks.add(nextBark);
+                    this.currentBarkPacket = new BarkPacket(List.of(nextBark));
                 } catch (InterruptedException _e) {
                     // TODO: Graceful handling of an interrupt.
                     continue;
