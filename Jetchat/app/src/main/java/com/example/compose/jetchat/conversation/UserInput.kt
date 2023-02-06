@@ -16,6 +16,7 @@
 
 package com.example.compose.jetchat.conversation
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.MutableTransitionState
@@ -43,6 +44,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -137,8 +139,9 @@ fun UserInput(
     var textFieldFocusState by remember { mutableStateOf(false) }
 
     Surface(tonalElevation = 2.dp) {
-        Column(modifier = modifier) {
+        Column(modifier = modifier.padding(all=0.dp)) {
             UserInputText(
+                onMessageSent = onMessageSent,
                 textFieldValue = textState,
                 onTextChanged = { textState = it },
                 // Only show the keyboard if there's no input selector and text field has focus
@@ -259,15 +262,15 @@ private fun UserInputSelector(
         modifier = modifier
             .height(72.dp)
             .wrapContentHeight()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            .padding(start = 0.dp, end = 16.dp, top = 0.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        InputSelectorButton(
-            onClick = { onSelectorChange(InputSelector.EMOJI) },
-            icon = Icons.Outlined.Mood,
-            selected = currentInputSelector == InputSelector.EMOJI,
-            description = stringResource(id = R.string.emoji_selector_bt_desc)
-        )
+//        InputSelectorButton(
+//            onClick = { onSelectorChange(InputSelector.EMOJI) },
+//            icon = Icons.Outlined.Mood,
+//            selected = currentInputSelector == InputSelector.EMOJI,
+//            description = stringResource(id = R.string.emoji_selector_bt_desc)
+//        )
 //        InputSelectorButton(
 //            onClick = { onSelectorChange(InputSelector.DM) },
 //            icon = Icons.Outlined.AlternateEmail,
@@ -371,6 +374,7 @@ var SemanticsPropertyReceiver.keyboardShownProperty by KeyboardShownKey
 @ExperimentalFoundationApi
 @Composable
 private fun UserInputText(
+    onMessageSent: (String) -> Unit,
     keyboardType: KeyboardType = KeyboardType.Text,
     onTextChanged: (TextFieldValue) -> Unit,
     textFieldValue: TextFieldValue,
@@ -382,7 +386,7 @@ private fun UserInputText(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(32.dp)
             .semantics {
                 contentDescription = a11ylabel
                 keyboardShownProperty = keyboardShown
@@ -402,7 +406,8 @@ private fun UserInputText(
                     onValueChange = { onTextChanged(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 32.dp)
+//                        .height(16.dp)
+                        .padding(start = 32.dp, end = 0.dp, top = 8.dp, bottom = 0.dp)
                         .align(Alignment.CenterStart)
                         .onFocusChanged { state ->
                             if (lastFocusState != state.isFocused) {
@@ -412,8 +417,16 @@ private fun UserInputText(
                         },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = keyboardType,
-                        imeAction = ImeAction.Send
+                        imeAction = ImeAction.None
+//                        imeAction = ImeAction.Send
                     ),
+//                    keyboardActions = KeyboardActions(
+//                        onSend = {
+//                            Log.d("UserInput", "using keyboard send")
+//                            onMessageSent(textFieldValue.text)
+//
+//                        }
+//                    ),
                     maxLines = 1,
                     cursorBrush = SolidColor(LocalContentColor.current),
                     textStyle = LocalTextStyle.current.copy(color = LocalContentColor.current)
