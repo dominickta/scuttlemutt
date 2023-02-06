@@ -38,55 +38,59 @@ public class MeshOutput implements Runnable {
 
     @Override
     public void run() {
+        while (true) {
+            this.handleOutput();
+        }
+    }
+
+    public void handleOutput() {
         // TODO list:
         // - Create BarkPackets tailored for each receiver.
         // - Keep track of who successfully got a packet.
         // - Verify valid receivers from the DatabaseManager.
         // - Maintain/use a list of receivers that are blocked (e.g. for spam).
         // - Sign/encrypt messages before sending out.
-        while (true) {
-            if (this.currentBarkPacket == null) {
-                try {
-                    Bark nextBark = this.queue.take();
-                    this.seenBarks.add(nextBark);
-                    this.currentBarkPacket = new BarkPacket(List.of(nextBark));
-                } catch (InterruptedException _e) {
-                    // TODO: Graceful handling of an interrupt.
-                    continue;
-                }
-            }
-
-            Set<String> receiverIds;
+        if (this.currentBarkPacket == null) {
             try {
-                receiverIds = this.ioManager.availableConnections();
-            } catch (IOManagerException e) {
-                System.err.println("Failed to get available connections -- " + e);
-                continue;
+                Bark nextBark = this.queue.take();
+                this.seenBarks.add(nextBark);
+                this.currentBarkPacket = new BarkPacket(List.of(nextBark));
+            } catch (InterruptedException _e) {
+                // TODO: Graceful handling of an interrupt.
+                return;
+            }
+        }
+
+        Set<String> receiverIds;
+        try {
+            receiverIds = this.ioManager.availableConnections();
+        } catch (IOManagerException e) {
+            System.err.println("Failed to get available connections -- " + e);
+            return;
+        }
+
+        if (receiverIds.size() > 0) {
+            int successfulSends = 0;
+            for (String receiverId : receiverIds) {
+                try {
+                    this.ioManager.send(receiverId, new BarkPacket(this.currentBarkPacket));
+                    successfulSends++;
+                } catch (IOManagerException e) {
+                    System.err.println("Failed to send to '" + receiverId + "' -- " + e);
+                }
             }
 
-            if (receiverIds.size() > 0) {
-                int successfulSends = 0;
-                for (String receiverId : receiverIds) {
-                    try {
-                        this.ioManager.send(receiverId, new BarkPacket(this.currentBarkPacket));
-                        successfulSends++;
-                    } catch (IOManagerException e) {
-                        System.err.println("Failed to send to '" + receiverId + "' -- " + e);
-                    }
-                }
-
-                // Only drop the current packet if at least one receiver got it.
-                if (successfulSends > 0) {
-                    this.currentBarkPacket = null;
-                }
-            } else {
-                // Wait 100ms before trying again for performance.
-                // Could be arbitrarily long before we have any connections.
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException _e) {
-                    // TODO: Graceful handling of an interrupt.
-                }
+            // Only drop the current packet if at least one receiver got it.
+            if (successfulSends > 0) {
+                this.currentBarkPacket = null;
+            }
+        } else {
+            // Wait 100ms before trying again for performance.
+            // Could be arbitrarily long before we have any connections.
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException _e) {
+                // TODO: Graceful handling of an interrupt.
             }
         }
     }
