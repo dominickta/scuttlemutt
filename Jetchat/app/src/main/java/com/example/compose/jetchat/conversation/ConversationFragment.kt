@@ -55,10 +55,10 @@ class ConversationFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+        val channel = arguments?.getString("channel")!! // Consider using safe args plugin
         database = ScuttlemuttDatabase.getDatabase(context)
-        conversationViewModel = ViewModelProvider(this, ConversationViewModelFactory(database)).get(ConversationViewModel::class.java)
-        val channel = arguments?.getString("channel") // Consider using safe args plugin
-        conversationViewModel.setChannel(channel)
+        conversationViewModel = ViewModelProvider(this, ConversationViewModelFactory(database, channel)).get(ConversationViewModel::class.java)
+//        conversationViewModel.setChat(channel!!)
     }
 
     override fun onCreateView(
@@ -70,13 +70,13 @@ class ConversationFragment : Fragment() {
 
         setContent {
             val currUiState by conversationViewModel.currUiState.observeAsState()
-            Log.d("ConvFrag", "recomposing ${currUiState!!.channelName}")
+            Log.d("ConvFrag", "recomposing ${currUiState!!.contactName}")
 //
 //            val currentChannel by conversationViewModel.channelData.observeAsState()
 //            Log.d("CONVFRAGMENT", currentChannel!!)
-//            if (currentChannel == "#droidcon-nyc") {
 //                currUiState = exampleUiStateDroidConNYC
 //            }
+//            if (currentChannel == "#droidcon-nyc") {
             CompositionLocalProvider(
                 LocalBackPressedDispatcher provides requireActivity().onBackPressedDispatcher
             ) {

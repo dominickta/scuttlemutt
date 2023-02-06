@@ -26,9 +26,10 @@ interface BarkDao {
     @Delete
     suspend fun delete(bark: Bark)
 
-    @Query("SELECT * from barks where publicKey = :publicKey")
-    fun getBarks(publicKey: String): Flow<List<Bark>>
+    // TODO: include srcPublicKey
+    @Query("SELECT * from barks where dstPublicKey = :dstPublicKey")
+    fun getBarks(dstPublicKey: String): Flow<List<Bark>>
 
-    @Query("SELECT seqNum from barks where publicKey = :publicKey ORDER BY seqNum DESC LIMIT 1")
-    fun getLastSeqNum(publicKey: String): Int?
+    @Query("SELECT seqNum from barks where dstPublicKey = :dstPublicKey ORDER BY seqNum DESC LIMIT 1")
+    fun getLastSeqNum(dstPublicKey: String): Int?
 }

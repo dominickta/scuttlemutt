@@ -129,13 +129,10 @@ fun ConversationContent(
                     scrollState = scrollState
                 )
                 UserInput(
-                    onMessageSent = fun(content: String) {
-                        Log.d("Conversation", "Message sent: $content")
-                        GlobalScope.launch {
-                            Log.d("Conversation", "in global scope, calling conversationViewModel.addMessage()")
-                            conversationViewModel.addMessage(content)
-                        }
-                        uiState.addMessage(Message(authorMe, content, timeNow))
+                    onMessageSent = {
+                        Log.d("Conversation", "Message sent: $it")
+                        conversationViewModel.addMessage(it)
+//                        uiState.addMessage(Message(authorMe, it, timeNow))
                     },
                     resetScroll = {
                         scope.launch {
@@ -151,8 +148,8 @@ fun ConversationContent(
             }
             // Channel name bar floats above the messages
             ChannelNameBar(
-                channelName = uiState.channelName,
-                channelMembers = uiState.channelMembers,
+                channelName = uiState.contactName,
+                channelMembers = 1,
                 onNavIconPressed = onNavIconPressed,
                 scrollBehavior = scrollBehavior,
             )
@@ -241,6 +238,8 @@ fun Messages(
                 .testTag(ConversationTestTag)
                 .fillMaxSize()
         ) {
+            // ASSUMES EARLIER INDEXES ARE MORE RECENT
+            // [most recent, ... , oldest message)
             for (index in messages.indices) {
                 val prevAuthor = messages.getOrNull(index - 1)?.author
                 val nextAuthor = messages.getOrNull(index + 1)?.author
@@ -298,6 +297,7 @@ fun Messages(
     }
 }
 
+// Displays avatar image and chat message
 @Composable
 fun Message(
     onAuthorClick: (String) -> Unit,
@@ -314,6 +314,8 @@ fun Message(
 
     val spaceBetweenAuthors = if (isLastMessageByAuthor) Modifier.padding(top = 8.dp) else Modifier
     Row(modifier = spaceBetweenAuthors) {
+        // if this is the first message to be displayed for this author, show their image
+        // else, just put an empty filler space next to the text message
         if (isLastMessageByAuthor) {
             // Avatar
             Image(
@@ -333,6 +335,7 @@ fun Message(
             // Space under avatar
             Spacer(modifier = Modifier.width(74.dp))
         }
+        // showcase the text message
         AuthorAndTextMessage(
             msg = msg,
             isUserMe = isUserMe,
@@ -346,6 +349,7 @@ fun Message(
     }
 }
 
+// Displays the chat bubble, message, and metadata
 @Composable
 fun AuthorAndTextMessage(
     msg: Message,
@@ -371,7 +375,7 @@ fun AuthorAndTextMessage(
 }
 
 @Composable
-private fun AuthorNameTimestamp(msg: Message) {
+private fun AuthorNameTimestamp(msg: Bark) {
     // Combine author and timestamp for a11y.
     Row(modifier = Modifier.semantics(mergeDescendants = true) {}) {
         Text(
@@ -421,9 +425,10 @@ private fun RowScope.DayHeaderLine() {
     )
 }
 
+// The actual text bubble surrounding the text message
 @Composable
 fun ChatItemBubble(
-    message: Message,
+    message: Bark,
     isUserMe: Boolean,
     authorClicked: (String) -> Unit
 ) {
@@ -446,33 +451,37 @@ fun ChatItemBubble(
             )
         }
 
-        message.image?.let {
-            Spacer(modifier = Modifier.height(4.dp))
-            Surface(
-                color = backgroundBubbleColor,
-                shape = ChatBubbleShape
-            ) {
-                Image(
-                    painter = painterResource(it),
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.size(160.dp),
-                    contentDescription = stringResource(id = R.string.attached_image)
-                )
-            }
-        }
+//        // Displays an image if the message contains a reference to an image
+//        message.image?.let {
+//            Spacer(modifier = Modifier.height(4.dp))
+//            Surface(
+//                color = backgroundBubbleColor,
+//                shape = ChatBubbleShape
+//            ) {
+//                Image(
+//                    painter = painterResource(it),
+//                    contentScale = ContentScale.Fit,
+//                    modifier = Modifier.size(160.dp),
+//                    contentDescription = stringResource(id = R.string.attached_image)
+//                )
+//            }
+//        }
     }
 }
 
+// Makes the message text clickable
+// If there's a @profilename, allows you to navigate to their profile
+// If there's an http link, allows you to click and open that hyperlink
 @Composable
 fun ClickableMessage(
-    message: Message,
+    message: Bark,
     isUserMe: Boolean,
     authorClicked: (String) -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
 
     val styledMessage = messageFormatter(
-        text = message.content,
+        text = message.msg,
         primary = isUserMe
     )
 
