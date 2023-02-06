@@ -139,7 +139,7 @@ fun UserInput(
     var textFieldFocusState by remember { mutableStateOf(false) }
 
     Surface(tonalElevation = 2.dp) {
-        Column(modifier = modifier.padding(all=0.dp)) {
+        Column(modifier = modifier) {
             UserInputText(
                 onMessageSent = onMessageSent,
                 textFieldValue = textState,
@@ -396,9 +396,10 @@ private fun UserInputText(
         Surface {
             Box(
                 modifier = Modifier
-                    .height(64.dp)
+                    .height(32.dp)
                     .weight(1f)
                     .align(Alignment.Bottom)
+                    .padding(top = 16.dp)
             ) {
                 var lastFocusState by remember { mutableStateOf(false) }
                 BasicTextField(
@@ -407,7 +408,7 @@ private fun UserInputText(
                     modifier = Modifier
                         .fillMaxWidth()
 //                        .height(16.dp)
-                        .padding(start = 32.dp, end = 0.dp, top = 8.dp, bottom = 0.dp)
+                        .padding(start = 32.dp, end = 0.dp, top = 0.dp, bottom = 0.dp)
                         .align(Alignment.CenterStart)
                         .onFocusChanged { state ->
                             if (lastFocusState != state.isFocused) {
