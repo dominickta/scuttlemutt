@@ -1,6 +1,9 @@
 package types;
 
+import crypto.Crypto;
 import org.apache.commons.lang3.RandomStringUtils;
+import types.packet.BarkPacket;
+import types.packet.KeyExchangePacket;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +21,10 @@ public class TestUtils {
     public static BarkPacket generateRandomizedBarkPacket() {
         return new BarkPacket(List.of(TestUtils.generateRandomizedBark()));
     }
+
+    public static KeyExchangePacket generateRandomizedKeyExchangePacket() {
+        return new KeyExchangePacket(Crypto.generateKeyPair().getPublic());
+    }
     
     public static Bark generateRandomizedBark() {
         return new Bark(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE),
@@ -29,7 +36,7 @@ public class TestUtils {
     public static DawgIdentifier generateRandomizedDawgIdentifier() {
         return new DawgIdentifier(RandomStringUtils.random(15),
                 UUID.randomUUID(),
-                RandomStringUtils.randomAlphabetic(15));
+                Crypto.generateKeyPair().getPublic());
     }
 
     public static Conversation generateRandomizedConversation() {

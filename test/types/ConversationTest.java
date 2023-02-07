@@ -1,9 +1,11 @@
 package types;
 
+import crypto.Crypto;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.security.PublicKey;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -22,7 +24,7 @@ public class ConversationTest {
         final Supplier<DawgIdentifier> dawgIdentifierSupplier = () -> {
             final String userName = RandomStringUtils.randomAlphanumeric(15);
             final UUID uuid = UUID.randomUUID();
-            final String publicKey = RandomStringUtils.randomAlphanumeric(15);
+            final PublicKey publicKey = Crypto.generateKeyPair().getPublic();
             return new DawgIdentifier(userName, uuid, publicKey);
         };
 

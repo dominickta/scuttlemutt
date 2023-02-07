@@ -3,10 +3,11 @@ package backend.simulation;
 import backend.scuttlemutt.Scuttlemutt;
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
+import crypto.Crypto;
 import org.apache.commons.lang3.RandomStringUtils;
 import storagemanager.MapStorageManager;
-import types.BarkPacket;
 import types.DawgIdentifier;
+import types.packet.Packet;
 
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -39,7 +40,7 @@ public class NetworkSimulation {
 
             // create a Scuttlemutt object which references the above QueueIOManagers
             // TODO:  Replace with crypto functionality in the future.
-            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID(), RandomStringUtils.randomAlphabetic(15));
+            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID(), Crypto.generateKeyPair().getPublic());
             final Scuttlemutt scuttlemutt = new Scuttlemutt(ioManager, dawgId, new MapStorageManager());
 
             // stash the ioManager in the scuttlemuttMap.
@@ -121,8 +122,8 @@ public class NetworkSimulation {
         device2.addContact(device1.getDawgIdentifier());
 
         // Build queues to connect devices
-        final BlockingQueue<BarkPacket> q1to2 = new LinkedBlockingQueue<BarkPacket>();
-        final BlockingQueue<BarkPacket> q2to1 = new LinkedBlockingQueue<BarkPacket>();
+        final BlockingQueue<Packet> q1to2 = new LinkedBlockingQueue<Packet>();
+        final BlockingQueue<Packet> q2to1 = new LinkedBlockingQueue<Packet>();
 
         // add the queues to the QueueIOManagers
         queueIOManagerMap.get(device1Label).connect(device2Label, q1to2, q2to1);

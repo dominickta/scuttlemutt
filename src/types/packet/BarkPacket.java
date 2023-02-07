@@ -1,16 +1,14 @@
-package types;
+package types.packet;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import types.Bark;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class represents the packets sent by the IOManager.
+ * This class represents the messaging packets sent by the IOManager.
  */
-public class BarkPacket {
-    private static final Gson GSON = new GsonBuilder().setLenient().create();
+public class BarkPacket extends Packet {
     public final List<Bark> packetBarks;
 
     /**
@@ -39,24 +37,6 @@ public class BarkPacket {
      */
     public List<Bark> getPacketBarks() {
         return List.copyOf(packetBarks);
-    }
-
-    /**
-     * Returns a byte[] containing the contents of the BarkPacket.
-     * @return a byte[] containing the contents of the BarkPacket.
-     */
-    public byte[] toNetworkBytes() {
-        // since the packetBarks are contained in a list, we have to serialize them instead of the overall object.
-        return GSON.toJson(this).getBytes();
-    }
-
-    /**
-     * Convert the passed byte[] into a BarkPacket.
-     * @param receivedBytes  The byte[] containing the bytes to source the packet from.
-     * @return  A BarkPacket containing the receivedBytes.
-     */
-    public static BarkPacket fromNetworkBytes(final byte[] receivedBytes) {
-        return GSON.fromJson(new String(receivedBytes), BarkPacket.class);
     }
 
     @Override
