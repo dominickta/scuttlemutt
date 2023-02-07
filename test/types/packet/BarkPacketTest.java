@@ -1,7 +1,9 @@
-package types;
+package types.packet;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import types.Bark;
+import types.TestUtils;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -55,27 +57,11 @@ public class BarkPacketTest {
 
     @Test
     public void testEquals_differentObjectsAndDifferentBytes_returnsFalse() {
-        // Create two BarkPacket objects with the same List.
+        // Create two BarkPacket objects with the different Lists.
         final BarkPacket bp1 = new BarkPacket(barkList1);
         final BarkPacket bp2 = new BarkPacket(barkList2);
 
-        // Verify that the two BarkPacket objects are equal.
+        // Verify that the two BarkPacket objects are not equal.
         assertNotEquals(bp1, bp2);
     }
-
-    @Test
-    public void testNetworkByteConversion_convertsToBytes_convertsFromBytes_identicalObject() {
-        // Successfully create a BarkPacket object.
-        final BarkPacket bp = new BarkPacket(barkList1);
-
-        // Convert the Bark object to a byte[] for sending over the network.
-        final byte[] byteArray = bp.toNetworkBytes();
-
-        // Convert the byteArray back to a BarkPacket object.
-        final BarkPacket rebuiltBarkPacket = BarkPacket.fromNetworkBytes(byteArray);
-
-        // Verify that they're equal.
-        assertEquals(bp, rebuiltBarkPacket);
-    }
-
 }

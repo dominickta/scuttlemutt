@@ -3,7 +3,7 @@ package backend.meshdaemon;
 import backend.iomanager.IOManager;
 import backend.iomanager.IOManagerException;
 import types.Bark;
-import types.BarkPacket;
+import types.packet.BarkPacket;
 
 import java.util.List;
 import java.util.Set;

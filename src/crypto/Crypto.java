@@ -21,7 +21,7 @@ import javax.crypto.NoSuchPaddingException;
  * The available methods to call are:
  * - KeyPair generateKeyPair()
  * - byte[] encrypt(byte[] plaintext, PublicKey pk)
- * - byte[] decrypt(byte[] cyphertext, PrivateKey pk)
+ * - byte[] decrypt(byte[] ciphertext, PrivateKey pk)
  * - byte[] sign(byte[] message, PrivateKey pk)
  * - bool verify(byte[] signature, byte[] message, PublicKey pk)
  */

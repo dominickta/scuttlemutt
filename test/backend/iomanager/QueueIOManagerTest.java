@@ -2,8 +2,9 @@ package backend.iomanager;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
-import types.BarkPacket;
+import types.packet.BarkPacket;
 import types.TestUtils;
+import types.packet.Packet;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,8 +35,8 @@ public class QueueIOManagerTest {
 
             final String connectionLabel = "Connection-" + RandomStringUtils.randomAlphanumeric(15);
 
-            BlockingQueue<BarkPacket> inputQueue = new LinkedBlockingQueue<>();
-            BlockingQueue<BarkPacket> outputQueue = new LinkedBlockingQueue<>();
+            BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
+            BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
 
             m.connect(connectionLabel, inputQueue, outputQueue);
 
@@ -61,8 +62,8 @@ public class QueueIOManagerTest {
 
             final String connectionLabel = "Connection-" + RandomStringUtils.randomAlphanumeric(15);
 
-            BlockingQueue<BarkPacket> inputQueue = new LinkedBlockingQueue<>();
-            BlockingQueue<BarkPacket> outputQueue = new LinkedBlockingQueue<>();
+            BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
+            BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
 
             m.connect(connectionLabel, inputQueue, outputQueue);
 
@@ -92,14 +93,14 @@ public class QueueIOManagerTest {
             QueueIOManager m = new QueueIOManager();
 
             List<String> connectionLabels = new ArrayList<>();
-            List<BlockingQueue<BarkPacket>> outputQueues = new ArrayList<>();
+            List<BlockingQueue<Packet>> outputQueues = new ArrayList<BlockingQueue<Packet>>();
 
             for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
                 final String connectionLabel = "Connection" + i + "-" + RandomStringUtils.randomAlphanumeric(15);
                 connectionLabels.add(connectionLabel);
 
-                BlockingQueue<BarkPacket> inputQueue = new LinkedBlockingQueue<>();
-                BlockingQueue<BarkPacket> outputQueue = new LinkedBlockingQueue<>();
+                BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
+                BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
 
                 outputQueues.add(outputQueue);
                 m.connect(connectionLabel, inputQueue, outputQueue);
@@ -141,12 +142,12 @@ public class QueueIOManagerTest {
 
             final String connectionLabel = "Connection-" + RandomStringUtils.randomAlphanumeric(15);
 
-            BlockingQueue<BarkPacket> inputQueue = new LinkedBlockingQueue<>();
-            BlockingQueue<BarkPacket> outputQueue = new LinkedBlockingQueue<>();
+            BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
+            BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
 
             m.connect(connectionLabel, inputQueue, outputQueue);
 
-            List<BarkPacket> barkPackets = new ArrayList<>();
+            List<Packet> barkPackets = new ArrayList<Packet>();
 
             for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
                 BarkPacket barkPacket = TestUtils.generateRandomizedBarkPacket();
@@ -173,8 +174,8 @@ public class QueueIOManagerTest {
 
             final String connectionLabel = "Connection-" + RandomStringUtils.randomAlphanumeric(15);
 
-            BlockingQueue<BarkPacket> inputQueue = new LinkedBlockingQueue<>();
-            BlockingQueue<BarkPacket> outputQueue = new LinkedBlockingQueue<>();
+            BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
+            BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
 
             m.connect(connectionLabel, inputQueue, outputQueue);
 
@@ -204,14 +205,14 @@ public class QueueIOManagerTest {
             QueueIOManager m = new QueueIOManager();
 
             List<String> connectionLabels = new ArrayList<>();
-            List<BlockingQueue<BarkPacket>> inputQueues = new ArrayList<>();
+            List<BlockingQueue<Packet>> inputQueues = new ArrayList<BlockingQueue<Packet>>();
 
             for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
                 final String connectionLabel = "Connection" + i + "-" + RandomStringUtils.randomAlphanumeric(15);
                 connectionLabels.add(connectionLabel);
 
-                BlockingQueue<BarkPacket> inputQueue = new LinkedBlockingQueue<>();
-                BlockingQueue<BarkPacket> outputQueue = new LinkedBlockingQueue<>();
+                BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
+                BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
 
                 inputQueues.add(inputQueue);
                 m.connect(connectionLabel, inputQueue, outputQueue);
@@ -251,8 +252,8 @@ public class QueueIOManagerTest {
             final String connectionLabel1 = "Connection-m1-" + RandomStringUtils.randomAlphanumeric(15);
             final String connectionLabel2 = "Connection-m2-" + RandomStringUtils.randomAlphanumeric(15);
 
-            BlockingQueue<BarkPacket> q1to2 = new LinkedBlockingQueue<>();
-            BlockingQueue<BarkPacket> q2to1 = new LinkedBlockingQueue<>();
+            BlockingQueue<Packet> q1to2 = new LinkedBlockingQueue<Packet>();
+            BlockingQueue<Packet> q2to1 = new LinkedBlockingQueue<Packet>();
 
             m1.connect(connectionLabel2, q2to1, q1to2);
             m2.connect(connectionLabel1, q1to2, q2to1);

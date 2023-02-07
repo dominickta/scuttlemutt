@@ -4,7 +4,7 @@ import backend.iomanager.IOManager;
 import backend.iomanager.IOManagerException;
 import storagemanager.StorageManager;
 import types.Bark;
-import types.BarkPacket;
+import types.packet.BarkPacket;
 import types.Conversation;
 import types.DawgIdentifier;
 
@@ -43,7 +43,7 @@ public class MeshInput implements Runnable {
         while (true) {
             try {
                 // Check if ioManager is connected so .call function in Iomanager doesn't fail
-                BarkPacket barkPacket = ioManager.receive();
+                BarkPacket barkPacket = (BarkPacket) ioManager.receive();
                 List<Bark> barkList = barkPacket.getPacketBarks();
 
                 for (Bark bark : barkList) {
