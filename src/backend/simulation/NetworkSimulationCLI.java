@@ -129,7 +129,7 @@ public class NetworkSimulationCLI {
 
             } else if (tokens[0].equals("exit")) {
                 simulation.shutdown();
-                return;
+                System.exit(0);
             } else {
                 System.out.println(HELP_PRINTOUT);
             }
