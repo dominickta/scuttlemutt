@@ -20,6 +20,8 @@ public class NetworkSimulationCLI {
             "select-device/sd:  selects the network device to interact with.  args: -d: the deviceID of the device we wish to interact with.\n" +
             "print-current-device/pd:  prints the currently-selected device we're interacting with.\n" +
             "print-messages/pm:  prints the messages in the specified conversation.  args: -d: the other party in the conversation\n" +  // TODO:  If we implement group msgs, revise to support groups.
+            "connect-devices/cd:  creates a connection between the specified devices.  args:  -d1:  the deviceID of one of the devices.  -d2:  the deviceID of the other device.\n" +
+            "disconnect-devices/dd:  removes a connection between the specified devices.  args:  -d1:  the deviceID of one of the devices.  -d2:  the deviceID of the other device.\n" +
             "exit:  exits the CLI.";
 
     private static NetworkSimulation simulation = null;  // the simulation of the network.
@@ -83,6 +85,42 @@ public class NetworkSimulationCLI {
 
                 System.out.println("Successfully sent the message to " + dstDeviceId + "!");
 
+
+            } else if (tokens[0].equals("connect-devices") || tokens[0].equals("cd")) {
+                final String deviceId1, deviceId2;
+                if (tokens[1].equals("-d1") && tokens[3].equals("-d2")) {
+                    deviceId1 = LABEL_PREFIX + tokens[2];
+                    deviceId2 = LABEL_PREFIX + tokens[4];
+                } else if (tokens[1].equals("-d2") && tokens[3].equals("-d1")) {
+                    deviceId1 = LABEL_PREFIX + tokens[4];
+                    deviceId2 = LABEL_PREFIX + tokens[2];
+                } else {
+                    System.out.println("Please specify the two devices in the connection being created using the `-d1` and `-d2` flags when calling connect-devices!  Order does not matter.");
+                    continue;
+                }
+
+                // create the connections.
+                connectDevices(deviceId1, deviceId2);
+
+                System.out.println("Successfully connected  " + deviceId1 + " to " + deviceId2 + "!");
+
+            } else if (tokens[0].equals("disconnect-devices") || tokens[0].equals("dd")) {
+                final String deviceId1, deviceId2;
+                if (tokens[1].equals("-d1") && tokens[3].equals("-d2")) {
+                    deviceId1 = LABEL_PREFIX + tokens[2];
+                    deviceId2 = LABEL_PREFIX + tokens[4];
+                } else if (tokens[1].equals("-d2") && tokens[3].equals("-d1")) {
+                    deviceId1 = LABEL_PREFIX + tokens[4];
+                    deviceId2 = LABEL_PREFIX + tokens[2];
+                } else {
+                    System.out.println("Please specify the two devices in the connection being removed using the `-d1` and `-d2` flags when calling disconnect-devices!  Order does not matter.");
+                    continue;
+                }
+
+                // create the connections.
+                disconnectDevices(deviceId1, deviceId2);
+
+                System.out.println("Successfully disconnected  " + deviceId1 + " to " + deviceId2 + "!");
 
             } else if (tokens[0].equals("print-conversations")|| tokens[0].equals("pc")) {
                 printConversations();
@@ -198,6 +236,14 @@ public class NetworkSimulationCLI {
         for (final String m : msgs) {
             System.out.println(m);
         }
+    }
+
+    private static void connectDevices(final String deviceId1, final String deviceId2) {
+        simulation.disconnectDevices(deviceId1, deviceId2);
+    }
+
+    private static void disconnectDevices(final String deviceId1, final String deviceId2) {
+        simulation.disconnectDevices(deviceId1, deviceId2);
     }
 
     /**
