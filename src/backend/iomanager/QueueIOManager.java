@@ -34,7 +34,7 @@ public class QueueIOManager implements IOManager {
     }
 
     @Override
-    public Packet receive() throws IOManagerException {
+    public <T extends Packet> T meshReceive(final Class<T> desiredPacketClass) {
         while (true) {
             // Randomize the checking order to avoid overpolling.
             // Rebuild the list every iteration to remove dead connections.
@@ -42,9 +42,47 @@ public class QueueIOManager implements IOManager {
             Collections.shuffle(inputs);
 
             for (BlockingQueue<Packet> input : inputs) {
-                if (input.size() > 0) {
-                    // Return on the first message received.
-                    return input.remove();
+                synchronized (input) {  // obtain a lock on the current BlockingQueue (to ensure singleDeviceReceive
+                                        // doesn't accidentally take input.)
+                    if (input.size() > 0) {
+                        // see if a Packet of the desired type is in the BlockingQueue.
+                        final Optional<T> foundPacketOptional
+                                = this.getPacketTypeFromBlockingQueue(input, desiredPacketClass);
+
+                        // if a Packet of the desired type was found, return it.
+                        if (foundPacketOptional.isPresent()) {
+                            return foundPacketOptional.get();
+                        }
+                    }
+                }
+            }
+
+            // Wait 100ms before trying again for performance.
+            // Could be arbitrarily long before we have any new messages.
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException _e) {
+                // TODO: Graceful handling of an interrupt.
+            }
+        }
+    }
+
+    @Override
+    public <T extends Packet> T singleDeviceReceive(final String senderId, final Class<T> desiredPacketClass) {
+        final BlockingQueue<Packet> inputQueue = inputQueues.get(senderId);
+        while (true) {
+
+            synchronized (inputQueue) {  // obtain a lock on the current BlockingQueue (to ensure meshDeviceReceive
+                                         // doesn't accidentally take input.)
+                if (inputQueue.size() > 0) {
+                    // see if a Packet of the desired type is in the BlockingQueue.
+                    final Optional<T> foundPacketOptional
+                            = this.getPacketTypeFromBlockingQueue(inputQueue, desiredPacketClass);
+
+                    // if a Packet of the desired type was found, return it.
+                    if (foundPacketOptional.isPresent()) {
+                        return foundPacketOptional.get();
+                    }
                 }
             }
 
@@ -95,5 +133,49 @@ public class QueueIOManager implements IOManager {
             this.inputQueues.remove(deviceId);
             this.outputQueues.remove(deviceId);
         }
+    }
+
+    /**
+     * Obtains the first of the desired Packet type from the passed BlockingQueue.
+     *
+     * If no such packets of the specified type exist in the BlockingQueue, returns Optional.empty().
+     *
+     * NOTE:  This method _does not_ empty the BlockingQueue--all Packets which are iterated through + not returned are
+     * reloaded upon the queue.
+     *
+     * @param queue the BlockingQueue which we are polling for the Packet.
+     * @param desiredPacketClass the desired class of the Packet.
+     * @return an Optional<Packet> containing the first packet of the specified type from the BlockingQueue.  If no such
+     * packet of the specified type exists in the queue, returns Optional.empty().
+     */
+    private <T extends Packet> Optional<T> getPacketTypeFromBlockingQueue(final BlockingQueue<Packet> queue,
+                                                            final Class<T> desiredPacketClass) {
+        // drain the queue's packets to a List.
+        final List<Packet> packetList = new ArrayList<Packet>();
+        queue.drainTo(packetList);
+
+        // peruse the List for the desired Packet type.
+        int packetIdx = 0;
+        for (; packetIdx < packetList.size(); packetIdx++) {
+            // if the current Packet is of the correct class type, stop the search.
+            if (desiredPacketClass.equals(packetList.get(packetIdx).getClass())) {
+                break;
+            }
+        }
+
+        final Optional<T> foundPacketOptional;
+        if (packetIdx < packetList.size()) {
+            // if we found a packet of the correct type, remove it from the packetList and store it.
+            foundPacketOptional = (Optional<T>) Optional.of(packetList.remove(packetIdx));
+        } else {
+            // otherwise, store that no packet was found.
+            foundPacketOptional = Optional.empty();
+        }
+
+        // reload all irrelevant Packets onto the queue.
+        queue.addAll(packetList);
+
+        // return the foundPacketOptional.
+        return foundPacketOptional;
     }
 }

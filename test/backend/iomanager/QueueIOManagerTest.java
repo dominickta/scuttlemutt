@@ -2,8 +2,9 @@ package backend.iomanager;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
-import types.packet.BarkPacket;
 import types.TestUtils;
+import types.packet.BarkPacket;
+import types.packet.KeyExchangePacket;
 import types.packet.Packet;
 
 import java.util.ArrayList;
@@ -136,31 +137,26 @@ public class QueueIOManagerTest {
      * Tests that a single QueueIOManager can properly receive a message.
      */
     @Test
-    public void testReceive_singleManager_singleConnection_singlePacket() {
-        try {
-            QueueIOManager m = new QueueIOManager();
+    public void testMeshReceive_singleManager_singleConnection_singlePacket() {
+        QueueIOManager m = new QueueIOManager();
 
-            final String connectionLabel = "Connection-" + RandomStringUtils.randomAlphanumeric(15);
+        final String connectionLabel = "Connection-" + RandomStringUtils.randomAlphanumeric(15);
 
-            BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
-            BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
+        BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
+        BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
 
-            m.connect(connectionLabel, inputQueue, outputQueue);
+        m.connect(connectionLabel, inputQueue, outputQueue);
 
-            List<Packet> barkPackets = new ArrayList<Packet>();
+        List<Packet> barkPackets = new ArrayList<Packet>();
 
-            for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
-                BarkPacket barkPacket = TestUtils.generateRandomizedBarkPacket();
-                barkPackets.add(barkPacket);
-                inputQueue.add(barkPacket);
-            }
+        for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
+            BarkPacket barkPacket = TestUtils.generateRandomizedBarkPacket();
+            barkPackets.add(barkPacket);
+            inputQueue.add(barkPacket);
+        }
 
-            for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
-                assertEquals(barkPackets.get(i), m.receive());
-            }
-        } catch (IOManagerException e) {
-            System.err.println("Unexpected error during test -- " + e);
-            throw new RuntimeException(e);
+        for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
+            assertEquals(barkPackets.get(i), m.meshReceive(BarkPacket.class));
         }
     }
 
@@ -168,31 +164,26 @@ public class QueueIOManagerTest {
      * Tests that a single QueueIOManager can properly receive multiple messages.
      */
     @Test
-    public void testReceive_singleManager_singleConnection_multiPacket() {
-        try {
-            QueueIOManager m = new QueueIOManager();
+    public void testMeshReceive_singleManager_singleConnection_multiPacket() {
+        QueueIOManager m = new QueueIOManager();
 
-            final String connectionLabel = "Connection-" + RandomStringUtils.randomAlphanumeric(15);
+        final String connectionLabel = "Connection-" + RandomStringUtils.randomAlphanumeric(15);
 
-            BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
-            BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
+        BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
+        BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
 
-            m.connect(connectionLabel, inputQueue, outputQueue);
+        m.connect(connectionLabel, inputQueue, outputQueue);
 
-            List<BarkPacket> barkPackets = new ArrayList<>();
+        List<BarkPacket> barkPackets = new ArrayList<>();
 
-            for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
-                BarkPacket barkPacket = TestUtils.generateRandomizedBarkPacket();
-                barkPackets.add(barkPacket);
-                inputQueue.add(barkPacket);
-            }
+        for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
+            BarkPacket barkPacket = TestUtils.generateRandomizedBarkPacket();
+            barkPackets.add(barkPacket);
+            inputQueue.add(barkPacket);
+        }
 
-            for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
-                assertEquals(barkPackets.get(i), m.receive());
-            }
-        } catch (IOManagerException e) {
-            System.err.println("Unexpected error during test -- " + e);
-            throw new RuntimeException(e);
+        for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
+            assertEquals(barkPackets.get(i), m.meshReceive(BarkPacket.class));
         }
     }
 
@@ -200,43 +191,38 @@ public class QueueIOManagerTest {
      * Tests that a single QueueIOManager can properly receive multiple messages from many connections.
      */
     @Test
-    public void testReceive_singleManager_multiConnection_multiPacket() {
-        try {
-            QueueIOManager m = new QueueIOManager();
+    public void testMeshReceive_singleManager_multiConnection_multiPacket() {
+        QueueIOManager m = new QueueIOManager();
 
-            List<String> connectionLabels = new ArrayList<>();
-            List<BlockingQueue<Packet>> inputQueues = new ArrayList<BlockingQueue<Packet>>();
+        List<String> connectionLabels = new ArrayList<>();
+        List<BlockingQueue<Packet>> inputQueues = new ArrayList<BlockingQueue<Packet>>();
 
-            for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
-                final String connectionLabel = "Connection" + i + "-" + RandomStringUtils.randomAlphanumeric(15);
-                connectionLabels.add(connectionLabel);
+        for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
+            final String connectionLabel = "Connection" + i + "-" + RandomStringUtils.randomAlphanumeric(15);
+            connectionLabels.add(connectionLabel);
 
-                BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
-                BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
+            BlockingQueue<Packet> inputQueue = new LinkedBlockingQueue<Packet>();
+            BlockingQueue<Packet> outputQueue = new LinkedBlockingQueue<Packet>();
 
-                inputQueues.add(inputQueue);
-                m.connect(connectionLabel, inputQueue, outputQueue);
+            inputQueues.add(inputQueue);
+            m.connect(connectionLabel, inputQueue, outputQueue);
+        }
+
+        Set<BarkPacket> barkPackets = new HashSet<>();
+
+        for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
+            for (int bi = 0; bi < this.NUM_PACKETS_FOR_MULTI; bi++) {
+                BarkPacket barkPacket = TestUtils.generateRandomizedBarkPacket();
+                barkPackets.add(barkPacket);
+                inputQueues.get(i).add(barkPacket);
             }
+        }
 
-            Set<BarkPacket> barkPackets = new HashSet<>();
-
-            for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
-                for (int bi = 0; bi < this.NUM_PACKETS_FOR_MULTI; bi++) {
-                    BarkPacket barkPacket = TestUtils.generateRandomizedBarkPacket();
-                    barkPackets.add(barkPacket);
-                    inputQueues.get(i).add(barkPacket);
-                }
+        // Check that all messages exist.
+        for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
+            for (int bi = 0; bi < this.NUM_PACKETS_FOR_MULTI; bi++) {
+                assertTrue(barkPackets.remove(m.meshReceive(BarkPacket.class)));
             }
-
-            // Check that all messages exist.
-            for (int i = 0; i < this.NUM_CONNECTIONS_FOR_MULTI; i++) {
-                for (int bi = 0; bi < this.NUM_PACKETS_FOR_MULTI; bi++) {
-                    assertTrue(barkPackets.remove(m.receive()));
-                }
-            }
-        } catch (IOManagerException e) {
-            System.err.println("Unexpected error during test -- " + e);
-            throw new RuntimeException(e);
         }
     }
 
@@ -268,7 +254,7 @@ public class QueueIOManagerTest {
             }
 
             for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
-                assertEquals(barkPackets.get(i), m2.receive());
+                assertEquals(barkPackets.get(i), m2.meshReceive(BarkPacket.class));
             }
 
             barkPackets = new ArrayList<>();
@@ -280,11 +266,45 @@ public class QueueIOManagerTest {
                 m2.send(connectionLabel1, barkPacket);
             }
             for (int i = 0; i < this.NUM_PACKETS_FOR_MULTI; i++) {
-                assertEquals(barkPackets.get(i), m1.receive());
+                assertEquals(barkPackets.get(i), m1.meshReceive(BarkPacket.class));
             }
         } catch (IOManagerException e) {
             System.err.println("Unexpected error during test -- " + e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void testSingleDeviceReceive_whenUndesiredPacketsAreInQueue_returnsDesiredType_thenCanReturnOtherTypes() {
+        // link-up two QueueIOManagers.
+        final QueueIOManager m1 = new QueueIOManager();
+
+        final String connectionLabel = "Connection-m2-" + RandomStringUtils.randomAlphanumeric(15);
+
+        final BlockingQueue<Packet> q1to2 = new LinkedBlockingQueue<Packet>();
+        final BlockingQueue<Packet> q2to1 = new LinkedBlockingQueue<Packet>();
+
+        m1.connect(connectionLabel, q2to1, q1to2);
+
+        // load up q2to1 with two BarkPackets and then one KeyExchangePacket.
+        final BarkPacket barkPacket1 = TestUtils.generateRandomizedBarkPacket();
+        q2to1.add(barkPacket1);
+        q2to1.add(TestUtils.generateRandomizedBarkPacket());
+        final KeyExchangePacket kePacket = TestUtils.generateRandomizedKeyExchangePacket();
+        q2to1.add(kePacket);
+
+        // use m1 to get a KeyExchangePacket from m2.
+        final KeyExchangePacket receivedKEPacket = m1.singleDeviceReceive(connectionLabel, KeyExchangePacket.class);
+
+        // assert that the receivedPacket is equal to what was originally sent.
+        assertEquals(kePacket, receivedKEPacket);
+
+        // let's now verify that the BarkPackets we originally iterated over are still present and were not dropped.
+
+        // use m1 to get a BarkPacket from m2.
+        final BarkPacket receivedBarkPacket = m1.singleDeviceReceive(connectionLabel, BarkPacket.class);
+
+        // assert that the obtained BarkPacket is identical to barkPacket1.
+        assertEquals(barkPacket1, receivedBarkPacket);
     }
 }

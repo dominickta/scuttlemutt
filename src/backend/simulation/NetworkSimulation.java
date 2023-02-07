@@ -5,7 +5,6 @@ import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import storagemanager.MapStorageManager;
-import types.packet.BarkPacket;
 import types.DawgIdentifier;
 import types.packet.Packet;
 

@@ -17,12 +17,23 @@ public interface IOManager {
     void send(final String receiverId, final Packet packet) throws IOManagerException;
 
     /**
-     * Waits for a Packet to be received by the device, then returns it.
+     * Waits for a Packet to be received by the device from the mesh network, then returns it.
      * Blocks until a packet is received, even if no connections are available.
      *
-     * @return A BarkPacket received by the device.
+     * @param desiredPacketClass the class of the Packet type we wish to receive.
+     * @return A Packet received by the device.
      */
-    Packet receive() throws IOManagerException;
+    <T extends Packet> T meshReceive(final Class<T> desiredPacketClass);
+
+    /**
+     * Waits for a Packet to be received by the device from the specified device, then returns it.
+     * Blocks until a packet is received.
+     *
+     * @param senderId  the ID of the packet's sender.
+     * @param desiredPacketClass the class of the Packet type we wish to receive.
+     * @return a Packet from the specified sender.
+     */
+    <T extends Packet> T singleDeviceReceive(final String senderId, final Class<T> desiredPacketClass);
 
     /**
      * @return The list of ids for available connections.

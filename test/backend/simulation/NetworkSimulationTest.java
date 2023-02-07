@@ -61,7 +61,7 @@ public class NetworkSimulationTest {
             // verify that all other QueueIOManagers successfully received the message.
             for (int i = 1; i < deviceLabels.size(); i++) {
                 final QueueIOManager receiver = simulation.getQueueIOManager(deviceLabels.get(i));
-                assertEquals(barkPacket, receiver.receive());
+                assertEquals(barkPacket, receiver.meshReceive(BarkPacket.class));
             }
 
         } catch (IOManagerException e) {
@@ -88,7 +88,7 @@ public class NetworkSimulationTest {
         // verify that the intended destination device successfully received the message.
         try {
             final QueueIOManager destinationIOManager = simulation.getQueueIOManager(destinationLabel);
-            final Bark receivedMsg = ((BarkPacket) destinationIOManager.receive()).getPacketBarks().get(0);
+            final Bark receivedMsg = destinationIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
             assertEquals(msg, receivedMsg.getContents());
         } catch (IOManagerException e) {
             // this should never happen, print stack trace if it does.
@@ -128,8 +128,8 @@ public class NetworkSimulationTest {
             // assert that we can send messages between device1 and device2
             device1.send(device2Label, barkPacket);
             device2.send(device1Label, barkPacket);
-            final BarkPacket receivedPacket1 = (BarkPacket) device1.receive();
-            final BarkPacket receivedPacket2 = (BarkPacket) device2.receive();
+            final BarkPacket receivedPacket1 = device1.meshReceive(BarkPacket.class);
+            final BarkPacket receivedPacket2 = device2.meshReceive(BarkPacket.class);
             assertEquals(this.barkPacket, receivedPacket1);
             assertEquals(this.barkPacket, receivedPacket2);
 
