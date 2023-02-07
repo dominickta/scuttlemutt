@@ -65,7 +65,7 @@ public class MeshInputTest {
     }
 
     /**
-     * Tests that a new barkPacket will be passed through appropriately.
+     * Tests that a new barkPacket will be passed through.
      */
     @Test
     public void test_singleBark_notSeenPreviously() {

@@ -16,6 +16,8 @@ import java.util.concurrent.BlockingQueue;
  * block (it will probably block).
  */
 public class MeshOutput implements Runnable {
+    private static final long RETRY_SLEEP_MILLIS = 100;
+
     private final IOManager ioManager;
     private final BlockingQueue<Bark> queue;
 
@@ -56,7 +58,7 @@ public class MeshOutput implements Runnable {
                 this.seenBarks.add(nextBark);
                 this.currentBarkPacket = new BarkPacket(List.of(nextBark));
             } catch (InterruptedException _e) {
-                // TODO: Graceful handling of an interrupt.
+                // TODO: Add logging/cleanup as necessary.
                 return;
             }
         }
@@ -85,12 +87,13 @@ public class MeshOutput implements Runnable {
                 this.currentBarkPacket = null;
             }
         } else {
-            // Wait 100ms before trying again for performance.
+            // Wait before trying again for performance.
             // Could be arbitrarily long before we have any connections.
             try {
-                Thread.sleep(100);
+                Thread.sleep(RETRY_SLEEP_MILLIS);
             } catch (InterruptedException _e) {
-                // TODO: Graceful handling of an interrupt.
+                // TODO: Add logging/cleanup as necessary.
+                return;
             }
         }
     }

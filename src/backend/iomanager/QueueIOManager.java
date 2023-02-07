@@ -11,6 +11,8 @@ import java.util.concurrent.BlockingQueue;
  * This manager can be used to simulate a network via feeding the queues to different devices.
  */
 public class QueueIOManager implements IOManager {
+    private static final long RETRY_SLEEP_MILLIS = 100;
+    
     // Set of all available connections
     private final Set<String> connections;
     // Maps connection ID to input stream
@@ -48,12 +50,13 @@ public class QueueIOManager implements IOManager {
                 }
             }
 
-            // Wait 100ms before trying again for performance.
+            // Wait before trying again for performance.
             // Could be arbitrarily long before we have any new messages.
             try {
-                Thread.sleep(100);
+                Thread.sleep(RETRY_SLEEP_MILLIS);
             } catch (InterruptedException _e) {
-                // TODO: Graceful handling of an interrupt.
+                // TODO: Add logging/cleanup as necessary.
+                return null;
             }
         }
     }
