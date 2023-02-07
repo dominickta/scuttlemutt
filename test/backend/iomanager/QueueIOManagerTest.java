@@ -276,7 +276,7 @@ public class QueueIOManagerTest {
 
     @Test
     public void testSingleDeviceReceive_whenUndesiredPacketsAreInQueue_returnsDesiredType_thenCanReturnOtherTypes() {
-        // link-up two QueueIOManagers.
+        // setup QueueIOManager infra for test.
         final QueueIOManager m1 = new QueueIOManager();
 
         final String connectionLabel = "Connection-m2-" + RandomStringUtils.randomAlphanumeric(15);
