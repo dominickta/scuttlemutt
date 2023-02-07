@@ -1,5 +1,8 @@
 package types;
 
+import types.serialization.SerializationUtils;
+
+import java.security.PublicKey;
 import java.util.UUID;
 
 /**
@@ -9,7 +12,7 @@ public class DawgIdentifier {
     // class variables
     private final String userContact;
     private final UUID muttNetworkUUID;
-    private String publicKey;
+    private byte[] publicKeyBytes;
 
     /**
      * Constructs a new DawgIdentifier.
@@ -18,10 +21,10 @@ public class DawgIdentifier {
      *                                initialization.
      * @param publicKey  The user's public key.  This is mutable since the user's key can change.
      */
-    public DawgIdentifier(final String userContact, final UUID scuttlemuttNetworkUUID, final String publicKey) {
+    public DawgIdentifier(final String userContact, final UUID scuttlemuttNetworkUUID, final PublicKey publicKey) {
         this.userContact = userContact;
         this.muttNetworkUUID = scuttlemuttNetworkUUID;
-        this.publicKey = publicKey;
+        this.publicKeyBytes = SerializationUtils.serializeKey(publicKey);
     }
 
     // public methods
@@ -33,12 +36,12 @@ public class DawgIdentifier {
         return this.muttNetworkUUID;
     }
 
-    public String getPublicKey() {
-        return this.publicKey;
+    public PublicKey getPublicKey() {
+        return SerializationUtils.deserializeRSAPublicKey(this.publicKeyBytes);
     }
 
-    public void setPublicKey(final String newPublicKey) {
-        this.publicKey = newPublicKey;
+    public void setPublicKey(final PublicKey publicKey) {
+        this.publicKeyBytes = SerializationUtils.serializeKey(publicKey);
     }
 
     // overrides
@@ -52,6 +55,6 @@ public class DawgIdentifier {
 
     @Override
     public String toString() {
-        return "userContact:  " + this.userContact + "\tmuttNetworkUUID:  " + this.muttNetworkUUID.toString() + "\tpublicKey:  " + this.publicKey;
+        return "userContact:  " + this.userContact + "\tmuttNetworkUUID:  " + this.muttNetworkUUID.toString() + "\tpublicKey:  " + new String(this.publicKeyBytes);
     }
 }

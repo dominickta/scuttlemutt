@@ -3,6 +3,7 @@ package backend.simulation;
 import backend.scuttlemutt.Scuttlemutt;
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
+import crypto.Crypto;
 import org.apache.commons.lang3.RandomStringUtils;
 import storagemanager.MapStorageManager;
 import types.DawgIdentifier;
@@ -39,7 +40,7 @@ public class NetworkSimulation {
 
             // create a Scuttlemutt object which references the above QueueIOManagers
             // TODO:  Replace with crypto functionality in the future.
-            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID(), RandomStringUtils.randomAlphabetic(15));
+            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID(), Crypto.generateKeyPair().getPublic());
             final Scuttlemutt scuttlemutt = new Scuttlemutt(ioManager, dawgId, new MapStorageManager());
 
             // stash the ioManager in the scuttlemuttMap.

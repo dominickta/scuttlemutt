@@ -36,7 +36,7 @@ public class TestUtils {
     public static DawgIdentifier generateRandomizedDawgIdentifier() {
         return new DawgIdentifier(RandomStringUtils.random(15),
                 UUID.randomUUID(),
-                RandomStringUtils.randomAlphabetic(15));
+                Crypto.generateKeyPair().getPublic());
     }
 
     public static Conversation generateRandomizedConversation() {

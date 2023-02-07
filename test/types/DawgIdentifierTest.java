@@ -1,8 +1,10 @@
 package types;
 
+import crypto.Crypto;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 
+import java.security.PublicKey;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,8 +16,8 @@ public class DawgIdentifierTest {
     private static final String userName2 = RandomStringUtils.randomAlphanumeric(15);
     private static final UUID uuid1 = UUID.randomUUID();
     private static final UUID uuid2 = UUID.randomUUID();
-    private static final String publicKey1 = RandomStringUtils.randomAlphanumeric(15);
-    private static final String publicKey2 = RandomStringUtils.randomAlphanumeric(15);
+    private static final PublicKey publicKey1 = Crypto.generateKeyPair().getPublic();
+    private static final PublicKey publicKey2 = Crypto.generateKeyPair().getPublic();
 
     @Test
     public void testConstructor_createsObjectSuccessfully(){

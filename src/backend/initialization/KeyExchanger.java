@@ -61,7 +61,7 @@ public class KeyExchanger {
                 .getPublicKey();
 
         // create a DawgIdentifier using the PublicKey.  TODO:  Make DawgIdentifier use PublicKey type, _NOT_ String.
-        final DawgIdentifier dawgId = new DawgIdentifier(senderId, UUID.randomUUID(), publicKey.toString());
+        final DawgIdentifier dawgId = new DawgIdentifier(senderId, UUID.randomUUID(), publicKey);
 
         // store + return the dawgId.
         this.storageManager.storeDawgIdentifier(dawgId);

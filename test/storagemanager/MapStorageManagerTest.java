@@ -1,5 +1,6 @@
 package storagemanager;
 
+import crypto.Crypto;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ public class MapStorageManagerTest {
         assertEquals(m, obtainedDawgIdentifier);
 
         // update the object in the storage manager.
-        m.setPublicKey(RandomStringUtils.randomAlphanumeric(15));
+        m.setPublicKey(Crypto.generateKeyPair().getPublic());
         this.mapStorageManager.storeDawgIdentifier(m);
 
         // verify that the updated object was stored by looking it up.

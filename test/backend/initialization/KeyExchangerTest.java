@@ -59,6 +59,6 @@ public class KeyExchangerTest {
 
         // receive the PublicKey using the KeyExchanger, verify that the generated DawgIdentifier is as expected.
         final DawgIdentifier dawgId = this.keyExchanger.receivePublicKey(this.otherDeviceId);
-        assertEquals(sentKePacket.getPublicKey().toString(), dawgId.getPublicKey());  // TODO:  Update to not be String comparison once DawgIdentifier has been adapted to use PublicKey type.
+        assertEquals(sentKePacket.getPublicKey(), dawgId.getPublicKey());
     }
 }

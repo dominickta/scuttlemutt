@@ -1,8 +1,10 @@
 package backend.scuttlemutt;
 
+import java.security.PublicKey;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import crypto.Crypto;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import backend.iomanager.IOManager;
@@ -128,11 +130,9 @@ public class Scuttlemutt {
      * @return new DawgIdentifier with generated UUID and public key
      */
     private DawgIdentifier generateDawgIdentifier(String userContact){
-        UUID uuid=UUID.randomUUID();   
-        //TODO: Replace this with actual public key generation once 
-        // encryption method has been decided
-        String publickey = RandomStringUtils.randomAlphabetic(15);
-        return new DawgIdentifier(userContact, uuid, publickey);
+        final UUID uuid = UUID.randomUUID();
+        final PublicKey publicKey = Crypto.generateKeyPair().getPublic();
+        return new DawgIdentifier(userContact, uuid, publicKey);
         
     }
 }
