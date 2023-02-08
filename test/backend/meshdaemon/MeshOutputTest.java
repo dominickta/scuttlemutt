@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
- * Runs tests for MeshInput.
+ * Runs tests for MeshOutput.
  *
  * Tests for:
  * - Sending single a bark
@@ -42,7 +42,7 @@ public class MeshOutputTest {
     private MeshOutput meshOutput;
 
     /**
-     * Sets up a single meshInput object with all the appropriate internals.
+     * Sets up a single MeshOutput object with all the appropriate internals.
      */
     @BeforeEach
     public void setup() {
@@ -68,7 +68,7 @@ public class MeshOutputTest {
         Bark bark = barkPacket.packetBarks.get(0);
         this.meshQueue.add(bark);
 
-        // Allow meshInput to grab the new packet
+        // Allow MeshOutput to grab the new packet
         this.meshOutput.handleOutput();
 
         // Check that the bark made is through
