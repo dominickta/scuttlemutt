@@ -82,6 +82,7 @@ android {
 dependencies {
     implementation("androidx.room:room-common:2.4.2")
     implementation("androidx.room:room-ktx:2.4.2")
+    implementation(project(mapOf("path" to ":scuttlemutt-backend")))
     ksp(libs.androidx.room.compiler)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)

@@ -36,32 +36,47 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import backend.initialization.KeyExchanger
+import backend.iomanager.IOManager
+import backend.iomanager.QueueIOManager
+import backend.scuttlemutt.Scuttlemutt
 //import com.example.compose.jetchat.databinding.ContentMainBinding
 import com.scuttlemutt.app.components.JetchatDrawer
 import com.scuttlemutt.app.conversation.BackPressHandler
 import com.scuttlemutt.app.conversation.LocalBackPressedDispatcher
 import com.scuttlemutt.app.data.ScuttlemuttDatabase
 import com.scuttlemutt.app.databinding.ContentMainBinding
+import crypto.Crypto
 import kotlinx.coroutines.launch
+import storagemanager.MapStorageManager
+import storagemanager.StorageManager
+import types.DawgIdentifier
+import java.security.KeyPair
+import java.security.PublicKey
+import java.util.*
+
 
 /**
  * Main activity for the app.
  */
 class NavActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: com.scuttlemutt.app.MainViewModel
+    private val TAG = "NavActivity"
+    private lateinit var viewModel: MainViewModel
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val database = ScuttlemuttDatabase.getDatabase(this)
-        viewModel = ViewModelProvider(this, com.scuttlemutt.app.MainViewModelFactory(database)).get(
-            com.scuttlemutt.app.MainViewModel::class.java)
-//        GlobalScope.launch {
-//            database.contactDao().insert(Contact(publicKey = "myPublicKey", nickname = "me"))
-//            database.contactDao().insert(Contact(publicKey = "FriendAPublicKey", nickname = "FriendA"))
-//            database.contactDao().insert(Contact(publicKey = "FriendBPublicKey", nickname = "FriendB"))
-//        }
+        viewModel = ViewModelProvider(this, MainViewModelFactory(database)).get(MainViewModel::class.java)
+
+        val mykeys: KeyPair = Crypto.generateKeyPair()
+        val iom: IOManager = QueueIOManager()
+        val dawgid: DawgIdentifier = DawgIdentifier("blah", UUID.randomUUID(), mykeys.public)
+        val storagem: StorageManager = MapStorageManager()
+
+        val mutt: Scuttlemutt = Scuttlemutt(iom, dawgid, storagem)
+        Log.d(TAG, "Testing Scuttlemutt dawgIdentifier: ${mutt.dawgIdentifier}")
 
         // Turn off the decor fitting system windows, which allows us to handle insets,
         // including IME animations
