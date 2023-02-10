@@ -16,9 +16,9 @@
 
 package com.scuttlemutt.app
 
+//import com.example.compose.jetchat.databinding.ContentMainBinding
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.material3.DrawerValue.Closed
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,12 +36,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import backend.initialization.KeyExchanger
 import backend.iomanager.IOManager
 import backend.iomanager.QueueIOManager
 import backend.scuttlemutt.Scuttlemutt
-//import com.example.compose.jetchat.databinding.ContentMainBinding
+import com.google.android.gms.nearby.connection.ConnectionInfo
+import com.google.android.gms.nearby.connection.Payload
+import com.google.android.gms.nearby.connection.Strategy
 import com.scuttlemutt.app.components.JetchatDrawer
+import com.scuttlemutt.app.connection.ConnectionsActivity
 import com.scuttlemutt.app.conversation.BackPressHandler
 import com.scuttlemutt.app.conversation.LocalBackPressedDispatcher
 import com.scuttlemutt.app.data.ScuttlemuttDatabase
@@ -51,19 +53,42 @@ import kotlinx.coroutines.launch
 import storagemanager.MapStorageManager
 import storagemanager.StorageManager
 import types.DawgIdentifier
+import types.packet.BarkPacket
 import java.security.KeyPair
-import java.security.PublicKey
 import java.util.*
 
 
 /**
  * Main activity for the app.
  */
-class NavActivity : AppCompatActivity() {
+class NavActivity() : ConnectionsActivity() {
 
-    private val TAG = "NavActivity"
     private lateinit var viewModel: MainViewModel
 
+
+    private val SERVICE_ID = "com.google.location.nearby.apps.walkietalkie.automatic.SERVICE_ID"
+
+    /**
+     * The state of the app. As the app changes states, the UI will update and advertising/discovery
+     * will start/stop.
+     */
+    private var mState: com.scuttlemutt.app.NavActivity.State =
+        com.scuttlemutt.app.NavActivity.State.UNKNOWN
+
+    /**
+     * Name of the user - ScuttleMutt.DawgIdentifier.userContact
+     */
+    override var name = "Placeholder"
+
+    /**
+     * This service id lets us find other nearby devices that are interested in the same thing. Our
+     * sample does exactly one thing, so we hardcode the ID.
+     */
+    override val serviceId = "com.google.location.nearby.apps.walkietalkie.automatic.SERVICE_ID"
+
+    override val strategy = Strategy.P2P_STAR
+
+    override val TAG = "NavActivity"
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,6 +103,8 @@ class NavActivity : AppCompatActivity() {
         val mutt: Scuttlemutt = Scuttlemutt(iom, dawgid, storagem)
         Log.d(TAG, "Testing Scuttlemutt dawgIdentifier: ${mutt.dawgIdentifier}")
 
+        // Set user name
+        name = mutt.dawgIdentifier.userContact
         // Turn off the decor fitting system windows, which allows us to handle insets,
         // including IME animations
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -149,6 +176,17 @@ class NavActivity : AppCompatActivity() {
         )
     }
 
+    override fun onStart() {
+        super<ConnectionsActivity>.onStart()
+        setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
+    }
+
+    override fun onStop(){
+
+        // After our Activity stops, we disconnect from Nearby Connections.
+        setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
+        super.onStop()
+    }
     override fun onSupportNavigateUp(): Boolean {
         return findNavController().navigateUp() || super.onSupportNavigateUp()
     }
@@ -160,5 +198,114 @@ class NavActivity : AppCompatActivity() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         return navHostFragment.navController
+    }
+
+    /**
+     * Send provided string.
+     */
+    private fun onSend(message: BarkPacket) {
+        logV("startSend()")
+
+        val byteMessage: ByteArray = message.toNetworkBytes()
+        send(Payload.fromBytes(byteMessage))
+    }
+    override fun onReceive(endpoint: Endpoint?, payload: Payload?) {
+        logD("" + payload?.type)
+        if (payload?.type == Payload.Type.BYTES) {
+                val buffer = payload?.asBytes()
+                var messageString = String(buffer!!)
+            if (endpoint != null) {
+                messageString = "From " + endpoint.name + ": " + messageString
+            }
+                logI(messageString, false)
+                logD("RECIEVED MESSAGE")
+            }
+        }
+
+    override fun onEndpointDiscovered(endpoint: Endpoint) {
+        // We found an advertiser!
+        stopDiscovering()
+        connectToEndpoint(endpoint!!)
+    }
+    protected fun verifyConnection(): Boolean {
+        return true
+    }
+    override fun onConnectionInitiated(endpoint: Endpoint, connectionInfo: ConnectionInfo) {
+        // We accept the connection immediately.
+        // TODO: Put some verification with IOManager here.
+        // For now, dummy method that just returns true
+        if(verifyConnection()){
+            acceptConnection(endpoint)
+        }else{
+            rejectConnection(endpoint)
+        }
+
+    }
+
+    override fun onEndpointConnected(endpoint: Endpoint?) {
+        // Maybe a message to say we've been connected?
+        setState(com.scuttlemutt.app.NavActivity.State.CONNECTED)
+    }
+
+    override fun onEndpointDisconnected(endpoint: Endpoint?) {
+        // Maybe a message to say we've been disconnected?
+        setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
+    }
+
+    override fun onConnectionFailed(endpoint: Endpoint?) {
+        // Let's try someone else.
+        if (getState() == com.scuttlemutt.app.NavActivity.State.SEARCHING) {
+            startDiscovering()
+        }
+    }
+    /**
+     * The state has changed. Switch it.
+     *
+     * @param state The new state.
+     */
+    private fun setState(state: com.scuttlemutt.app.NavActivity.State) {
+        if (mState == state) {
+            logW("State set to $state but already in that state")
+            return
+        }
+        logD("State set to $state")
+        val oldState: com.scuttlemutt.app.NavActivity.State = mState
+        mState = state
+        onStateChanged(oldState, state)
+    }
+
+    /** @return The current state.
+     */
+    private fun getState(): com.scuttlemutt.app.NavActivity.State? {
+        return mState
+    }
+
+    /**
+     * State has changed.
+     *
+     * @param oldState The previous state we were in. Clean up anything related to this state.
+     * @param newState The new state we're now in. Prepare the UI for this state.
+     */
+    private fun onStateChanged(
+        oldState: com.scuttlemutt.app.NavActivity.State,
+        newState: com.scuttlemutt.app.NavActivity.State
+    ) {
+        when (newState) {
+            com.scuttlemutt.app.NavActivity.State.SEARCHING -> {
+                disconnectFromAllEndpoints()
+                startDiscovering()
+                startAdvertising()
+            }
+            com.scuttlemutt.app.NavActivity.State.CONNECTED -> {
+                stopDiscovering()
+                stopAdvertising()
+            }
+            com.scuttlemutt.app.NavActivity.State.UNKNOWN -> stopAllEndpoints()
+            else -> {}
+        }
+    }
+    /** States that the UI goes through.  */
+    enum class State {
+        UNKNOWN, SEARCHING, CONNECTED
     }
 }
