@@ -68,8 +68,37 @@ abstract class ConnectionsActivity : AppCompatActivity() {
     protected var isAdvertising = false
         private set
 
+    private val REQUEST_CODE_REQUIRED_PERMISSIONS = 1
 
 
+    private val REQUIRED_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        arrayOf(
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_ADVERTISE,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        arrayOf(
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    }
 
 
     /** Callbacks for connections to other devices.  */
@@ -157,13 +186,13 @@ abstract class ConnectionsActivity : AppCompatActivity() {
     /** Called when our Activity has been made visible to the user.  */
     override fun onStart() {
         super.onStart()
-        if (!hasPermissions(this, *requiredPermissions)) {
+        if (!hasPermissions(this, *getRequiredPermissions())) {
             if (Build.VERSION.SDK_INT < 23) {
                 ActivityCompat.requestPermissions(
-                    this, requiredPermissions, REQUEST_CODE_REQUIRED_PERMISSIONS
+                    this, getRequiredPermissions(), REQUEST_CODE_REQUIRED_PERMISSIONS
                 )
             } else {
-                requestPermissions(requiredPermissions, REQUEST_CODE_REQUIRED_PERMISSIONS)
+                requestPermissions(getRequiredPermissions(), REQUEST_CODE_REQUIRED_PERMISSIONS)
             }
         }
     }
@@ -535,7 +564,7 @@ abstract class ConnectionsActivity : AppCompatActivity() {
         }
     }
 
-    companion object {
+
         /**
          * An optional hook to pool any permissions the app needs with the permissions ConnectionsActivity
          * will request.
@@ -545,41 +574,10 @@ abstract class ConnectionsActivity : AppCompatActivity() {
         /**
          * These permissions are required before connecting to Nearby Connections.
          */
-        protected var requiredPermissions: Array<String>
-            protected get() = Companion.requiredPermissions
-
-        init {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                requiredPermissions = arrayOf(
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_ADVERTISE,
-                    Manifest.permission.BLUETOOTH_CONNECT,
-                    Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.CHANGE_WIFI_STATE,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                requiredPermissions = arrayOf(
-                    Manifest.permission.BLUETOOTH,
-                    Manifest.permission.BLUETOOTH_ADMIN,
-                    Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.CHANGE_WIFI_STATE,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            } else {
-                requiredPermissions = arrayOf(
-                    Manifest.permission.BLUETOOTH,
-                    Manifest.permission.BLUETOOTH_ADMIN,
-                    Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.CHANGE_WIFI_STATE,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            }
+        protected fun getRequiredPermissions():Array<String>{
+         return REQUIRED_PERMISSIONS
         }
 
-        private const val REQUEST_CODE_REQUIRED_PERMISSIONS = 1
 
         /**
          * Transforms a [Status] into a English-readable message for logging.
@@ -611,5 +609,5 @@ abstract class ConnectionsActivity : AppCompatActivity() {
             }
             return true
         }
-    }
+
 }

@@ -244,6 +244,7 @@ class NavActivity() : ConnectionsActivity() {
 
     override fun onEndpointConnected(endpoint: Endpoint?) {
         // Maybe a message to say we've been connected?
+        logD("CONNECTED")
         setState(com.scuttlemutt.app.NavActivity.State.CONNECTED)
     }
 
