@@ -89,11 +89,13 @@ class NavActivity() : ConnectionsActivity() {
     override val strategy = Strategy.P2P_STAR
 
     override val TAG = "NavActivity"
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val database = ScuttlemuttDatabase.getDatabase(this)
-        viewModel = ViewModelProvider(this, MainViewModelFactory(database)).get(MainViewModel::class.java)
+        viewModel =
+            ViewModelProvider(this, MainViewModelFactory(database)).get(MainViewModel::class.java)
 
         val mykeys: KeyPair = Crypto.generateKeyPair()
         val iom: IOManager = QueueIOManager()
@@ -148,7 +150,7 @@ class NavActivity() : ConnectionsActivity() {
                             viewModel = viewModel,
                             activeChannel = activeChannel!!,
                             drawerState = drawerState,
-                            onChatClicked = fun(channel: String){
+                            onChatClicked = fun(channel: String) {
 //                                convViewModel.setChat(channel)
                                 viewModel.setChannel(channel)
 //                                val bundle = bundleOf("channel" to it)
@@ -181,12 +183,13 @@ class NavActivity() : ConnectionsActivity() {
         setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
     }
 
-    override fun onStop(){
+    override fun onStop() {
 
         // After our Activity stops, we disconnect from Nearby Connections.
         setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
         super.onStop()
     }
+
     override fun onSupportNavigateUp(): Boolean {
         return findNavController().navigateUp() || super.onSupportNavigateUp()
     }
@@ -209,34 +212,37 @@ class NavActivity() : ConnectionsActivity() {
         val byteMessage: ByteArray = message.toNetworkBytes()
         send(Payload.fromBytes(byteMessage))
     }
+
     override fun onReceive(endpoint: Endpoint?, payload: Payload?) {
         logD("" + payload?.type)
         if (payload?.type == Payload.Type.BYTES) {
-                val buffer = payload?.asBytes()
-                var messageString = String(buffer!!)
+            val buffer = payload?.asBytes()
+            var messageString = String(buffer!!)
             if (endpoint != null) {
                 messageString = "From " + endpoint.name + ": " + messageString
             }
-                logI(messageString, false)
-                logD("RECIEVED MESSAGE")
-            }
+            logI(messageString, false)
+            logD("RECIEVED MESSAGE")
         }
+    }
 
     override fun onEndpointDiscovered(endpoint: Endpoint) {
         // We found an advertiser!
         stopDiscovering()
         connectToEndpoint(endpoint!!)
     }
+
     protected fun verifyConnection(): Boolean {
         return true
     }
+
     override fun onConnectionInitiated(endpoint: Endpoint, connectionInfo: ConnectionInfo) {
         // We accept the connection immediately.
         // TODO: Put some verification with IOManager here.
         // For now, dummy method that just returns true
-        if(verifyConnection()){
+        if (verifyConnection()) {
             acceptConnection(endpoint)
-        }else{
+        } else {
             rejectConnection(endpoint)
         }
 
@@ -259,6 +265,7 @@ class NavActivity() : ConnectionsActivity() {
             startDiscovering()
         }
     }
+
     /**
      * The state has changed. Switch it.
      *
@@ -305,6 +312,7 @@ class NavActivity() : ConnectionsActivity() {
             else -> {}
         }
     }
+
     /** States that the UI goes through.  */
     enum class State {
         UNKNOWN, SEARCHING, CONNECTED

@@ -155,7 +155,7 @@ abstract class ConnectionsActivity : AppCompatActivity() {
 
     /** Callbacks for payloads (bytes of data) sent from another device to us.  */
 
-    private val mPayloadCallback: PayloadCallback = object:PayloadCallback() {
+    private val mPayloadCallback: PayloadCallback = object : PayloadCallback() {
 
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
             logD(
@@ -362,7 +362,7 @@ abstract class ConnectionsActivity : AppCompatActivity() {
     }
 
     /** Called when discovery successfully starts. Override this method to act on the event.  */
-    protected fun onDiscoveryStarted(){}
+    protected fun onDiscoveryStarted() {}
 
     /** Called when discovery fails to start. Override this method to act on the event.  */
     protected fun onDiscoveryFailed() {
@@ -565,49 +565,49 @@ abstract class ConnectionsActivity : AppCompatActivity() {
     }
 
 
-        /**
-         * An optional hook to pool any permissions the app needs with the permissions ConnectionsActivity
-         * will request.
-         *
-         * @return All permissions required for the app to properly function.
-         */
-        /**
-         * These permissions are required before connecting to Nearby Connections.
-         */
-        protected fun getRequiredPermissions():Array<String>{
-         return REQUIRED_PERMISSIONS
-        }
+    /**
+     * An optional hook to pool any permissions the app needs with the permissions ConnectionsActivity
+     * will request.
+     *
+     * @return All permissions required for the app to properly function.
+     */
+    /**
+     * These permissions are required before connecting to Nearby Connections.
+     */
+    protected fun getRequiredPermissions(): Array<String> {
+        return REQUIRED_PERMISSIONS
+    }
 
 
-        /**
-         * Transforms a [Status] into a English-readable message for logging.
-         *
-         * @param status The current status
-         * @return A readable String. eg. [404]File not found.
-         */
-        private fun toString(status: Status): String {
-            return java.lang.String.format(
-                Locale.US,
-                "[%d]%s",
-                status.getStatusCode(),
-                if (status.getStatusMessage() != null) status.getStatusMessage() else ConnectionsStatusCodes.getStatusCodeString(
-                    status.getStatusCode()
-                )
+    /**
+     * Transforms a [Status] into a English-readable message for logging.
+     *
+     * @param status The current status
+     * @return A readable String. eg. [404]File not found.
+     */
+    private fun toString(status: Status): String {
+        return java.lang.String.format(
+            Locale.US,
+            "[%d]%s",
+            status.getStatusCode(),
+            if (status.getStatusMessage() != null) status.getStatusMessage() else ConnectionsStatusCodes.getStatusCodeString(
+                status.getStatusCode()
             )
-        }
+        )
+    }
 
-        /**
-         * Returns `true` if the app was granted all the permissions. Otherwise, returns `false`.
-         */
-        fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
-            for (permission in permissions) {
-                if (ContextCompat.checkSelfPermission(context!!, permission!!)
-                    != PackageManager.PERMISSION_GRANTED
-                ) {
-                    return false
-                }
+    /**
+     * Returns `true` if the app was granted all the permissions. Otherwise, returns `false`.
+     */
+    fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
+        for (permission in permissions) {
+            if (ContextCompat.checkSelfPermission(context!!, permission!!)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                return false
             }
-            return true
         }
+        return true
+    }
 
 }
