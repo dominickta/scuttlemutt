@@ -1,5 +1,8 @@
 package types;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import types.serialization.SerializationUtils;
 
 import java.security.PublicKey;
@@ -9,6 +12,8 @@ import java.util.UUID;
  * Represents a unique identifier for users on the network.
  */
 public class DawgIdentifier {
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
+
     // class variables
     private final String userContact;
     private final UUID muttNetworkUUID;
@@ -51,6 +56,25 @@ public class DawgIdentifier {
             return false;
         }
         return this.getUniqueId().equals(((DawgIdentifier) o).getUniqueId());
+    }
+
+    /**
+     * Returns a byte[] containing the bytes which represent the DawgIdentifier.
+     *
+     * @return a byte[] containing the bytes which represent the DawgIdentifier.
+     */
+    public byte[] toNetworkBytes() {
+        return GSON.toJson(this).getBytes();
+    }
+
+    /**
+     * Returns a DawgIdentifier derived from the passed byte[].
+     *
+     * @return a DawgIdentifier derived from the passed byte[].
+     */
+    public static DawgIdentifier fromNetworkBytes(final byte[] dawgIdentifierBytes) {
+        // TODO:  Add decryption here.
+        return GSON.fromJson(new String(dawgIdentifierBytes), DawgIdentifier.class);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package types;
 
+import static java.lang.Thread.sleep;
+
 import crypto.Crypto;
 import org.apache.commons.lang3.RandomStringUtils;
 import types.packet.BarkPacket;
@@ -41,5 +43,14 @@ public class TestUtils {
 
     public static Conversation generateRandomizedConversation() {
         return new Conversation(Collections.singletonList(generateRandomizedDawgIdentifier()));
+    }
+
+    public static void sleepOneSecond() {
+        // allow request to complete.
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
