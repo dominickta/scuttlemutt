@@ -103,6 +103,14 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
+    public List<DawgIdentifier> getAllDawgIdentifiers() {
+        return this.dawgIdentifierMap.values()
+                .stream()
+                .map(s -> GSON.fromJson(s, DawgIdentifier.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<Conversation> listAllConversations() {
         return this.conversationMap.values()
                 .stream()

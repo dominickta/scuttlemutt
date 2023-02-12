@@ -6,6 +6,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -14,9 +15,12 @@ import java.util.UUID;
 @Dao
 public interface DawgIdentifierDao {
     @Query("SELECT * FROM dawgidentifierentry WHERE uuid LIKE :dawgIdUuid LIMIT 1")
-    DawgIdentifierEntry findByUuid(UUID dawgIdUuid);
+    DawgIdentifierEntry findByUuid(String dawgIdUuid);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Query("SELECT * FROM dawgidentifierentry")
+    List<DawgIdentifierEntry> getAllDawgIdentifiers();
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     long insertDawgIdentifierEntry(DawgIdentifierEntry dawgIdentifierEntry);
 
     @Delete

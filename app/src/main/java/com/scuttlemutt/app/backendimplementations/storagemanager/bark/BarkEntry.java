@@ -17,7 +17,7 @@ import types.Conversation;
 public class BarkEntry {
     @PrimaryKey
     @NonNull
-    public UUID uuid;
+    public String uuid;
 
     @ColumnInfo(name = "barkJson")
     @NonNull
@@ -28,7 +28,7 @@ public class BarkEntry {
      *
      * (Otherwise, BarkEntry class is not a valid Entity.)
      */
-    public BarkEntry(@NonNull final UUID uuid,
+    public BarkEntry(@NonNull final String uuid,
                      @NonNull final String barkJson) {
         this.uuid = uuid;
         this.barkJson = barkJson;
@@ -39,7 +39,7 @@ public class BarkEntry {
      * @param bark The Bark object from which this entry is being constructed.
      */
     public BarkEntry(final Bark bark) {
-        this.uuid = bark.getUniqueId();
+        this.uuid = bark.getUniqueId().toString();
         this.barkJson = new String(bark.toNetworkBytes());
     }
 

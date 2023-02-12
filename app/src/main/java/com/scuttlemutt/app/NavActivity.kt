@@ -36,23 +36,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import backend.initialization.KeyExchanger
-import backend.iomanager.IOManager
-import backend.iomanager.QueueIOManager
 import backend.scuttlemutt.Scuttlemutt
-//import com.example.compose.jetchat.databinding.ContentMainBinding
 import com.scuttlemutt.app.components.JetchatDrawer
 import com.scuttlemutt.app.conversation.BackPressHandler
 import com.scuttlemutt.app.conversation.LocalBackPressedDispatcher
-import com.scuttlemutt.app.data.ScuttlemuttDatabase
 import com.scuttlemutt.app.databinding.ContentMainBinding
-import crypto.Crypto
 import kotlinx.coroutines.launch
-import storagemanager.MapStorageManager
-import storagemanager.StorageManager
-import types.DawgIdentifier
-import java.security.KeyPair
-import java.security.PublicKey
 import java.util.*
 
 
@@ -63,20 +52,15 @@ class NavActivity : AppCompatActivity() {
 
     private val TAG = "NavActivity"
     private lateinit var viewModel: MainViewModel
+    private lateinit var mutt: Scuttlemutt
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val database = ScuttlemuttDatabase.getDatabase(this)
-        viewModel = ViewModelProvider(this, MainViewModelFactory(database)).get(MainViewModel::class.java)
-
-        val mykeys: KeyPair = Crypto.generateKeyPair()
-        val iom: IOManager = QueueIOManager()
-        val dawgid: DawgIdentifier = DawgIdentifier("blah", UUID.randomUUID(), mykeys.public)
-        val storagem: StorageManager = MapStorageManager()
-
-        val mutt: Scuttlemutt = Scuttlemutt(iom, dawgid, storagem)
-        Log.d(TAG, "Testing Scuttlemutt dawgIdentifier: ${mutt.dawgIdentifier}")
+        Log.d(TAG, "GETTING SCUTTLEMUTT INSTANCE")
+        mutt = SingletonScuttlemutt.getInstance(this)
+        viewModel = ViewModelProvider(this, MainViewModelFactory(mutt)).get(MainViewModel::class.java)
+        Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
 
         // Turn off the decor fitting system windows, which allows us to handle insets,
         // including IME animations
@@ -93,7 +77,7 @@ class NavActivity : AppCompatActivity() {
                         val drawerOpen by viewModel.drawerShouldBeOpened
                             .collectAsStateWithLifecycle()
 
-                        val activeChannel by viewModel.activeChannel.observeAsState()
+                        val activeChannel by viewModel.activeContact.observeAsState()
 
                         if (drawerOpen) {
                             // Open drawer and reset state in VM.
@@ -122,11 +106,8 @@ class NavActivity : AppCompatActivity() {
                             activeChannel = activeChannel!!,
                             drawerState = drawerState,
                             onChatClicked = fun(channel: String){
-//                                convViewModel.setChat(channel)
                                 viewModel.setChannel(channel)
-//                                val bundle = bundleOf("channel" to it)
-//                                Log.d("NavActivity", "Navigating to nav_home")
-//                                findNavController().navigate(R.id.nav_home, bundle)
+                                Log.d("NavActivity", "Navigating to nav_home")
                                 findNavController().navigate(R.id.nav_home)
                                 scope.launch {
                                     drawerState.close()

@@ -68,8 +68,6 @@ import com.scuttlemutt.app.FunctionalityNotAvailablePopup
 import com.scuttlemutt.app.R
 import com.scuttlemutt.app.components.AnimatingFabContent
 import com.scuttlemutt.app.components.baselineHeight
-import com.scuttlemutt.app.data.colleagueProfile
-import com.scuttlemutt.app.data.meProfile
 import com.scuttlemutt.app.theme.JetchatTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)

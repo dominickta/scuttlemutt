@@ -16,6 +16,8 @@
 
 package com.scuttlemutt.app.conversation
 
+import ConversationViewModel
+import ConversationViewModelFactory
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -39,23 +41,27 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
+import backend.scuttlemutt.Scuttlemutt
 import com.scuttlemutt.app.R
-import com.scuttlemutt.app.data.ScuttlemuttDatabase
+import com.scuttlemutt.app.SingletonScuttlemutt
 import com.scuttlemutt.app.theme.JetchatTheme
 
 class ConversationFragment : Fragment() {
     private val TAG = "ConversationFragment"
     private val activityViewModel: com.scuttlemutt.app.MainViewModel by activityViewModels()
 
-    private lateinit var database: ScuttlemuttDatabase
     private lateinit var conversationViewModel: ConversationViewModel
+
+    private lateinit var mutt: Scuttlemutt
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        database = ScuttlemuttDatabase.getDatabase(context)
-        val channel = activityViewModel.activeChannel.value ?: "" // Consider using safe args plugin
-        conversationViewModel = ViewModelProvider(requireActivity(), ConversationViewModelFactory(database, channel)).get(ConversationViewModel::class.java)
-        conversationViewModel.setChat(channel)
+        Log.d(TAG, "GETTING SCUTTLEMUTT INSTANCE")
+        mutt = SingletonScuttlemutt.getInstance()
+        val activeChat = activityViewModel.activeContact.value ?: "" // Consider using safe args plugin
+        conversationViewModel = ViewModelProvider(requireActivity(), ConversationViewModelFactory(activityViewModel, mutt, activeChat)).get(ConversationViewModel::class.java)
+        conversationViewModel.setChat(activeChat)
+        Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
     }
 
 
