@@ -14,7 +14,7 @@ import java.util.UUID;
 @Dao
 public interface BarkDao {
     @Query("SELECT * FROM barkentry WHERE uuid LIKE :barkUuid LIMIT 1")
-    BarkEntry findByUuid(UUID barkUuid);
+    BarkEntry findByUuid(String barkUuid);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insertBarkEntry(BarkEntry barkEntry);

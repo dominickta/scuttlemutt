@@ -19,7 +19,7 @@ import types.DawgIdentifier;
 public class DawgIdentifierEntry {
     @PrimaryKey
     @NonNull
-    public UUID uuid;
+    public String uuid;
 
     @ColumnInfo(name = "dawgIdentifierJson")
     @NonNull
@@ -30,7 +30,7 @@ public class DawgIdentifierEntry {
      *
      * (Otherwise, DawgIdentifierEntry class is not a valid Entity.)
      */
-    public DawgIdentifierEntry(@NonNull final UUID uuid,
+    public DawgIdentifierEntry(@NonNull final String uuid,
                                @NonNull final String dawgIdentifierJson) {
         this.uuid = uuid;
         this.dawgIdentifierJson = dawgIdentifierJson;
@@ -41,7 +41,7 @@ public class DawgIdentifierEntry {
      * @param dawgId The DawgIdentifier object from which this entry is being constructed.
      */
     public DawgIdentifierEntry(final DawgIdentifier dawgId) {
-        this.uuid = dawgId.getUniqueId();
+        this.uuid = dawgId.getUniqueId().toString();
         this.dawgIdentifierJson = new String(dawgId.toNetworkBytes());
     }
 

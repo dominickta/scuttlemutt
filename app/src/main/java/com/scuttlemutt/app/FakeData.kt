@@ -14,21 +14,29 @@
  * limitations under the License.
  */
 
-package com.scuttlemutt.app.conversation
+package com.scuttlemutt.app
 
-import androidx.compose.runtime.Immutable
-import com.scuttlemutt.app.R
+import crypto.Crypto
+import types.DawgIdentifier
+import java.util.*
 
-data class ConversationUiState(
-    var contactName: String,
-    var messages: List<FrontEndMessage>
+val AKeys = Crypto.generateKeyPair()
+val ADawgTag = DawgIdentifier(
+    "ADawg",
+    UUID.fromString("26f4dfb5-ac74-4832-90ef-05daf947aa87"),
+    AKeys.public
 )
 
-@Immutable
-data class FrontEndMessage(
-    val author: String,
-    val content: String,
-    val timestamp: String,
-//    val image: Int? = null, // for messages that have an img attachment
-    val authorImage: Int = if (author == "me") R.drawable.ali else R.drawable.someone_else
+val BKeys = Crypto.generateKeyPair()
+val BDawgTag = DawgIdentifier(
+    "BDawg",
+    UUID.fromString("fa47fef0-a646-4959-8f36-efdf94a4f295"),
+    BKeys.public
+)
+
+val CKeys = Crypto.generateKeyPair()
+val CDawgTag = DawgIdentifier(
+    "CDawg",
+    UUID.fromString("9d2166e8-da9b-48f8-b3fe-34e0162bf79a"),
+    CKeys.public
 )

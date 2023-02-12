@@ -34,13 +34,13 @@ public class RoomStorageManager implements StorageManager {
 
     @Override
     public Bark lookupBark(UUID barkUuid) {
-        final BarkEntry be = this.appDb.barkDao().findByUuid(barkUuid);
+        final BarkEntry be = this.appDb.barkDao().findByUuid(barkUuid.toString());
         return be != null ? be.toBark() : null;
     }
 
     @Override
     public DawgIdentifier lookupDawgIdentifier(UUID dawgIdentifierUuid) {
-        final DawgIdentifierEntry de = this.appDb.dawgIdentifierDao().findByUuid(dawgIdentifierUuid);
+        final DawgIdentifierEntry de = this.appDb.dawgIdentifierDao().findByUuid(dawgIdentifierUuid.toString());
         return de != null ? de.toDawgIdentifier() : null;
     }
 
@@ -72,7 +72,7 @@ public class RoomStorageManager implements StorageManager {
     @Override
     public Bark deleteBark(UUID barkUuid) {
         // find the BarkEntry that needs to be deleted.
-        final BarkEntry b = this.appDb.barkDao().findByUuid(barkUuid);
+        final BarkEntry b = this.appDb.barkDao().findByUuid(barkUuid.toString());
 
         // delete the BarkEntry.
         this.appDb.barkDao().deleteBarkEntry(b);
@@ -84,7 +84,7 @@ public class RoomStorageManager implements StorageManager {
     @Override
     public DawgIdentifier deleteDawgIdentifier(UUID dawgIdentifierUuid) {
         // find the DawgIdentifierEntry that needs to be deleted.
-        final DawgIdentifierEntry d = this.appDb.dawgIdentifierDao().findByUuid(dawgIdentifierUuid);
+        final DawgIdentifierEntry d = this.appDb.dawgIdentifierDao().findByUuid(dawgIdentifierUuid.toString());
 
         // delete the DawgIdentifierEntry.
         this.appDb.dawgIdentifierDao().deleteDawgIdentifierEntry(d);
@@ -113,6 +113,14 @@ public class RoomStorageManager implements StorageManager {
         final List<ConversationEntry> ces = this.appDb.conversationDao().listAllConversations();
         return ces.stream()
                 .map(ConversationEntry::toConversation)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DawgIdentifier> getAllDawgIdentifiers() {
+        final List<DawgIdentifierEntry> ces = this.appDb.dawgIdentifierDao().getAllDawgIdentifiers();
+        return ces.stream()
+                .map(DawgIdentifierEntry::toDawgIdentifier)
                 .collect(Collectors.toList());
     }
 }

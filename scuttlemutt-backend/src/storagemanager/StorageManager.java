@@ -34,4 +34,6 @@ public interface StorageManager {
 
     // list*() methods
     List<Conversation> listAllConversations();
+
+    List<DawgIdentifier> getAllDawgIdentifiers();
 }

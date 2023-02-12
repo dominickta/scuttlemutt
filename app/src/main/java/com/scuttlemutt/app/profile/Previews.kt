@@ -18,9 +18,38 @@ package com.scuttlemutt.app.profile
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.scuttlemutt.app.data.colleagueProfile
-import com.scuttlemutt.app.data.meProfile
+import com.scuttlemutt.app.R
 import com.scuttlemutt.app.theme.JetchatTheme
+
+/**
+ * Example colleague profile
+ */
+val colleagueProfile = ProfileScreenState(
+    userId = "12345",
+    photo = R.drawable.someone_else,
+    name = "Taylor Brooks",
+    status = "Away",
+    displayName = "taylor",
+    position = "Senior Android Dev at Openlane",
+    twitter = "twitter.com/taylorbrookscodes",
+    timeZone = "12:25 AM local time (Eastern Daylight Time)",
+    commonChannels = "2"
+)
+
+/**
+ * Example "me" profile.
+ */
+val meProfile = ProfileScreenState(
+    userId = "me",
+    photo = R.drawable.ali,
+    name = "Ali Conors",
+    status = "Online",
+    displayName = "aliconors",
+    position = "Senior Android Dev at Yearin\nGoogle Developer Expert",
+    twitter = "twitter.com/aliconors",
+    timeZone = "In your timezone",
+    commonChannels = null
+)
 
 @Preview(widthDp = 340, name = "340 width - Me")
 @Composable

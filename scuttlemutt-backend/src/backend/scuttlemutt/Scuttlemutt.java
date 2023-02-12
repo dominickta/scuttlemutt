@@ -10,6 +10,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import backend.iomanager.IOManager;
 import backend.meshdaemon.MeshDaemon;
 import storagemanager.StorageManager;
+import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
 import static java.util.stream.Collectors.toList;
@@ -74,17 +75,32 @@ public class Scuttlemutt {
      * @return a List<String> containing the messages of the passed Conversation.
      */
     public List<String> getMessagesForConversation(final Conversation conversation) {
-        final List<String> msgs = new ArrayList<String>();
-        for (final UUID uuid : conversation.getBarkUUIDList()) {
-            // TODO:  Replace this with code which actually looks up the full msg instead of just one Bark.
-            //   (if we don't do this though, the demo should still work given a short enough msg)
-            final String msg = this.storageManager
-                    .lookupBark(uuid)
-                    .getContents();
+        return getBarksForConversation(conversation).stream().map(Bark::getContents).collect(toList());
+    }
 
-            msgs.add(msg);
+    /**
+     * Returns a List<Bark> containing the barks of the passed Conversation.
+     * @param conversation  the Conversation whose barks we're obtaining.
+     * @return a List<Bark> containing the barks of the passed Conversation, or null.
+     */
+    public List<Bark> getBarksForConversation(final Conversation conversation) {
+        final List<Bark> barks = new ArrayList<Bark>();
+        for (final UUID uuid : conversation.getBarkUUIDList()) {
+            final Bark bark = this.storageManager.lookupBark(uuid);
+            if (bark == null) {
+                return null;
+            }
+            barks.add(bark);
         }
-        return msgs;
+        return barks;
+    }
+
+    public List<DawgIdentifier> getAllContacts() {
+        return this.storageManager.getAllDawgIdentifiers();
+    }
+
+    public boolean haveContact(final UUID muttNetworkUUID) {
+        return this.storageManager.lookupDawgIdentifier(muttNetworkUUID) != null;
     }
 
     public void addContact(final DawgIdentifier dawgIdentifier) {
@@ -109,11 +125,7 @@ public class Scuttlemutt {
         final Conversation c = this.storageManager.lookupConversation(convoIds);
 
         if (c == null) {
-            final String convoIdListString = dawgIdentifiers.stream()
-                    .map(id -> id.getUniqueId().toString())
-                    .collect(Collectors.joining(", "));
-            throw new RuntimeException("Attempted to get a nonexistent Converation!  Scuttlemutt instance:  " + this.dawgIdentifier.getUniqueId().toString()
-                    + "\tConversation DawgIdentifier IDs:  " + convoIdListString);
+            return null;
         }
 
         return c;
