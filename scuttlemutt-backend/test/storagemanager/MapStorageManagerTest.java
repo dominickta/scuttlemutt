@@ -1,7 +1,6 @@
 package storagemanager;
 
 import crypto.Crypto;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import types.Bark;
@@ -25,6 +24,22 @@ public class MapStorageManagerTest {
         m = TestUtils.generateRandomizedDawgIdentifier();
         c = TestUtils.generateRandomizedConversation();
         this.mapStorageManager = new MapStorageManager();
+    }
+
+    @Test
+    public void testBarkStorageLifecycle() {
+        // create the object in the storage manager.
+        this.mapStorageManager.storeBark(b);
+
+        // lookup the object in the storage manager.
+        final Bark obtainedBark = this.mapStorageManager.lookupBark(b.getUniqueId());
+        assertEquals(b, obtainedBark);
+
+        // successfully delete the object.
+        this.mapStorageManager.deleteBark(b.getUniqueId());
+
+        // verify that the object was deleted.
+        assertNull(this.mapStorageManager.lookupBark(b.getUniqueId()));
     }
 
     @Test

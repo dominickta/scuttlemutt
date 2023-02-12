@@ -1,5 +1,8 @@
 package types;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -12,6 +15,8 @@ import java.util.stream.Collectors;
  * metadata though.  In the future, we can add more to this class as necessary.
  */
 public class Conversation {
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
+
     // class variables
     private final List<DawgIdentifier> userList;
     private final List<UUID> barkList;  // a List of the UUIDs of the Barks associated with the conversation.
@@ -62,6 +67,26 @@ public class Conversation {
      */
     public void storeBarkUUID(final UUID barkUUID) {
         this.barkList.add(barkUUID);
+    }
+
+    /**
+     * Returns a byte[] containing the bytes which represent the Conversation.
+     *
+     * @return a byte[] containing the bytes which represent the Conversation.
+     */
+    public byte[] toNetworkBytes() {
+        // TODO:  Add encryption here.
+
+        return GSON.toJson(this).getBytes();
+    }
+
+    /**
+     * Returns a Conversation derived from the passed byte[].
+     *
+     * @return a Conversation derived from the passed byte[].
+     */
+    public static Conversation fromNetworkBytes(final byte[] conversationBytes) {
+        return GSON.fromJson(new String(conversationBytes), Conversation.class);
     }
 
     // overrides
