@@ -7,7 +7,6 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * DAO for DawgIdentifierEntry objects.
@@ -20,7 +19,7 @@ public interface DawgIdentifierDao {
     @Query("SELECT * FROM dawgidentifierentry")
     List<DawgIdentifierEntry> getAllDawgIdentifiers();
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insertDawgIdentifierEntry(DawgIdentifierEntry dawgIdentifierEntry);
 
     @Delete

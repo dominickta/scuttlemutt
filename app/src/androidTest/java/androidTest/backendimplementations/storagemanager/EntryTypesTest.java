@@ -31,7 +31,7 @@ public class EntryTypesTest {
 
         // verify that the contents of the entry are as expected.
         assertEquals(new String(b.toNetworkBytes()), be.barkJson);
-        assertEquals(b.getUniqueId(), be.uuid);
+        assertEquals(b.getUniqueId().toString(), be.uuid);
     }
 
     @Test
@@ -57,7 +57,7 @@ public class EntryTypesTest {
 
         // verify that the contents of the entry are as expected.
         assertEquals(new String(d.toNetworkBytes()), de.dawgIdentifierJson);
-        assertEquals(d.getUniqueId(), de.uuid);
+        assertEquals(d.getUniqueId().toString(), de.uuid);
     }
 
     @Test

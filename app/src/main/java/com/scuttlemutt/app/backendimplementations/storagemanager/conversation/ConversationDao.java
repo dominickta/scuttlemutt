@@ -7,7 +7,6 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * DAO for ConversationEntry objects.
