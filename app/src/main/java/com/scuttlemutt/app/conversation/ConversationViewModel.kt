@@ -57,6 +57,8 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
     fun setChat(newChatPartnerName: String) {
         Log.d(TAG, "Changing contact to: $newChatPartnerName")
         contactName = newChatPartnerName
+        //Set to default value
+        contactID = mutt.dawgIdentifier
         _currUiState.value!!.contactName = contactName
         viewModelScope.launch {
             withContext(Dispatchers.Default) {

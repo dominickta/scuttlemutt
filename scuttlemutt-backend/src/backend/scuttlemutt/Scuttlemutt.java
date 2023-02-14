@@ -24,7 +24,7 @@ public class Scuttlemutt {
     // Identifier object of user
     private final DawgIdentifier dawgIdentifier;
     // I/O manager
-    private final IOManager ioManager;
+    public final IOManager ioManager;
     // Database of connected users, previous conversations, and previous messages
     private final StorageManager storageManager;
     // Daemon controlling recieving and broadcasting of messages
