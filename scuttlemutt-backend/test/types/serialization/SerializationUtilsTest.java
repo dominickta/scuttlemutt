@@ -1,17 +1,18 @@
 package types.serialization;
 
-import crypto.Crypto;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.security.PublicKey;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import crypto.Crypto;
 
 public class SerializationUtilsTest {
     @Test
     public void testPublicKeySerializationLifecycle() {
         // create a PublicKey.
-        final PublicKey publicKey = Crypto.generateKeyPair().getPublic();
+        final PublicKey publicKey = Crypto.alice.getPublic();
 
         // serialize the PublicKey.
         final byte[] publicKeyBytes = SerializationUtils.serializeKey(publicKey);

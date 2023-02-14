@@ -1,17 +1,21 @@
 package backend.simulation;
 
-import backend.scuttlemutt.Scuttlemutt;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
+import backend.scuttlemutt.Scuttlemutt;
 import crypto.Crypto;
-import org.apache.commons.lang3.RandomStringUtils;
 import storagemanager.MapStorageManager;
 import types.DawgIdentifier;
 import types.packet.Packet;
-
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Sets up and stores QueueIOManager objects to simulate a network.
@@ -25,7 +29,7 @@ public class NetworkSimulation {
     /**
      * Creates a new NetworkSimulation where all devices are fully interconnected.
      *
-     * @param deviceLabels  The labels of the devices on the simulated network.
+     * @param deviceLabels The labels of the devices on the simulated network.
      */
     public NetworkSimulation(final List<String> deviceLabels) {
         // setup the QueueIOManager + Scuttlemutt for each device.
@@ -39,15 +43,14 @@ public class NetworkSimulation {
             queueIOManagerMap.put(deviceLabel, ioManager);
 
             // create a Scuttlemutt object which references the above QueueIOManagers
-            // TODO:  Replace with crypto functionality in the future.
-            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID(), Crypto.generateKeyPair().getPublic());
+            // TODO: Replace with crypto functionality in the future.
+            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID(), Crypto.alice.getPublic());
             final Scuttlemutt scuttlemutt = new Scuttlemutt(ioManager, dawgId, new MapStorageManager());
 
             // stash the ioManager in the scuttlemuttMap.
             scuttlemuttMap.put(deviceLabel, scuttlemutt);
         }
     }
-
 
     public void connectAll() {
         List<String> deviceLabels = new ArrayList<>();
@@ -82,8 +85,9 @@ public class NetworkSimulation {
 
     /**
      * Obtains the Scuttlemutt object associated with the passed deviceLabel.
-     * @param deviceLabel  The label associated with the desired Scuttlemutt object.
-     * @return  The Scuttlemutt object associated with the passed label.
+     * 
+     * @param deviceLabel The label associated with the desired Scuttlemutt object.
+     * @return The Scuttlemutt object associated with the passed label.
      */
     public Scuttlemutt getScuttlemutt(final String deviceLabel) {
         if (!this.scuttlemuttMap.containsKey(deviceLabel)) {
@@ -94,8 +98,9 @@ public class NetworkSimulation {
 
     /**
      * Obtains the QueueIOManager associated with the passed deviceLabel.
-     * @param deviceLabel  The label associated with the desired QueueIOManager.
-     * @return  The QueueIOManager associated with the passed label.
+     * 
+     * @param deviceLabel The label associated with the desired QueueIOManager.
+     * @return The QueueIOManager associated with the passed label.
      */
     public QueueIOManager getQueueIOManager(final String deviceLabel) throws IOManagerException {
         if (!this.queueIOManagerMap.containsKey(deviceLabel)) {
@@ -106,8 +111,9 @@ public class NetworkSimulation {
 
     /**
      * Sets-up a connection between the two specified devices.
-     * @param device1Label  The label of one of the devices in the connection.
-     * @param device2Label  The label of the other device in the connection.
+     * 
+     * @param device1Label The label of one of the devices in the connection.
+     * @param device2Label The label of the other device in the connection.
      */
     public void connectDevices(final String device1Label, final String device2Label) {
         // we should not allow a device to connect to itself.
@@ -132,8 +138,9 @@ public class NetworkSimulation {
 
     /**
      * Removes a connection between the two specified devices.I
-     * @param device1Label  The label of one of the devices in the connection.
-     * @param device2Label  The label of the other device in the connection.
+     * 
+     * @param device1Label The label of one of the devices in the connection.
+     * @param device2Label The label of the other device in the connection.
      */
     public void disconnectDevices(final String device1Label, final String device2Label) {
 

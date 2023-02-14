@@ -1,21 +1,22 @@
 package types.packet;
 
-import crypto.Crypto;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.security.PublicKey;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import crypto.Crypto;
 
 public class KeyExchangePacketTest {
     private PublicKey publicKey1, publicKey2;
 
     @BeforeEach
     public void setup() {
-        this.publicKey1 = Crypto.generateKeyPair().getPublic();
-        this.publicKey2 = Crypto.generateKeyPair().getPublic();
+        this.publicKey1 = Crypto.alice.getPublic();
+        this.publicKey2 = Crypto.bob.getPublic();
     }
 
     @Test
@@ -25,7 +26,7 @@ public class KeyExchangePacketTest {
     }
 
     @Test
-    public void testGetPacketContents_returnsContents(){
+    public void testGetPacketContents_returnsContents() {
         // Successfully create a KeyExchangePacket object.
         final KeyExchangePacket kePacket = new KeyExchangePacket(publicKey1);
 

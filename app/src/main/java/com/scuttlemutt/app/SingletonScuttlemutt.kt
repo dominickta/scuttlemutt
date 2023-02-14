@@ -41,7 +41,7 @@ class SingletonScuttlemutt {
             if (INSTANCE == null) {
                 synchronized(this) {
                     if (INSTANCE == null) {
-                        val mykeys: KeyPair = Crypto.generateKeyPair()
+                        val mykeys: KeyPair = Crypto.alice
                         val iom: IOManager = QueueIOManager()
                         val dawgid: DawgIdentifier = DawgIdentifier("me", UUID.fromString("22df6593-676e-4c8c-a9d9-48d43c03cc8e"), mykeys.public)
 

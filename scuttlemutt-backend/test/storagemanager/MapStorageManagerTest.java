@@ -1,23 +1,26 @@
 package storagemanager;
 
-import crypto.Crypto;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import crypto.Crypto;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
 import types.TestUtils;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 public class MapStorageManagerTest {
-    
+
     // runtime-defined test objects
     private Bark b;
     private DawgIdentifier m;
     private Conversation c;
     private MapStorageManager mapStorageManager;
-    
+
     @BeforeEach
     public void setup() {
         b = TestUtils.generateRandomizedBark();
@@ -52,11 +55,12 @@ public class MapStorageManagerTest {
         assertEquals(m, obtainedDawgIdentifier);
 
         // update the object in the storage manager.
-        m.setPublicKey(Crypto.generateKeyPair().getPublic());
+        m.setPublicKey(Crypto.bob.getPublic());
         this.mapStorageManager.storeDawgIdentifier(m);
 
         // verify that the updated object was stored by looking it up.
-        final DawgIdentifier obtainedUpdatedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(m.getUniqueId());
+        final DawgIdentifier obtainedUpdatedDawgIdentifier = this.mapStorageManager
+                .lookupDawgIdentifier(m.getUniqueId());
         assertNotEquals(obtainedUpdatedDawgIdentifier.getPublicKey(), obtainedDawgIdentifier.getPublicKey());
         assertEquals(m.getPublicKey(), obtainedUpdatedDawgIdentifier.getPublicKey());
 

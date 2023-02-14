@@ -32,13 +32,15 @@ import types.TestUtils;
 /**
  * Tests the RoomStorageManager class.
  *
- * NOTE:  These tests may intermittently fail--this is expected since Room DB operations execute
+ * NOTE: These tests may intermittently fail--this is expected since Room DB
+ * operations execute
  * asynchronously and can cause race conditions to arise.
  */
 @RunWith(AndroidJUnit4.class)
 @SmallTest
 public class RoomStorageManagerTest {
-    // this rule attempts to force the threads to execute synchronously for our tests.
+    // this rule attempts to force the threads to execute synchronously for our
+    // tests.
     @Rule
     public InstantTaskExecutorRule rule = new InstantTaskExecutorRule();
 
@@ -99,7 +101,7 @@ public class RoomStorageManagerTest {
         assertEquals(d, obtainedDawgIdentifier);
 
         // update the object in the storage manager.
-        d.setPublicKey(Crypto.generateKeyPair().getPublic());
+        d.setPublicKey(Crypto.bob.getPublic());
         this.storageManager.storeDawgIdentifier(d);
 
         // allow request to complete.

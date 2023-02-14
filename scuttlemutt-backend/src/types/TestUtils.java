@@ -1,18 +1,18 @@
 package types;
 
 import static java.lang.Thread.sleep;
-
-import crypto.Crypto;
-import org.apache.commons.lang3.RandomStringUtils;
-import types.packet.BarkPacket;
-import types.packet.KeyExchangePacket;
+import static types.Bark.MAX_MESSAGE_SIZE;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import static types.Bark.MAX_MESSAGE_SIZE;
+import org.apache.commons.lang3.RandomStringUtils;
+
+import crypto.Crypto;
+import types.packet.BarkPacket;
+import types.packet.KeyExchangePacket;
 
 /**
  * Used by our tests to generate the various object types.
@@ -25,9 +25,9 @@ public class TestUtils {
     }
 
     public static KeyExchangePacket generateRandomizedKeyExchangePacket() {
-        return new KeyExchangePacket(Crypto.generateKeyPair().getPublic());
+        return new KeyExchangePacket(Crypto.alice.getPublic());
     }
-    
+
     public static Bark generateRandomizedBark() {
         return new Bark(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE),
                 generateRandomizedDawgIdentifier(),
@@ -38,7 +38,7 @@ public class TestUtils {
     public static DawgIdentifier generateRandomizedDawgIdentifier() {
         return new DawgIdentifier(RandomStringUtils.random(15),
                 UUID.randomUUID(),
-                Crypto.generateKeyPair().getPublic());
+                Crypto.alice.getPublic());
     }
 
     public static Conversation generateRandomizedConversation() {

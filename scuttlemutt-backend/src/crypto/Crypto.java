@@ -26,6 +26,10 @@ import javax.crypto.NoSuchPaddingException;
  * - bool verify(byte[] signature, byte[] message, PublicKey pk)
  */
 public class Crypto {
+    public static final KeyPair alice = generateKeyPair();
+    public static final KeyPair bob = generateKeyPair();
+    public static final KeyPair charlie = generateKeyPair();
+
     /**
      * Generates a new 4096-bit RSA KeyPair.
      * 
