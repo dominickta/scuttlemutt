@@ -3,9 +3,9 @@ package com.scuttlemutt.app
 import android.content.Context
 import android.util.Log
 import androidx.room.Room
-import backend.iomanager.IOManager
-import backend.iomanager.QueueIOManager
 import backend.scuttlemutt.Scuttlemutt
+import com.google.android.gms.nearby.connection.ConnectionsClient
+import com.scuttlemutt.app.backendimplementations.iomanager.EndpointIOManager
 import com.scuttlemutt.app.backendimplementations.storagemanager.AppDatabase
 import com.scuttlemutt.app.backendimplementations.storagemanager.RoomStorageManager
 import crypto.Crypto
@@ -36,20 +36,24 @@ class SingletonScuttlemutt {
         @Volatile
         private var INSTANCE: Scuttlemutt? = null
 
+        @Volatile
+        private var IOMANAGER: EndpointIOManager? = null
+
         // Should only be called by NavActivity
-        fun getInstance(context: Context): Scuttlemutt {
+        fun getInstance(context: Context, connectionsClient: ConnectionsClient): Scuttlemutt {
             if (INSTANCE == null) {
                 synchronized(this) {
                     if (INSTANCE == null) {
                         val mykeys: KeyPair = Crypto.alice
                         val iom: IOManager = QueueIOManager()
+                        IOMANAGER = EndpointIOManager(connectionsClient)
                         val dawgid: DawgIdentifier = DawgIdentifier("me", UUID.fromString("22df6593-676e-4c8c-a9d9-48d43c03cc8e"), mykeys.public)
 
                         val appDb : AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, "scuttlemutt-app-database")
                             .fallbackToDestructiveMigration()
                             .build()
                         val storagem: StorageManager = RoomStorageManager(appDb)
-                        val mutt: Scuttlemutt = Scuttlemutt(iom, dawgid, storagem)
+                        val mutt: Scuttlemutt = Scuttlemutt(IOMANAGER, dawgid, storagem)
                         Log.d("SingletonScuttlemutt", "instantiating instance..: ${mutt.dawgIdentifier}")
                         INSTANCE = mutt
                     }
@@ -63,6 +67,13 @@ class SingletonScuttlemutt {
             // If this assertion fails, some other thing getInstance() before NavActivity
             assert(INSTANCE != null)
             return INSTANCE!!
+        }
+
+        // Anything else can call this
+        fun getIOManager(): EndpointIOManager {
+            // If this assertion fails, some other thing getInstance() before NavActivity
+            assert(IOMANAGER != null)
+            return IOMANAGER!!
         }
     }
 }
