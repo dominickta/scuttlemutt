@@ -187,9 +187,7 @@ abstract class ConnectionsActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         if (!hasPermissions(this, *getRequiredPermissions())) {
-            {
-                requestPermissions(getRequiredPermissions(), REQUEST_CODE_REQUIRED_PERMISSIONS)
-            }
+            requestPermissions(getRequiredPermissions(), REQUEST_CODE_REQUIRED_PERMISSIONS)
         }
     }
 
