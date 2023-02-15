@@ -31,7 +31,7 @@ public class MeshDaemon {
      */
     public MeshDaemon(final IOManager ioManager, final StorageManager storageManager, final DawgIdentifier currentUser) {
         // Shared state between input and output
-        Set<Bark> seenBarks = new HashSet<>();
+        Set<Bark> seenBarks = Collections.synchronizedSet(new HashSet<>());
 
         this.currentUser = currentUser;
         this.queue = new LinkedBlockingQueue<>();
