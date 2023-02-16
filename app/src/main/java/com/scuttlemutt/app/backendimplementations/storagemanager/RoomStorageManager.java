@@ -5,10 +5,13 @@ import com.google.gson.GsonBuilder;
 import com.scuttlemutt.app.backendimplementations.storagemanager.bark.BarkEntry;
 import com.scuttlemutt.app.backendimplementations.storagemanager.conversation.ConversationEntry;
 import com.scuttlemutt.app.backendimplementations.storagemanager.dawgidentifier.DawgIdentifierEntry;
+import com.scuttlemutt.app.backendimplementations.storagemanager.key.KeyEntry;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.crypto.SecretKey;
 
 import storagemanager.StorageManager;
 import types.Bark;
@@ -55,6 +58,15 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
+    public SecretKey lookupKeyForDawgIdentifier(UUID dawgIdentifierUuid) {
+        // lookup the KeyEntry.
+        final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
+
+        // return the key if it was found.  otherwise, return null.
+        return ke != null ? ke.getKey() : null;
+    }
+
+    @Override
     public void storeBark(Bark bark) {
         this.appDb.barkDao().insertBarkEntry(new BarkEntry(bark));
     }
@@ -67,6 +79,11 @@ public class RoomStorageManager implements StorageManager {
     @Override
     public void storeConversation(Conversation conversation) {
         this.appDb.conversationDao().insertConverationEntry(new ConversationEntry(conversation));
+    }
+
+    @Override
+    public void storeKeyForDawgIdentifier(UUID dawgIdentifierUuid, SecretKey key) {
+        this.appDb.keyDao().insertKeyEntry(new KeyEntry(dawgIdentifierUuid, key));
     }
 
     @Override
@@ -106,6 +123,18 @@ public class RoomStorageManager implements StorageManager {
 
         // return the Conversation object associated with the deleted ConversationEntry.
         return c.toConversation();
+    }
+
+    @Override
+    public SecretKey deleteKeyForDawgIdentifier(UUID dawgIdentifierUuid) {
+        // lookup the KeyEntry.
+        final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
+
+        // delete the KeyEntry.
+        this.appDb.keyDao().deleteKeyEntry(ke);
+
+        // return the Key object associated with the deleted KeyEntry.
+        return ke.getKey();
     }
 
     @Override

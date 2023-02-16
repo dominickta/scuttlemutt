@@ -23,6 +23,8 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 
+import javax.crypto.SecretKey;
+
 import crypto.Crypto;
 import types.Bark;
 import types.Conversation;
@@ -100,18 +102,6 @@ public class RoomStorageManagerTest {
         final DawgIdentifier obtainedDawgIdentifier = this.storageManager.lookupDawgIdentifier(d.getUniqueId());
         assertEquals(d, obtainedDawgIdentifier);
 
-        // update the object in the storage manager.
-        d.setPublicKey(Crypto.bob.getPublic());
-        this.storageManager.storeDawgIdentifier(d);
-
-        // allow request to complete.
-        TestUtils.sleepOneSecond();
-
-        // verify that the updated object was stored by looking it up.
-        final DawgIdentifier obtainedUpdatedDawgIdentifier = this.storageManager.lookupDawgIdentifier(d.getUniqueId());
-        assertNotEquals(obtainedUpdatedDawgIdentifier.getPublicKey(), obtainedDawgIdentifier.getPublicKey());
-        assertEquals(d.getPublicKey(), obtainedUpdatedDawgIdentifier.getPublicKey());
-
         // successfully delete the object.
         this.storageManager.deleteDawgIdentifier(d.getUniqueId());
 
@@ -144,6 +134,33 @@ public class RoomStorageManagerTest {
 
         // verify that the object was deleted.
         assertNull(this.storageManager.lookupConversation(c.getUserUUIDList()));
+    }
+
+    @Test
+    public void testKeyStorageLifecycle() {
+        final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
+        final SecretKey k1 = Crypto.generateSecretKey();
+        final SecretKey k2 = Crypto.generateSecretKey();
+
+        // create the object in the storage manager.
+        this.storageManager.storeKeyForDawgIdentifier(d.getUniqueId(), k1);
+
+        // lookup the object in the storage manager.
+        final SecretKey obtainedKey = this.storageManager.lookupKeyForDawgIdentifier(d.getUniqueId());
+        assertEquals(k1, obtainedKey);
+
+        // update the key in the storage manager.
+        this.storageManager.storeKeyForDawgIdentifier(d.getUniqueId(), k2);
+
+        // lookup the object in the storage manager, verify that it was updated.
+        final SecretKey obtainedUpdatedKey = this.storageManager.lookupKeyForDawgIdentifier(d.getUniqueId());
+        assertEquals(k2, obtainedUpdatedKey);
+
+        // successfully delete the object.
+        this.storageManager.deleteKeyForDawgIdentifier(d.getUniqueId());
+
+        // verify that the object was deleted.
+        assertNull(this.storageManager.lookupKeyForDawgIdentifier(d.getUniqueId()));
     }
 
     @Test

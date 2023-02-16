@@ -10,9 +10,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import types.Bark
-import types.Conversation
 import types.DawgIdentifier
 import java.util.*
+import javax.crypto.SecretKey
 
 class ConversationViewModelFactory (private val mainViewModel: MainViewModel, private val mutt: Scuttlemutt, private val initContactName: String) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
@@ -64,22 +64,22 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
             withContext(Dispatchers.Default) {
                 if (!mutt.haveContact(mutt.dawgIdentifier.uniqueId)) {
                     Log.d(TAG, "Adding myself because I'm not in the database yet")
-                    mutt.addContact(mutt.dawgIdentifier) // add myself
+                    mutt.addContact(mutt.dawgIdentifier, MyKey) // add myself
                     mutt.sendMessage("talking to myself", mutt.dawgIdentifier)
                 }
                 if (!mutt.haveContact(ADawgTag.uniqueId)) {
                     Log.d(TAG, "Adding ADawg because not in the database yet")
-                    mutt.addContact(ADawgTag)
+                    mutt.addContact(ADawgTag, AKey)
                     mutt.sendMessage("hey ADawg, this is me", ADawgTag)
                 }
                 if (!mutt.haveContact(BDawgTag.uniqueId)) {
                     Log.d(TAG, "Adding BDawg because not in the database yet")
-                    mutt.addContact(BDawgTag)
+                    mutt.addContact(BDawgTag, BKey)
                     mutt.sendMessage("hey BDawg, this is me", BDawgTag)
                 }
                 if (!mutt.haveContact(CDawgTag.uniqueId)) {
                     Log.d(TAG, "Adding CDawg because not in the database yet")
-                    mutt.addContact(CDawgTag)
+                    mutt.addContact(CDawgTag, CKey)
                 }
                 Log.d(TAG, "Added messages")
                 val contactNames: MutableList<String> = mutableListOf()
@@ -101,6 +101,7 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
                 } else {
                     var msgs: MutableList<FrontEndMessage> = mutableListOf()
                     val barks : List<Bark>? = mutt.getBarksForConversation(conv)
+                    val key : SecretKey = mutt.getKey(conv.userList.get(0))
                     if (barks == null) {
                         _currUiState.postValue(ConversationUiState(contactName, listOf()))
                         Log.d(TAG, "Set empty barks for: $contactName")
@@ -110,7 +111,7 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
                             msgs.add(0,
                                 FrontEndMessage(
                                     author = bark.sender.userContact,
-                                    content = bark.contents,
+                                    content = bark.getContents(key),
                                     timestamp = bark.orderNum.toString()
                                 )
                             )

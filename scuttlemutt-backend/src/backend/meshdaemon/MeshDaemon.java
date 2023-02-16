@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.*;
 
+import javax.crypto.SecretKey;
+
 /**
  * Controls input/output logic and an internal Bark queue.
  */
@@ -65,7 +67,8 @@ public class MeshDaemon {
      * @returns UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
-        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId);
+        final SecretKey encryptionKey = this.storageManager.lookupKeyForDawgIdentifier(recipient.getUniqueId());
+        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, encryptionKey);
 
         // update the Conversation object stored in the StorageManager to include the Bark.
         Conversation c = this.storageManager.lookupConversation(Collections.singletonList(recipient.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.

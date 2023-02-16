@@ -44,9 +44,8 @@ class SingletonScuttlemutt {
             if (INSTANCE == null) {
                 synchronized(this) {
                     if (INSTANCE == null) {
-                        val mykeys: KeyPair = Crypto.alice
                         IOMANAGER = EndpointIOManager(connectionsClient)
-                        val dawgid: DawgIdentifier = DawgIdentifier("me", UUID.fromString("22df6593-676e-4c8c-a9d9-48d43c03cc8e"), mykeys.public)
+                        val dawgid: DawgIdentifier = DawgIdentifier("me", UUID.fromString("22df6593-676e-4c8c-a9d9-48d43c03cc8e"))
 
                         val appDb : AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, "scuttlemutt-app-database")
                             .fallbackToDestructiveMigration()

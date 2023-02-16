@@ -1,57 +1,53 @@
 package types.packet;
 
+import crypto.Crypto;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import java.security.Key;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-import java.security.PublicKey;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import crypto.Crypto;
+import javax.crypto.SecretKey;
 
 public class KeyExchangePacketTest {
-    private PublicKey publicKey1, publicKey2;
-
-    @BeforeEach
-    public void setup() {
-        this.publicKey1 = Crypto.alice.getPublic();
-        this.publicKey2 = Crypto.bob.getPublic();
-    }
+    private static final SecretKey secretKey = Crypto.DUMMY_SECRETKEY;
 
     @Test
     public void testConstructor_createsObjectSuccessfully() {
         // Successfully create a KeyExchangePacket object.
-        final KeyExchangePacket kePacket = new KeyExchangePacket(publicKey1);
+        final KeyExchangePacket kePacket = new KeyExchangePacket(this.secretKey);
     }
 
     @Test
     public void testGetPacketContents_returnsContents() {
         // Successfully create a KeyExchangePacket object.
-        final KeyExchangePacket kePacket = new KeyExchangePacket(publicKey1);
+        final KeyExchangePacket kePacket = new KeyExchangePacket(this.secretKey);
 
         // Obtain the packet contents.
-        final PublicKey kePacketContents = kePacket.getPublicKey();
+        final Key kePacketContents = kePacket.getKey();
 
         // Assert that the contents are as expected.
-        assertEquals(publicKey1, kePacketContents);
+        assertEquals(this.secretKey, kePacketContents);
     }
 
     @Test
-    public void testEquals_differentObjectsButSameBarks_returnsTrue() {
+    public void testEquals_differentObjectsButSameKeys_returnsTrue() {
         // Create two KeyExchangePacket objects with the same PublicKey.
-        final KeyExchangePacket kePacket1 = new KeyExchangePacket(publicKey1);
-        final KeyExchangePacket kePacket2 = new KeyExchangePacket(publicKey1);
+        final KeyExchangePacket kePacket1 = new KeyExchangePacket(this.secretKey);
+        final KeyExchangePacket kePacket2 = new KeyExchangePacket(this.secretKey);
 
         // Verify that the two KeyExchangePacket objects are equal.
         assertEquals(kePacket1, kePacket2);
     }
 
     @Test
-    public void testEquals_differentObjectsAndDifferentBytes_returnsFalse() {
+    public void testEquals_differentObjectsAndDifferentKeys_returnsFalse() {
         // Create two KeyExchangePacket objects with the different PublicKeys.
-        final KeyExchangePacket kePacket1 = new KeyExchangePacket(publicKey1);
-        final KeyExchangePacket kePacket2 = new KeyExchangePacket(publicKey2);
+        final KeyExchangePacket kePacket1 = new KeyExchangePacket(this.secretKey);
+        final KeyExchangePacket kePacket2 = new KeyExchangePacket(Crypto.generateSecretKey());
 
         // Verify that the two KeyExchangePacket objects are different.
         assertNotEquals(kePacket1, kePacket2);

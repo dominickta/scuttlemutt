@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 
 import crypto.Crypto;
 
+import javax.crypto.SecretKey;
+
 public class ConversationTest {
     // test variables
     private List<DawgIdentifier> userList1;
@@ -25,12 +27,7 @@ public class ConversationTest {
     @BeforeEach
     public void setup() {
         // create a Supplier which generates randomized DawgIdentifiers.
-        final Supplier<DawgIdentifier> dawgIdentifierSupplier = () -> {
-            final String userName = RandomStringUtils.randomAlphanumeric(15);
-            final UUID uuid = UUID.randomUUID();
-            final PublicKey publicKey = Crypto.alice.getPublic();
-            return new DawgIdentifier(userName, uuid, publicKey);
-        };
+        final Supplier<DawgIdentifier> dawgIdentifierSupplier = TestUtils::generateRandomizedDawgIdentifier;
 
         // create the userLists using the Supplier.
         userList1 = Stream.generate(dawgIdentifierSupplier)
