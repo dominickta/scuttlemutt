@@ -32,8 +32,8 @@ public abstract class Packet {
         // if the packet's JSON form contains the substring "packetBarks", it's a BarkPacket.
         if (packetJson.contains("packetBarks")) {
             return GSON.fromJson(packetJson, BarkPacket.class);
-        // if the packet's JSON form contains the substring "publicKey", it's a KeyExchangePacket.
-        } else if (packetJson.contains("publicKey")) {
+        // if the packet's JSON form contains the substring "publicKey" or "keyBytes", it's a KeyExchangePacket.
+        } else if (packetJson.contains("keyBytes") || packetJson.contains("publicKey")) {
             return GSON.fromJson(packetJson, KeyExchangePacket.class);
         // otherwise, we don't know what type the packet is.
         } else {

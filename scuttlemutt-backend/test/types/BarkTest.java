@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static types.Bark.MAX_MESSAGE_SIZE;
 
+import crypto.Crypto;
+
 public class BarkTest {
     // test variables
     private static final String oversizedMessage = RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE + 1);
@@ -17,16 +19,20 @@ public class BarkTest {
         assertThrows(RuntimeException.class, () -> new Bark(oversizedMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
                 TestUtils.generateRandomizedDawgIdentifier(),
-                0L));
+                0L,
+                Crypto.generateSecretKey()
+        ));
     }
 
     @Test
-    public void testConstructor_contentsSafeSize_createsObjectSuccessfully() {
-        // Successfully reate a Bark object with the valid message String.
+    public void testConstructor_isNotEncrypted_contentsSafeSize_createsObjectSuccessfully() {
+        // Successfully create a Bark object with the valid message String.
         final Bark b = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
                 TestUtils.generateRandomizedDawgIdentifier(),
-                0L);
+                0L,
+                Crypto.generateSecretKey()
+        );
     }
 
     @Test
@@ -35,7 +41,9 @@ public class BarkTest {
         final Bark b = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
                 TestUtils.generateRandomizedDawgIdentifier(),
-                0L);
+                0L,
+                Crypto.generateSecretKey()
+        );
 
         // verify that it is equal to itself.
         assertEquals(b, b);
@@ -47,11 +55,15 @@ public class BarkTest {
         final Bark b1 = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
                 TestUtils.generateRandomizedDawgIdentifier(),
-                0L);
+                0L,
+                Crypto.generateSecretKey()
+        );
         final Bark b2 = new Bark(validMessage,
                 b1.getSender(),
                 b1.getReceiver(),
-                0L);
+                0L,
+                Crypto.generateSecretKey()
+        );
 
         // verify that they are not equal since they don't have the same unique ID.
         assertNotEquals(b1, b2);
@@ -63,7 +75,9 @@ public class BarkTest {
         final Bark b = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
                 TestUtils.generateRandomizedDawgIdentifier(),
-                0L);
+                0L,
+                Crypto.generateSecretKey()
+        );
 
         // Convert the Bark object to a byte[] for sending over the network.
         final byte[] byteArray = b.toNetworkBytes();

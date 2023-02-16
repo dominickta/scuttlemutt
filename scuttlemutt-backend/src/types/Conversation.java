@@ -3,10 +3,16 @@ package types;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.crypto.SecretKey;
+
+import crypto.Crypto;
+import types.serialization.SerializationUtils;
 
 /**
  * Contains the information for a given conversation.

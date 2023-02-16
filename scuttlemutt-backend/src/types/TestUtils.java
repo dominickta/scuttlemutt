@@ -25,20 +25,21 @@ public class TestUtils {
     }
 
     public static KeyExchangePacket generateRandomizedKeyExchangePacket() {
-        return new KeyExchangePacket(Crypto.alice.getPublic());
+        return new KeyExchangePacket(Crypto.DUMMY_SECRETKEY);
     }
 
     public static Bark generateRandomizedBark() {
         return new Bark(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE),
                 generateRandomizedDawgIdentifier(),
                 generateRandomizedDawgIdentifier(),
-                r.nextLong());
+                r.nextLong(),
+                Crypto.DUMMY_SECRETKEY
+        );
     }
 
     public static DawgIdentifier generateRandomizedDawgIdentifier() {
         return new DawgIdentifier(RandomStringUtils.random(15),
-                UUID.randomUUID(),
-                Crypto.alice.getPublic());
+                UUID.randomUUID());
     }
 
     public static Conversation generateRandomizedConversation() {

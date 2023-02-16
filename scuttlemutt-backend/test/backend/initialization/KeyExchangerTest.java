@@ -1,17 +1,12 @@
 package backend.initialization;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.security.PublicKey;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
+import backend.iomanager.QueueIOManager;
+import crypto.Crypto;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.powermock.reflect.Whitebox;
 
-import backend.iomanager.QueueIOManager;
-import crypto.Crypto;
 import storagemanager.MapStorageManager;
 import storagemanager.StorageManager;
 import types.DawgIdentifier;
@@ -19,12 +14,24 @@ import types.TestUtils;
 import types.packet.KeyExchangePacket;
 import types.packet.Packet;
 
+import java.security.KeyPair;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import javax.crypto.SecretKey;
+
 public class KeyExchangerTest {
 
     // test objects.
     String otherDeviceId;
     BlockingQueue<Packet> q1to2, q2to1;
     KeyExchanger keyExchanger;
+    StorageManager storageManager;
 
     @BeforeEach
     public void setup() {
@@ -35,34 +42,40 @@ public class KeyExchangerTest {
         this.q2to1 = new LinkedBlockingQueue<Packet>();
         m1.connect(otherDeviceId, q2to1, q1to2);
 
-        // create the KeyExchanger using the above QueueIOManager + a new
-        // StorageManager.
-        final StorageManager storageManager = new MapStorageManager();
+        // create the KeyExchanger using the above QueueIOManager + a new StorageManager.
+        storageManager = new MapStorageManager();
         this.keyExchanger = new KeyExchanger(m1, storageManager);
     }
 
     @Test
-    public void testSendPublicKey() {
-        // create + send a public key using the keyExchanger.
-        final PublicKey m1PublicKey = Crypto.alice.getPublic();
-        this.keyExchanger.sendPublicKey(m1PublicKey, otherDeviceId);
+    public void testSendSecretKey() {
+        // create + send a SecretKey using the KeyExchanger.
+        this.keyExchanger.sendSecretKey(otherDeviceId);
 
-        // verify the packet sent by the KeyExchanger contains the PublicKey as
-        // expected.
-        final KeyExchangePacket receivedKePacket = (KeyExchangePacket) q1to2.remove();
-        assertEquals(m1PublicKey, receivedKePacket.getPublicKey());
-
+        // verify that a KeyExchangePacket was successfully sent by the KeyExchanger.
+        final Packet receivedKePacket = q1to2.remove();
+        assertTrue(receivedKePacket instanceof KeyExchangePacket);
     }
 
     @Test
-    public void testReceivePublicKey() {
+    public void testReceiveSecretKey() {
+        // store a SecretKey for the otherDeviceId in the KeyExchanger.
+        final Map<String, SecretKey> internalKeyExchangeMap = new HashMap<String, SecretKey>();
+        final SecretKey localKey = Crypto.generateSecretKey();
+        internalKeyExchangeMap.put(this.otherDeviceId, localKey);
+        Whitebox.setInternalState(this.keyExchanger, "keysBeingExchanged", internalKeyExchangeMap, KeyExchanger.class);
+
         // send a KeyExchange packet to m1.
         final KeyExchangePacket sentKePacket = TestUtils.generateRandomizedKeyExchangePacket();
         this.q2to1.add(sentKePacket);
+        final SecretKey sentKey = sentKePacket.getKey();
 
-        // receive the PublicKey using the KeyExchanger, verify that the generated
-        // DawgIdentifier is as expected.
-        final DawgIdentifier dawgId = this.keyExchanger.receivePublicKey(this.otherDeviceId);
-        assertEquals(sentKePacket.getPublicKey(), dawgId.getPublicKey());
+        // figure out which SecretKey we should expect to have stored (the one with the lower hashCode).
+        final SecretKey expectedKey = localKey.hashCode() < sentKey.hashCode() ? sentKey : localKey;
+
+        // receive the SecretKey using the KeyExchanger, verify that the expectedKey is stored.
+        final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(this.otherDeviceId);
+        final SecretKey storedKey = this.storageManager.lookupKeyForDawgIdentifier(dawgId.getUniqueId());
+        assertEquals(expectedKey, storedKey);
     }
 }

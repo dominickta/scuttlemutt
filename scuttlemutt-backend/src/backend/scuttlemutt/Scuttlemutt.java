@@ -1,19 +1,16 @@
 package backend.scuttlemutt;
 
-import static java.util.stream.Collectors.toList;
-
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
+import java.util.*;
 import backend.iomanager.IOManager;
 import backend.meshdaemon.MeshDaemon;
-import crypto.Crypto;
 import storagemanager.StorageManager;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import static java.util.stream.Collectors.toList;
+
+import javax.crypto.SecretKey;
+
 
 /*
  * This class contains and organizes the content necessary to run the local device's node on the Scuttlemutt network.
@@ -41,17 +38,26 @@ public class Scuttlemutt {
 
     /**
      * Returns user's DawgIdentifier
-     * 
+     *
      * @return deep copy of user's DawgIdentifier so public key can't be modified
      */
-    public DawgIdentifier getDawgIdentifier() {
-        return new DawgIdentifier(this.dawgIdentifier.getUserContact(), this.dawgIdentifier.getUniqueId(),
-                this.dawgIdentifier.getPublicKey());
+    public DawgIdentifier getDawgIdentifier(){
+        return new DawgIdentifier(this.dawgIdentifier.getUserContact(), this.dawgIdentifier.getUniqueId());
+    }
+
+    /**
+     * Returns the SecretKey used to chat with the device associated with the passed DawgIdentifier.
+     *
+     * @param otherDeviceId  A DawgIdentifier used to identify the other device.
+     * @return the SecretKey used to chat with the device associated with the passed DawgIdentifier.
+     */
+    public SecretKey getKey(final DawgIdentifier otherDeviceId){
+        return this.storageManager.lookupKeyForDawgIdentifier(otherDeviceId.getUniqueId());
     }
 
     /**
      * Sends a message to recipient based on UUID
-     * 
+     *
      * @param message   Message that user is trying to send
      * @param dstDawgId Recipient's DawgIdentifier
      * @return UUID of sent message
@@ -65,7 +71,7 @@ public class Scuttlemutt {
 
     /**
      * Returns a List containing the active conversations for the user.
-     * 
+     *
      * @return a List containing the active conversations for the user.
      */
     public List<Conversation> listAllConversations() {
@@ -74,17 +80,20 @@ public class Scuttlemutt {
 
     /**
      * Returns a List<String> containing the messages of the passed Conversation.
-     * 
+     *
      * @param conversation the Conversation whose messages we're obtaining.
      * @return a List<String> containing the messages of the passed Conversation.
      */
     public List<String> getMessagesForConversation(final Conversation conversation) {
-        return getBarksForConversation(conversation).stream().map(Bark::getContents).collect(toList());
+        // get the encryption key associated with the Conversation.
+        final SecretKey decryptionKey = this.storageManager.lookupKeyForDawgIdentifier(conversation.getUserList().get(0).getUniqueId());
+
+        return getBarksForConversation(conversation).stream().map(b -> b.getContents(decryptionKey)).collect(toList());
     }
 
     /**
      * Returns a List<Bark> containing the barks of the passed Conversation.
-     * 
+     *
      * @param conversation the Conversation whose barks we're obtaining.
      * @return a List<Bark> containing the barks of the passed Conversation, or
      *         null.
@@ -109,8 +118,9 @@ public class Scuttlemutt {
         return this.storageManager.lookupDawgIdentifier(muttNetworkUUID) != null;
     }
 
-    public void addContact(final DawgIdentifier dawgIdentifier) {
+    public void addContact(final DawgIdentifier dawgIdentifier, final SecretKey secretKey) {
         this.storageManager.storeDawgIdentifier(dawgIdentifier);
+        this.storageManager.storeKeyForDawgIdentifier(dawgIdentifier.getUniqueId(), secretKey);
     }
 
     public void removeContact(final DawgIdentifier dawgIdentifier) {
@@ -143,18 +153,5 @@ public class Scuttlemutt {
      */
     public void shutdown() {
         this.meshDaemon.shutdown();
-    }
-
-    /**
-     * Generates a DawgIdentifier for user on creation
-     * 
-     * @param userContact User provided identification string
-     * @return new DawgIdentifier with generated UUID and public key
-     */
-    private DawgIdentifier generateDawgIdentifier(String userContact) {
-        final UUID uuid = UUID.randomUUID();
-        final PublicKey publicKey = Crypto.alice.getPublic();
-        return new DawgIdentifier(userContact, uuid, publicKey);
-
     }
 }
