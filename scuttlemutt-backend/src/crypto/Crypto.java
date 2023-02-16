@@ -1,40 +1,49 @@
 package crypto;
 
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 /**
  * A static helper class for cryptography primatives based on 4096-bit RSA.
  * 
  * The available methods to call are:
  * - KeyPair generateKeyPair()
+ * - KeyPair generateSecretKey()
  * - byte[] encrypt(byte[] plaintext, PublicKey pk)
  * - byte[] decrypt(byte[] ciphertext, PrivateKey pk)
  * - byte[] sign(byte[] message, PrivateKey pk)
  * - bool verify(byte[] signature, byte[] message, PublicKey pk)
  */
 public class Crypto {
+    public static final String ASYMMETRIC_KEY_TYPE = "RSA";
+    public static final String SYMMETRIC_KEY_TYPE = "AES";
+    public static final KeyPair ALICE_KEYPAIR = Crypto.generateKeyPair();
+    public static final KeyPair BOB_KEYPAIR = Crypto.generateKeyPair();
+    public static final SecretKey DUMMY_SECRETKEY = Crypto.generateSecretKey();
+    private static final int SYMMETRIC_KEY_SIZE = 128;  // the size of the symmetric key.
     /**
      * Generates a new 4096-bit RSA KeyPair.
      * 
      * @return the new KeyPair
      */
-    public static final KeyPair generateKeyPair() {
+    public static KeyPair generateKeyPair() {
         try {
-            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-            generator.initialize(4096, new SecureRandom());
+            KeyPairGenerator generator = KeyPairGenerator.getInstance(Crypto.ASYMMETRIC_KEY_TYPE);
+            generator.initialize(4096);
             return generator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             // Will throw if the platform's crypto provider doesn't support the
@@ -46,18 +55,35 @@ public class Crypto {
     }
 
     /**
-     * Encrypts the byte array payload with the given public key.
+     * Generates a new AES SecretKey.
+     *
+     * @return the new SecretKey.
+     */
+    public static SecretKey generateSecretKey() {
+        final KeyGenerator keyGenerator;
+        try {
+            keyGenerator = KeyGenerator.getInstance(Crypto.SYMMETRIC_KEY_TYPE);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        keyGenerator.init(SYMMETRIC_KEY_SIZE);
+        return keyGenerator.generateKey();
+    }
+
+    /**
+     * Encrypts the byte array payload with the given key.
      * 
      * @param payload   the byte array to encrypt
-     * @param publicKey the public key to encrypt with
-     * @return the encrypted (cyphertext) byte array, or empty on error
+     * @param key the key to encrypt with
+     * @param keyType the type of the Key.  Use the String constants defined in this class for this param.
+     * @return the encrypted (ciphertext) byte array, or empty on error
      */
-    public static final byte[] encrypt(byte[] payload, PublicKey publicKey) {
+    public static byte[] encrypt(final byte[] payload, final Key key, final String keyType) {
         byte[] result = {};
         try {
-            Cipher encryptCipher = Cipher.getInstance("RSA");
-            encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            result = encryptCipher.doFinal(payload);
+            Cipher encryptCipher = Cipher.getInstance(keyType);
+            encryptCipher.init(Cipher.ENCRYPT_MODE, key);
+            result = encryptCipher.doFinal(payload, 0, payload.length);
         } catch (NoSuchAlgorithmException e) {
             // Thrown when a particular cryptographic algorithm is requested
             // but is not available in the environment. (Never: RSA is common)
@@ -85,17 +111,18 @@ public class Crypto {
     }
 
     /**
-     * Decrypts the byte array payload with the given private key.
+     * Decrypts the byte array payload with the given key.
      * 
-     * @param payload    the byte array to encrypt
-     * @param privateKey the private key to encrypt with
+     * @param payload    the byte array to decrypt
+     * @param key the key to decrypt with
+     * @param keyType the type of the Key.  Use the String constants defined in this class for this param.
      * @return the decrypted (plaintext) byte array, or empty on error
      */
-    public static final byte[] decrypt(byte[] payload, PrivateKey privateKey) {
+    public static byte[] decrypt(final byte[] payload, final Key key, final String keyType) {
         byte[] result = {};
         try {
-            Cipher decryptCipher = Cipher.getInstance("RSA");
-            decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
+            Cipher decryptCipher = Cipher.getInstance(keyType);
+            decryptCipher.init(Cipher.DECRYPT_MODE, key);
             result = decryptCipher.doFinal(payload);
         } catch (NoSuchAlgorithmException e) {
             // Thrown when a particular cryptographic algorithm is requested

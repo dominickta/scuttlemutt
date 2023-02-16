@@ -21,8 +21,6 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.scuttlemutt.app.data.colleagueProfile
-import com.scuttlemutt.app.data.meProfile
 
 class ProfileViewModel : ViewModel() {
 

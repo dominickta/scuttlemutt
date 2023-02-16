@@ -7,14 +7,17 @@ import types.Conversation;
 import types.DawgIdentifier;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.*;
+
+import javax.crypto.SecretKey;
 
 /**
  * Controls input/output logic and an internal Bark queue.
  */
 public class MeshDaemon {
-    // class variables
     private final BlockingQueue<Bark> queue;
     private final MeshInput input;
     private final MeshOutput output;
@@ -29,10 +32,13 @@ public class MeshDaemon {
      * @param storageManager   The place to store messages + conversations meant for us.
      */
     public MeshDaemon(final IOManager ioManager, final StorageManager storageManager, final DawgIdentifier currentUser) {
+        // Shared state between input and output
+        Set<Bark> seenBarks = new HashSet<>();
+
         this.currentUser = currentUser;
         this.queue = new LinkedBlockingQueue<>();
-        this.input = new MeshInput(ioManager, queue, storageManager, currentUser);
-        this.output = new MeshOutput(ioManager, queue);
+        this.input = new MeshInput(ioManager, queue, storageManager, currentUser, seenBarks);
+        this.output = new MeshOutput(ioManager, queue, seenBarks);
         this.storageManager = storageManager;
 
         // Spin out two threads, one to block on the IOManager's receive() and
@@ -61,7 +67,8 @@ public class MeshDaemon {
      * @returns UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
-        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId);
+        final SecretKey encryptionKey = this.storageManager.lookupKeyForDawgIdentifier(recipient.getUniqueId());
+        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, encryptionKey);
 
         // update the Conversation object stored in the StorageManager to include the Bark.
         Conversation c = this.storageManager.lookupConversation(Collections.singletonList(recipient.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.

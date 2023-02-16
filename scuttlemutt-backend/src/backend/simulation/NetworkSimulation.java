@@ -1,11 +1,20 @@
 package backend.simulation;
 
-import backend.scuttlemutt.Scuttlemutt;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
+import backend.scuttlemutt.Scuttlemutt;
 import crypto.Crypto;
-import org.apache.commons.lang3.RandomStringUtils;
 import storagemanager.MapStorageManager;
+import storagemanager.StorageManager;
 import types.DawgIdentifier;
 import types.packet.Packet;
 
@@ -13,41 +22,46 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.crypto.SecretKey;
+
 /**
  * Sets up and stores QueueIOManager objects to simulate a network.
  */
 public class NetworkSimulation {
     // Maps device ID to QueueIOManager
     private final Map<String, QueueIOManager> queueIOManagerMap;
+    // Maps device ID to MapStorageManager
+    private final Map<String, StorageManager> storageManagerMap;
     // maps labels -> ScuttleMutt associated with the corresponding label.
     private final Map<String, Scuttlemutt> scuttlemuttMap;
 
     /**
      * Creates a new NetworkSimulation where all devices are fully interconnected.
      *
-     * @param deviceLabels  The labels of the devices on the simulated network.
+     * @param deviceLabels The labels of the devices on the simulated network.
      */
     public NetworkSimulation(final List<String> deviceLabels) {
         // setup the QueueIOManager + Scuttlemutt for each device.
         this.queueIOManagerMap = new HashMap<String, QueueIOManager>();
+        this.storageManagerMap = new HashMap<String, StorageManager>();
         this.scuttlemuttMap = new HashMap<String, Scuttlemutt>();
         for (final String deviceLabel : deviceLabels) {
             // create a QueueIOManager.
             final QueueIOManager ioManager = new QueueIOManager();
+            final MapStorageManager storageManager = new MapStorageManager();
 
             // stash the ioManager in the QueueIOManager.
             queueIOManagerMap.put(deviceLabel, ioManager);
+            storageManagerMap.put(deviceLabel, storageManager);
 
             // create a Scuttlemutt object which references the above QueueIOManagers
-            // TODO:  Replace with crypto functionality in the future.
-            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID(), Crypto.generateKeyPair().getPublic());
-            final Scuttlemutt scuttlemutt = new Scuttlemutt(ioManager, dawgId, new MapStorageManager());
+            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID());
+            final Scuttlemutt scuttlemutt = new Scuttlemutt(ioManager, dawgId, storageManager);
 
             // stash the ioManager in the scuttlemuttMap.
             scuttlemuttMap.put(deviceLabel, scuttlemutt);
         }
     }
-
 
     public void connectAll() {
         List<String> deviceLabels = new ArrayList<>();
@@ -82,8 +96,9 @@ public class NetworkSimulation {
 
     /**
      * Obtains the Scuttlemutt object associated with the passed deviceLabel.
-     * @param deviceLabel  The label associated with the desired Scuttlemutt object.
-     * @return  The Scuttlemutt object associated with the passed label.
+     *
+     * @param deviceLabel The label associated with the desired Scuttlemutt object.
+     * @return The Scuttlemutt object associated with the passed label.
      */
     public Scuttlemutt getScuttlemutt(final String deviceLabel) {
         if (!this.scuttlemuttMap.containsKey(deviceLabel)) {
@@ -94,8 +109,9 @@ public class NetworkSimulation {
 
     /**
      * Obtains the QueueIOManager associated with the passed deviceLabel.
-     * @param deviceLabel  The label associated with the desired QueueIOManager.
-     * @return  The QueueIOManager associated with the passed label.
+     *
+     * @param deviceLabel The label associated with the desired QueueIOManager.
+     * @return The QueueIOManager associated with the passed label.
      */
     public QueueIOManager getQueueIOManager(final String deviceLabel) throws IOManagerException {
         if (!this.queueIOManagerMap.containsKey(deviceLabel)) {
@@ -105,9 +121,22 @@ public class NetworkSimulation {
     }
 
     /**
+     * Obtains the StorageManager associated with the passed deviceLabel.
+     * @param deviceLabel  The label associated with the desired StorageManager.
+     * @return  The StorageManager associated with the passed label.
+     */
+    public StorageManager getStorageManager(final String deviceLabel) {
+        if (!this.queueIOManagerMap.containsKey(deviceLabel)) {
+            throw new RuntimeException("StorageManager not found!\tLabel:  " + deviceLabel);
+        }
+        return this.storageManagerMap.get(deviceLabel);
+    }
+
+    /**
      * Sets-up a connection between the two specified devices.
-     * @param device1Label  The label of one of the devices in the connection.
-     * @param device2Label  The label of the other device in the connection.
+     *
+     * @param device1Label The label of one of the devices in the connection.
+     * @param device2Label The label of the other device in the connection.
      */
     public void connectDevices(final String device1Label, final String device2Label) {
         // we should not allow a device to connect to itself.
@@ -115,11 +144,12 @@ public class NetworkSimulation {
             throw new UnsupportedOperationException("Cannot connect a device to itself!");
         }
 
-        // save the contacts in both devices.
+        // save a symmetric key for the connection in both devices.
+        final SecretKey secretKey = Crypto.generateSecretKey();
         final Scuttlemutt device1 = scuttlemuttMap.get(device1Label);
         final Scuttlemutt device2 = scuttlemuttMap.get(device2Label);
-        device1.addContact(device2.getDawgIdentifier());
-        device2.addContact(device1.getDawgIdentifier());
+        device1.addContact(device2.getDawgIdentifier(), secretKey);
+        device2.addContact(device1.getDawgIdentifier(), secretKey);
 
         // Build queues to connect devices
         final BlockingQueue<Packet> q1to2 = new LinkedBlockingQueue<Packet>();
@@ -132,8 +162,9 @@ public class NetworkSimulation {
 
     /**
      * Removes a connection between the two specified devices.I
-     * @param device1Label  The label of one of the devices in the connection.
-     * @param device2Label  The label of the other device in the connection.
+     *
+     * @param device1Label The label of one of the devices in the connection.
+     * @param device2Label The label of the other device in the connection.
      */
     public void disconnectDevices(final String device1Label, final String device2Label) {
 

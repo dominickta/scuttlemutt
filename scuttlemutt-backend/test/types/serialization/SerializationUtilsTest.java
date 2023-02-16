@@ -2,24 +2,22 @@ package types.serialization;
 
 import crypto.Crypto;
 import org.junit.jupiter.api.Test;
-
-import java.security.PublicKey;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import javax.crypto.SecretKey;
 
 public class SerializationUtilsTest {
     @Test
-    public void testPublicKeySerializationLifecycle() {
-        // create a PublicKey.
-        final PublicKey publicKey = Crypto.generateKeyPair().getPublic();
+    public void testSecretKeySerializationLifecycle() {
+        // create a SecretKey.
+        final SecretKey key = Crypto.DUMMY_SECRETKEY;
 
-        // serialize the PublicKey.
-        final byte[] publicKeyBytes = SerializationUtils.serializeKey(publicKey);
+        // serialize the SecretKey.
+        final byte[] secretKeyBytes = SerializationUtils.serializeKey(key);
 
-        // deserialize the PublicKey's byte[].
-        final PublicKey deserializedPublicKey = SerializationUtils.deserializeRSAPublicKey(publicKeyBytes);
+        // deserialize the SecretKey's byte[].
+        final SecretKey deserializedKey = SerializationUtils.deserializeSecretKey(secretKeyBytes);
 
         // assert that the deserialized key is identical to the original PublicKey.
-        assertEquals(publicKey, deserializedPublicKey);
+        assertArrayEquals(key.getEncoded(), deserializedKey.getEncoded());
     }
 }

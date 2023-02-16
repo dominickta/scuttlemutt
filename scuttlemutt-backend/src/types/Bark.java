@@ -4,7 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.RandomStringUtils;
 
+import java.util.Arrays;
 import java.util.UUID;
+
+import javax.crypto.SecretKey;
+
+import crypto.Crypto;
 
 /**
  * Represents a "bark" (message) sent by the user.
@@ -21,7 +26,7 @@ public class Bark {
 
     // class variables
     private final UUID uniqueId;
-    private final String contents;
+    private final byte[] encryptedContents;
     private final int fillerCount;  // stores the number of "filler" (dummy) chars filling up the buf.  This is always
                                     // at the end of the String.
     private final DawgIdentifier sender;
@@ -32,14 +37,16 @@ public class Bark {
      * Constructs a new Bark.
      *
      * @param contents The contents of the message.
-     * @param sender The DawgIdentifier of the sender of the message.
+     * @param sender   The DawgIdentifier of the sender of the message.
      * @param receiver The DawgIdentifier of the receiver of the message.
      * @param orderNum The number of the message in the conversation order.
+     * @param encryptionKey  The symmetric SecretKey used to encrypt the contents of the Bark.
      */
-    public Bark(final String contents,
+    public Bark(String contents,
                 final DawgIdentifier sender,
                 final DawgIdentifier receiver,
-                final Long orderNum) {
+                final Long orderNum,
+                final SecretKey encryptionKey) {
 
         // verify that the contents are less than the max message size.
         if (contents.length() > MAX_MESSAGE_SIZE) {
@@ -51,7 +58,10 @@ public class Bark {
 
         // setup the filler chars.
         this.fillerCount = MAX_MESSAGE_SIZE - contents.length();
-        this.contents = contents + RandomStringUtils.randomAlphanumeric(this.fillerCount);
+        contents += RandomStringUtils.randomAlphanumeric(this.fillerCount);
+
+        // encrypt the contents.
+        this.encryptedContents = Crypto.encrypt(contents.getBytes(), encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
         this.sender = sender;
         this.receiver = receiver;
         this.orderNum = orderNum;
@@ -65,7 +75,7 @@ public class Bark {
     public Bark(Bark bark) {
         this.uniqueId = bark.uniqueId;
         this.fillerCount = bark.fillerCount;
-        this.contents = bark.contents;
+        this.encryptedContents = bark.encryptedContents;
         this.sender = bark.sender;
         this.receiver = bark.receiver;
         this.orderNum = bark.orderNum;
@@ -73,9 +83,17 @@ public class Bark {
 
     // public methods
 
-    public String getContents() {
-        // when returning the contents, trim off the filler chars.
-        return this.contents.substring(0, this.contents.length() - this.fillerCount);
+    /**
+     * Returns the contents of the Bark after decrypting them using the passed key.
+     * @param encryptionKey  The key to decrypt the Bark's contents with.
+     * @return  The decrypted contents of the Bark.
+     */
+    public String getContents(final SecretKey encryptionKey) {
+        // decrypt the Bark's contents.
+        final String decryptedContents = new String(Crypto.decrypt(this.encryptedContents, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE));
+
+        // return the decrypted contents with the filler chars trimmed off.
+        return decryptedContents.substring(0, decryptedContents.length() - this.fillerCount);
     }
 
     public DawgIdentifier getSender() {
@@ -131,6 +149,6 @@ public class Bark {
 
     @Override
     public String toString() {
-        return "Contents:  " + this.contents + "\tuniqueId:  " + this.uniqueId.toString();
+        return "encryptedContents:  " + Arrays.toString(this.encryptedContents) + "\tuniqueId:  " + this.uniqueId.toString();
     }
 }

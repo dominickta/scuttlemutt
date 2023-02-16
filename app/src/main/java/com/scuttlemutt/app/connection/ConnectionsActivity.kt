@@ -34,7 +34,7 @@ import java.util.*
 /** A class that connects to Nearby Connections and provides convenience methods and callbacks.  */
 abstract class ConnectionsActivity : AppCompatActivity() {
     /** Our handler to Nearby Connections.  */
-    private var mConnectionsClient: ConnectionsClient? = null
+    var mConnectionsClient: ConnectionsClient? = null
 
     /** The devices we've discovered near us.  */
     private val mDiscoveredEndpoints: MutableMap<String, ConnectionsActivity.Endpoint> =
@@ -50,7 +50,7 @@ abstract class ConnectionsActivity : AppCompatActivity() {
      * The devices we are currently connected to. For advertisers, this may be large. For discoverers,
      * there will only be one entry in this map.
      */
-    private val mEstablishedConnections: MutableMap<String, ConnectionsActivity.Endpoint?> =
+    val mEstablishedConnections: MutableMap<String, ConnectionsActivity.Endpoint?> =
         HashMap<String, ConnectionsActivity.Endpoint?>()
     /** Returns `true` if we're currently attempting to connect to another device.  */
     /**
@@ -187,13 +187,7 @@ abstract class ConnectionsActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         if (!hasPermissions(this, *getRequiredPermissions())) {
-            if (Build.VERSION.SDK_INT < 23) {
-                ActivityCompat.requestPermissions(
-                    this, getRequiredPermissions(), REQUEST_CODE_REQUIRED_PERMISSIONS
-                )
-            } else {
-                requestPermissions(getRequiredPermissions(), REQUEST_CODE_REQUIRED_PERMISSIONS)
-            }
+            requestPermissions(getRequiredPermissions(), REQUEST_CODE_REQUIRED_PERMISSIONS)
         }
     }
 
@@ -341,6 +335,7 @@ abstract class ConnectionsActivity : AppCompatActivity() {
             ?.addOnSuccessListener(
                 object : OnSuccessListener<Void?> {
                     override fun onSuccess(unusedResult: Void?) {
+                        logD("Started Discovery with service ID " + serviceId)
                         onDiscoveryStarted()
                     }
                 })

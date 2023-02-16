@@ -1,9 +1,8 @@
 package types;
 
-import crypto.Crypto;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.PublicKey;
 import java.util.List;
@@ -12,7 +11,13 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import crypto.Crypto;
+
+import javax.crypto.SecretKey;
 
 public class ConversationTest {
     // test variables
@@ -22,12 +27,7 @@ public class ConversationTest {
     @BeforeEach
     public void setup() {
         // create a Supplier which generates randomized DawgIdentifiers.
-        final Supplier<DawgIdentifier> dawgIdentifierSupplier = () -> {
-            final String userName = RandomStringUtils.randomAlphanumeric(15);
-            final UUID uuid = UUID.randomUUID();
-            final PublicKey publicKey = Crypto.generateKeyPair().getPublic();
-            return new DawgIdentifier(userName, uuid, publicKey);
-        };
+        final Supplier<DawgIdentifier> dawgIdentifierSupplier = TestUtils::generateRandomizedDawgIdentifier;
 
         // create the userLists using the Supplier.
         userList1 = Stream.generate(dawgIdentifierSupplier)
@@ -39,13 +39,13 @@ public class ConversationTest {
     }
 
     @Test
-    public void testConstructor_createsObjectSuccessfully(){
+    public void testConstructor_createsObjectSuccessfully() {
         // Successfully create a Conversation object.
         final Conversation c = new Conversation(userList1);
     }
 
     @Test
-    public void testGetUserUUIDList_returnsCorrectList(){
+    public void testGetUserUUIDList_returnsCorrectList() {
         // Successfully create a Conversation object.
         final Conversation c = new Conversation(userList1);
 
@@ -59,22 +59,20 @@ public class ConversationTest {
     }
 
     @Test
-    public void testEquals_differentObjectsButSameList_returnsTrue(){
+    public void testEquals_differentObjectsButSameList_returnsTrue() {
         // Create two Conversation objects with the same List.
         final Conversation c1 = new Conversation(userList1);
         final Conversation c2 = new Conversation(userList1);
-
 
         // Verify that the two Conversation objects are equal.
         assertEquals(c1, c2);
     }
 
     @Test
-    public void testEquals_differentLists_returnsFalse(){
+    public void testEquals_differentLists_returnsFalse() {
         // Create two Conversation objects with the same List.
         final Conversation c1 = new Conversation(userList1);
         final Conversation c2 = new Conversation(userList2);
-
 
         // Verify that the two Conversation objects are not equal.
         assertNotEquals(c1, c2);

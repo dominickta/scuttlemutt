@@ -80,9 +80,16 @@ android {
 }
 
 dependencies {
-    implementation("androidx.room:room-common:2.4.2")
-    implementation("androidx.room:room-ktx:2.4.2")
+    implementation("androidx.room:room-common:2.5.0")
+    implementation("androidx.room:room-ktx:2.5.0")
     implementation(project(mapOf("path" to ":scuttlemutt-backend")))
+    implementation("junit:junit:4.13.2")
+    implementation("androidx.test:core:1.5.0")
+    implementation("androidx.test.ext:junit:1.1.5")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("androidx.test:runner:1.5.2")
+    implementation("com.google.android.gms:play-services-nearby:18.0.2")
+    implementation("org.apache.commons:commons-lang3:3.0")
     ksp(libs.androidx.room.compiler)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
@@ -119,6 +126,8 @@ dependencies {
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation("androidx.arch.core:core-testing:2.1.0")
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation("org.mockito:mockito-android:5.1.1")
 }

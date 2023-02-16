@@ -1,136 +1,127 @@
-package com.scuttlemutt.app.conversation
+import com.scuttlemutt.app.conversation.ConversationUiState
+import com.scuttlemutt.app.conversation.FrontEndMessage
+
 
 import android.util.Log
 import androidx.lifecycle.*
-import com.scuttlemutt.app.data.*
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.isActive
+import backend.scuttlemutt.Scuttlemutt
+import com.scuttlemutt.app.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
+import kotlinx.coroutines.withContext
+import types.Bark
+import types.DawgIdentifier
 import java.util.*
+import javax.crypto.SecretKey
 
-private const val DEFAULT_CHANNEL = "#composers"
-
-class ConversationViewModelFactory (private val database: ScuttlemuttDatabase, private val initContactName: String) : ViewModelProvider.Factory {
+class ConversationViewModelFactory (private val mainViewModel: MainViewModel, private val mutt: Scuttlemutt, private val initContactName: String) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ConversationViewModel::class.java)) {
-            return ConversationViewModel(database, initContactName) as T
+            return ConversationViewModel(mainViewModel, mutt, initContactName) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 
-// TODO: ViewModel needs to convert barks into messages for the frontend that uses nicknames
-class ConversationViewModel(private val database: ScuttlemuttDatabase, private val initContactName: String) : ViewModel() {
+class ConversationViewModel(private val mainViewModel: MainViewModel, private val mutt: Scuttlemutt, initContactName: String) : ViewModel() {
 
     private val TAG = "ConversationViewModel"
 
-    private val _contactName = MutableLiveData<String>(initContactName)
-    val contactName: LiveData<String> = _contactName
+    // Data about the current open chat partner
+    private var contactName: String = initContactName
+    private lateinit var contactID: DawgIdentifier
 
-    private val _channel = MutableLiveData<String>()
-    val channelData: LiveData<String> = _channel
-
-    private val _currUiState = MutableLiveData<ConversationUiState>(
-        ConversationUiState(contactName = initContactName, messages = listOf()))
+    // UI View
+    private val _currUiState = MutableLiveData(ConversationUiState(contactName = contactName, messages = listOf()))
     val currUiState: LiveData<ConversationUiState> = _currUiState
 
-    var barkUpdater : Job? = null
+    // TODO: how will new messages from the database be automatically updated? previously flows were used, currently no way to do this
 
     init {
-        setChat(initContactName)
+//        setChat(initContactName)
+//        Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
     }
 
     fun addMessage(msg: String) {
         viewModelScope.launch {
-            val dstPubKey = database.contactDao().getContactByNickname(_contactName.value!!).publicKey
-            val lastSeqNum = database.barkDao().getLastSeqNum(srcPublicKey = "myPublicKey", dstPublicKey = dstPubKey) ?: 0
-            Log.d(TAG, "lastSeqNum is $lastSeqNum, dstPubKey is $dstPubKey")
-            database.barkDao().insert(Bark(srcPublicKey = "myPublicKey", dstPublicKey = dstPubKey, timestamp = SimpleDateFormat(
-                "MM/dd/yyyy hh.mm aa",
-                Locale.getDefault()
-            ).format(Date()), seqNum = lastSeqNum + 1, msg = msg))
-            _currUiState.value
-        }
-    }
-
-    fun setChat(contactName: String) {
-        Log.d(TAG, "Changing contact to: $contactName")
-        _contactName.value = contactName
-        _currUiState.value!!.contactName = contactName
-        if (barkUpdater != null) {
-            barkUpdater!!.cancel()
-        }
-        barkUpdater = viewModelScope.launch {
-            while (isActive) {
-                val con : Contact = database.contactDao().getContactByNickname(contactName)
-                if (con == null) {
-                    // it is possible for con to be null
-                    continue
-                }
-                Log.d(TAG, "con.publickey is: ${con.publicKey}")
-                database.barkDao().getBarks(srcPublicKey = "myPublicKey", dstPublicKey = con.publicKey).cancellable().collect {
-                    Log.d(TAG, "Got some new barks for: $contactName")
-                    var msgs : MutableList<FrontEndMessage> = mutableListOf()
-                    for (bark in it) {
-                        val author = database.contactDao().getContactByKey(bark.srcPublicKey).nickname
-                        msgs.add(FrontEndMessage(
-                            author = author,
-                            content = bark.msg,
-                            timestamp = bark.timestamp
-                        ))
-                    }
-                    // Below is bad example of updating livedata, and does not cause composables to recompose
-//                    _currUiState.value!!.messages = msgs
-//                    Log.d(TAG, "Set new barks for: $contactName")
-                    _currUiState.postValue(ConversationUiState(contactName, msgs))
-                    Log.d(TAG, "Set new barks for (try 2): $contactName")
-                }
+            withContext(Dispatchers.Default) {
+                mutt.sendMessage(msg, contactID)
+                var msgs: MutableList<FrontEndMessage> = _currUiState.value!!.messages.toMutableList()
+                msgs.add(0, FrontEndMessage("me", msg, "0"))
+                _currUiState.postValue(ConversationUiState(contactName, msgs))
             }
         }
     }
 
-//    fun setChannel(newChannel: String?) {
-//        Log.d("ConvViewModel", "Changing channel to: $newChannel")
-//        val channel = newChannel ?: DEFAULT_CHANNEL
-//
-//        _channel.value = channel //TODO: remove
-//
-//        val retChannel = getUiState(channel)
-//        Log.d("ConvViewModel", "returned channel is ${retChannel.channelName}")
-//        _currUiState.value = getUiState(channel)
-////                        https://developer.android.com/codelabs/basic-android-kotlin-training-intro-room-flow#8
-//    }
+    fun setChat(newChatPartnerName: String) {
+        Log.d(TAG, "Changing contact to: $newChatPartnerName")
+        contactName = newChatPartnerName
+        //Set to default value
+        contactID = mutt.dawgIdentifier
+        _currUiState.value!!.contactName = contactName
+        viewModelScope.launch {
+            withContext(Dispatchers.Default) {
+                if (!mutt.haveContact(mutt.dawgIdentifier.uniqueId)) {
+                    Log.d(TAG, "Adding myself because I'm not in the database yet")
+                    mutt.addContact(mutt.dawgIdentifier, MyKey) // add myself
+                    mutt.sendMessage("talking to myself", mutt.dawgIdentifier)
+                }
+                if (!mutt.haveContact(ADawgTag.uniqueId)) {
+                    Log.d(TAG, "Adding ADawg because not in the database yet")
+                    mutt.addContact(ADawgTag, AKey)
+                    mutt.sendMessage("hey ADawg, this is me", ADawgTag)
+                }
+                if (!mutt.haveContact(BDawgTag.uniqueId)) {
+                    Log.d(TAG, "Adding BDawg because not in the database yet")
+                    mutt.addContact(BDawgTag, BKey)
+                    mutt.sendMessage("hey BDawg, this is me", BDawgTag)
+                }
+                if (!mutt.haveContact(CDawgTag.uniqueId)) {
+                    Log.d(TAG, "Adding CDawg because not in the database yet")
+                    mutt.addContact(CDawgTag, CKey)
+                }
+                Log.d(TAG, "Added messages")
+                val contactNames: MutableList<String> = mutableListOf()
+                for (id in mutt.allContacts) {
+                    contactNames.add(id.userContact)
+                    if (id.userContact == newChatPartnerName) {
+                        contactID = id
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    mainViewModel.setNewContactList(contactNames)
+                }
+                Log.d(TAG, "beepbeep")
 
-//    private fun getUiState(contactName: String) : ConversationUiState {
-////        val barks : Flow<List<Bark>> = database.barkDao().getBarks(con.publicKey)
-//
-//
-//
-//
-//    }
-
-//    private fun getUiState(channel: String): ConversationUiState {
-//        // TODO: This function would become a Room database call instead of if statements
-//        // TODO: actually, not a database call, but an observable query so that it automatically updates as the database changes
-//
-//        return if (channel == "#droidcon-nyc") {
-//            Log.d("ConvViewModel", "returning droidcon")
-//            ConversationUiState(
-//                initialMessages = droidconMessages,
-//                channelName = channel,
-//                channelMembers = 421
-//            )
-//        } else {
-//            Log.d("ConvViewModel", "returning composers")
-//            ConversationUiState(
-//                initialMessages = composersMessages,
-//                channelName = channel,
-//                channelMembers = 72
-//            )
-//        }
-//    }
+                val conv = mutt.getConversation(Collections.singletonList(contactID))
+                if (conv == null) {
+                    _currUiState.postValue(ConversationUiState(contactName, listOf()))
+                    Log.d(TAG, "Set empty barks for: $contactName")
+                } else {
+                    var msgs: MutableList<FrontEndMessage> = mutableListOf()
+                    val barks : List<Bark>? = mutt.getBarksForConversation(conv)
+                    val key : SecretKey = mutt.getKey(conv.userList.get(0))
+                    if (barks == null) {
+                        _currUiState.postValue(ConversationUiState(contactName, listOf()))
+                        Log.d(TAG, "Set empty barks for: $contactName")
+                    } else {
+                        for (bark in barks) {
+                            Log.d(TAG, "Bark is $bark")
+                            msgs.add(0,
+                                FrontEndMessage(
+                                    author = bark.sender.userContact,
+                                    content = bark.getContents(key),
+                                    timestamp = bark.orderNum.toString()
+                                )
+                            )
+                        }
+                        _currUiState.postValue(ConversationUiState(contactName, msgs))
+                        Log.d(TAG, "Set new barks for: $contactName")
+                    }
+                }
+            }
+        }
+    }
 
 }

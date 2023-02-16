@@ -1,18 +1,15 @@
 package backend.scuttlemutt;
 
-import java.security.PublicKey;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import crypto.Crypto;
-import org.apache.commons.lang3.RandomStringUtils;
-
 import backend.iomanager.IOManager;
 import backend.meshdaemon.MeshDaemon;
 import storagemanager.StorageManager;
+import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
 import static java.util.stream.Collectors.toList;
+
+import javax.crypto.SecretKey;
 
 
 /*
@@ -23,7 +20,7 @@ public class Scuttlemutt {
     // Identifier object of user
     private final DawgIdentifier dawgIdentifier;
     // I/O manager
-    private final IOManager ioManager;
+    public final IOManager ioManager;
     // Database of connected users, previous conversations, and previous messages
     private final StorageManager storageManager;
     // Daemon controlling recieving and broadcasting of messages
@@ -32,7 +29,7 @@ public class Scuttlemutt {
     /*
      * Constructs a new Scuttlemutt object
      */
-    public Scuttlemutt(IOManager inputIoManager, DawgIdentifier dawgIdentifier, StorageManager storageManager){
+    public Scuttlemutt(IOManager inputIoManager, DawgIdentifier dawgIdentifier, StorageManager storageManager) {
         this.dawgIdentifier = dawgIdentifier;
         this.ioManager = inputIoManager;
         this.storageManager = storageManager;
@@ -41,19 +38,31 @@ public class Scuttlemutt {
 
     /**
      * Returns user's DawgIdentifier
+     *
      * @return deep copy of user's DawgIdentifier so public key can't be modified
      */
     public DawgIdentifier getDawgIdentifier(){
-        return new DawgIdentifier(this.dawgIdentifier.getUserContact(), this.dawgIdentifier.getUniqueId(), this.dawgIdentifier.getPublicKey());
+        return new DawgIdentifier(this.dawgIdentifier.getUserContact(), this.dawgIdentifier.getUniqueId());
+    }
+
+    /**
+     * Returns the SecretKey used to chat with the device associated with the passed DawgIdentifier.
+     *
+     * @param otherDeviceId  A DawgIdentifier used to identify the other device.
+     * @return the SecretKey used to chat with the device associated with the passed DawgIdentifier.
+     */
+    public SecretKey getKey(final DawgIdentifier otherDeviceId){
+        return this.storageManager.lookupKeyForDawgIdentifier(otherDeviceId.getUniqueId());
     }
 
     /**
      * Sends a message to recipient based on UUID
-     * @param message Message that user is trying to send
+     *
+     * @param message   Message that user is trying to send
      * @param dstDawgId Recipient's DawgIdentifier
      * @return UUID of sent message
      */
-    public UUID sendMessage(String message, DawgIdentifier dstDawgId){
+    public UUID sendMessage(String message, DawgIdentifier dstDawgId) {
         // TODO : Implement seq ID in conversations
         // Placeholder for now
         final Long seqId = 0L;
@@ -62,6 +71,7 @@ public class Scuttlemutt {
 
     /**
      * Returns a List containing the active conversations for the user.
+     *
      * @return a List containing the active conversations for the user.
      */
     public List<Conversation> listAllConversations() {
@@ -70,31 +80,54 @@ public class Scuttlemutt {
 
     /**
      * Returns a List<String> containing the messages of the passed Conversation.
-     * @param conversation  the Conversation whose messages we're obtaining.
+     *
+     * @param conversation the Conversation whose messages we're obtaining.
      * @return a List<String> containing the messages of the passed Conversation.
      */
     public List<String> getMessagesForConversation(final Conversation conversation) {
-        final List<String> msgs = new ArrayList<String>();
-        for (final UUID uuid : conversation.getBarkUUIDList()) {
-            // TODO:  Replace this with code which actually looks up the full msg instead of just one Bark.
-            //   (if we don't do this though, the demo should still work given a short enough msg)
-            final String msg = this.storageManager
-                    .lookupBark(uuid)
-                    .getContents();
+        // get the encryption key associated with the Conversation.
+        final SecretKey decryptionKey = this.storageManager.lookupKeyForDawgIdentifier(conversation.getUserList().get(0).getUniqueId());
 
-            msgs.add(msg);
-        }
-        return msgs;
+        return getBarksForConversation(conversation).stream().map(b -> b.getContents(decryptionKey)).collect(toList());
     }
 
-    public void addContact(final DawgIdentifier dawgIdentifier) {
+    /**
+     * Returns a List<Bark> containing the barks of the passed Conversation.
+     *
+     * @param conversation the Conversation whose barks we're obtaining.
+     * @return a List<Bark> containing the barks of the passed Conversation, or
+     *         null.
+     */
+    public List<Bark> getBarksForConversation(final Conversation conversation) {
+        final List<Bark> barks = new ArrayList<Bark>();
+        for (final UUID uuid : conversation.getBarkUUIDList()) {
+            final Bark bark = this.storageManager.lookupBark(uuid);
+            if (bark == null) {
+                return null;
+            }
+            barks.add(bark);
+        }
+        return barks;
+    }
+
+    public List<DawgIdentifier> getAllContacts() {
+        return this.storageManager.getAllDawgIdentifiers();
+    }
+
+    public boolean haveContact(final UUID muttNetworkUUID) {
+        return this.storageManager.lookupDawgIdentifier(muttNetworkUUID) != null;
+    }
+
+    public void addContact(final DawgIdentifier dawgIdentifier, final SecretKey secretKey) {
         this.storageManager.storeDawgIdentifier(dawgIdentifier);
+        this.storageManager.storeKeyForDawgIdentifier(dawgIdentifier.getUniqueId(), secretKey);
     }
 
     public void removeContact(final DawgIdentifier dawgIdentifier) {
         // verify that the DawgIdentifier is currently stored.
         if (this.storageManager.lookupDawgIdentifier(dawgIdentifier.getUniqueId()) == null) {
-            throw new RuntimeException("Attempted to delete a nonexistent DawgIdentifier!  Scuttlemutt instance:  " + this.dawgIdentifier.getUniqueId().toString()
+            throw new RuntimeException("Attempted to delete a nonexistent DawgIdentifier!  Scuttlemutt instance:  "
+                    + this.dawgIdentifier.getUniqueId().toString()
                     + "\tDawgIdentifier ID:  " + dawgIdentifier.getUniqueId().toString());
         }
 
@@ -109,11 +142,7 @@ public class Scuttlemutt {
         final Conversation c = this.storageManager.lookupConversation(convoIds);
 
         if (c == null) {
-            final String convoIdListString = dawgIdentifiers.stream()
-                    .map(id -> id.getUniqueId().toString())
-                    .collect(Collectors.joining(", "));
-            throw new RuntimeException("Attempted to get a nonexistent Converation!  Scuttlemutt instance:  " + this.dawgIdentifier.getUniqueId().toString()
-                    + "\tConversation DawgIdentifier IDs:  " + convoIdListString);
+            return null;
         }
 
         return c;
@@ -124,17 +153,5 @@ public class Scuttlemutt {
      */
     public void shutdown() {
         this.meshDaemon.shutdown();
-    }
-
-    /**
-     * Generates a DawgIdentifier for user on creation
-     * @param userContact User provided identification string
-     * @return new DawgIdentifier with generated UUID and public key
-     */
-    private DawgIdentifier generateDawgIdentifier(String userContact){
-        final UUID uuid = UUID.randomUUID();
-        final PublicKey publicKey = Crypto.generateKeyPair().getPublic();
-        return new DawgIdentifier(userContact, uuid, publicKey);
-        
     }
 }

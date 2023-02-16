@@ -16,9 +16,9 @@
 
 package com.scuttlemutt.app
 
-//import com.example.compose.jetchat.databinding.ContentMainBinding
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.material3.DrawerValue.Closed
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,8 +36,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import backend.iomanager.IOManager
-import backend.iomanager.QueueIOManager
+import com.scuttlemutt.app.backendimplementations.iomanager.EndpointIOManager
 import backend.scuttlemutt.Scuttlemutt
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.Payload
@@ -46,15 +45,9 @@ import com.scuttlemutt.app.components.JetchatDrawer
 import com.scuttlemutt.app.connection.ConnectionsActivity
 import com.scuttlemutt.app.conversation.BackPressHandler
 import com.scuttlemutt.app.conversation.LocalBackPressedDispatcher
-import com.scuttlemutt.app.data.ScuttlemuttDatabase
 import com.scuttlemutt.app.databinding.ContentMainBinding
-import crypto.Crypto
 import kotlinx.coroutines.launch
-import storagemanager.MapStorageManager
-import storagemanager.StorageManager
-import types.DawgIdentifier
 import types.packet.BarkPacket
-import java.security.KeyPair
 import java.util.*
 
 
@@ -64,9 +57,10 @@ import java.util.*
 class NavActivity() : ConnectionsActivity() {
 
     private lateinit var viewModel: MainViewModel
+    private lateinit var mutt: Scuttlemutt
 
 
-    private val SERVICE_ID = "com.google.location.nearby.apps.walkietalkie.automatic.SERVICE_ID"
+    private val SERVICE_ID = "com.scuttlemutt.app.service_id.meshing"
 
     /**
      * The state of the app. As the app changes states, the UI will update and advertising/discovery
@@ -75,6 +69,7 @@ class NavActivity() : ConnectionsActivity() {
     private var mState: com.scuttlemutt.app.NavActivity.State =
         com.scuttlemutt.app.NavActivity.State.UNKNOWN
 
+    private lateinit var iom: EndpointIOManager
     /**
      * Name of the user - ScuttleMutt.DawgIdentifier.userContact
      */
@@ -93,17 +88,11 @@ class NavActivity() : ConnectionsActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val database = ScuttlemuttDatabase.getDatabase(this)
-        viewModel =
-            ViewModelProvider(this, MainViewModelFactory(database)).get(MainViewModel::class.java)
-
-        val mykeys: KeyPair = Crypto.generateKeyPair()
-        val iom: IOManager = QueueIOManager()
-        val dawgid: DawgIdentifier = DawgIdentifier("blah", UUID.randomUUID(), mykeys.public)
-        val storagem: StorageManager = MapStorageManager()
-
-        val mutt: Scuttlemutt = Scuttlemutt(iom, dawgid, storagem)
-        Log.d(TAG, "Testing Scuttlemutt dawgIdentifier: ${mutt.dawgIdentifier}")
+        Log.d(TAG, "GETTING SCUTTLEMUTT INSTANCE")
+        mutt = SingletonScuttlemutt.getInstance(this, this.mConnectionsClient!!)
+        iom = SingletonScuttlemutt.getIOManager()
+        viewModel = ViewModelProvider(this, MainViewModelFactory(mutt)).get(MainViewModel::class.java)
+        Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
 
         // Set user name
         name = mutt.dawgIdentifier.userContact
@@ -122,7 +111,7 @@ class NavActivity() : ConnectionsActivity() {
                         val drawerOpen by viewModel.drawerShouldBeOpened
                             .collectAsStateWithLifecycle()
 
-                        val activeChannel by viewModel.activeChannel.observeAsState()
+                        val activeChannel by viewModel.activeContact.observeAsState()
 
                         if (drawerOpen) {
                             // Open drawer and reset state in VM.
@@ -153,9 +142,7 @@ class NavActivity() : ConnectionsActivity() {
                             onChatClicked = fun(channel: String) {
 //                                convViewModel.setChat(channel)
                                 viewModel.setChannel(channel)
-//                                val bundle = bundleOf("channel" to it)
-//                                Log.d("NavActivity", "Navigating to nav_home")
-//                                findNavController().navigate(R.id.nav_home, bundle)
+                                Log.d("NavActivity", "Navigating to nav_home")
                                 findNavController().navigate(R.id.nav_home)
                                 scope.launch {
                                     drawerState.close()
@@ -180,6 +167,7 @@ class NavActivity() : ConnectionsActivity() {
 
     override fun onStart() {
         super<ConnectionsActivity>.onStart()
+        logD("STARTING")
         setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
     }
 
@@ -187,6 +175,7 @@ class NavActivity() : ConnectionsActivity() {
 
         // After our Activity stops, we disconnect from Nearby Connections.
         setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
+
         super.onStop()
     }
 
@@ -203,20 +192,12 @@ class NavActivity() : ConnectionsActivity() {
         return navHostFragment.navController
     }
 
-    /**
-     * Send provided string.
-     */
-    private fun onSend(message: BarkPacket) {
-        logV("startSend()")
-
-        val byteMessage: ByteArray = message.toNetworkBytes()
-        send(Payload.fromBytes(byteMessage))
-    }
 
     override fun onReceive(endpoint: Endpoint?, payload: Payload?) {
         logD("" + payload?.type)
         if (payload?.type == Payload.Type.BYTES) {
             val buffer = payload?.asBytes()
+            iom.addReceivedMessage(endpoint?.id, BarkPacket.fromNetworkBytes(buffer))
             var messageString = String(buffer!!)
             if (endpoint != null) {
                 messageString = "From " + endpoint.name + ": " + messageString
@@ -228,6 +209,7 @@ class NavActivity() : ConnectionsActivity() {
 
     override fun onEndpointDiscovered(endpoint: Endpoint) {
         // We found an advertiser!
+        logD("Endpoint Discovered")
         stopDiscovering()
         connectToEndpoint(endpoint!!)
     }
@@ -249,14 +231,18 @@ class NavActivity() : ConnectionsActivity() {
     }
 
     override fun onEndpointConnected(endpoint: Endpoint?) {
-        // Maybe a message to say we've been connected?
+        //TODO: Maybe a message to say we've been connected?
         logD("CONNECTED")
+        Toast.makeText(this,"Connected!", Toast.LENGTH_LONG)
         setState(com.scuttlemutt.app.NavActivity.State.CONNECTED)
+        iom.updateAvailableConnection(this.mEstablishedConnections.keys);
     }
 
     override fun onEndpointDisconnected(endpoint: Endpoint?) {
-        // Maybe a message to say we've been disconnected?
+        //TODO: Maybe a message to say we've been disconnected?
+        logD("DISCONNECTED")
         setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
+        iom.updateAvailableConnection(this.mEstablishedConnections.keys);
     }
 
     override fun onConnectionFailed(endpoint: Endpoint?) {
@@ -267,7 +253,7 @@ class NavActivity() : ConnectionsActivity() {
     }
 
     /**
-     * The state has changed. Switch it.
+     * The state has changed. Switch it to a new state.
      *
      * @param state The new state.
      */
@@ -300,9 +286,13 @@ class NavActivity() : ConnectionsActivity() {
     ) {
         when (newState) {
             com.scuttlemutt.app.NavActivity.State.SEARCHING -> {
+                logD("Changed to Searching from " + oldState)
                 disconnectFromAllEndpoints()
+                iom.updateAvailableConnection(emptySet())
                 startDiscovering()
+                logD("Start Discovering from state change")
                 startAdvertising()
+                logD("Start Advertising from state change")
             }
             com.scuttlemutt.app.NavActivity.State.CONNECTED -> {
                 stopDiscovering()

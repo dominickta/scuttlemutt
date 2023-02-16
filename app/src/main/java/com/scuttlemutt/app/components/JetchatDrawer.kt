@@ -68,12 +68,6 @@ fun JetchatDrawerContent(
         DividerItem()
         DrawerItemHeader("Chats")
         chatItems(viewModel, onChatClicked)
-//        DividerItem(modifier = Modifier.padding(horizontal = 28.dp))
-//        DrawerItemHeader("Recent Profiles")
-//        ProfileItem("Ali Conors (you)", meProfile.photo) { onProfileClicked(meProfile.userId) }
-//        ProfileItem("Taylor Brooks", colleagueProfile.photo) {
-//            onProfileClicked(colleagueProfile.userId)
-//        }
     }
 }
 
@@ -81,7 +75,7 @@ fun JetchatDrawerContent(
 @Composable
 private fun chatItems(viewModel: com.scuttlemutt.app.MainViewModel, onChatClicked: (String) -> Unit) {
     val channelNames = viewModel.allContactNames.observeAsState().value!!
-    val currChan = viewModel.activeChannel.observeAsState().value!!
+    val currChan = viewModel.activeContact.observeAsState().value!!
     for (channel in channelNames) {
         ChatItem(channel, channel == currChan) { onChatClicked(channel) }
     }
@@ -100,11 +94,6 @@ private fun DrawerHeader() {
             fontSize = 30.sp,
             modifier = Modifier.padding(horizontal = 5.dp)
         )
-//        Image(
-//            painter = painterResource(id = R.drawable.jetchat_logo),
-//            contentDescription = null,
-//            modifier = Modifier.padding(start = 8.dp)
-//        )
     }
 }
 @Composable
@@ -205,26 +194,3 @@ fun DividerItem(modifier: Modifier = Modifier) {
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     )
 }
-
-//@Composable
-//@Preview
-//fun DrawerPreview() {
-//    JetchatTheme {
-//        Surface {
-//            Column {
-//                JetchatDrawerContent("#droidcon-nyc",{}, {})
-//            }
-//        }
-//    }
-//}
-//@Composable
-//@Preview
-//fun DrawerPreviewDark() {
-//    JetchatTheme(isDarkTheme = true) {
-//        Surface {
-//            Column {
-//                JetchatDrawerContent("#droidcon-nyc",{}, {})
-//            }
-//        }
-//    }
-//}

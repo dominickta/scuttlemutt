@@ -19,14 +19,10 @@ package com.scuttlemutt.app.conversation
 import androidx.compose.runtime.Immutable
 import com.scuttlemutt.app.R
 
-class ConversationUiState(
-//    val channelName: String,
-//    val channelMembers: Int,
+data class ConversationUiState(
     var contactName: String,
     var messages: List<FrontEndMessage>
-) {
-//    private val _messages: MutableList<Message> = initialMessages.toMutableStateList()
-}
+)
 
 @Immutable
 data class FrontEndMessage(
