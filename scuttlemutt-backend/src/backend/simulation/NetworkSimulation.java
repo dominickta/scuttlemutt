@@ -1,13 +1,15 @@
 package backend.simulation;
 
+import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.crypto.SecretKey;
 
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
@@ -17,12 +19,6 @@ import storagemanager.MapStorageManager;
 import storagemanager.StorageManager;
 import types.DawgIdentifier;
 import types.packet.Packet;
-
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import javax.crypto.SecretKey;
 
 /**
  * Sets up and stores QueueIOManager objects to simulate a network.
@@ -55,7 +51,8 @@ public class NetworkSimulation {
             storageManagerMap.put(deviceLabel, storageManager);
 
             // create a Scuttlemutt object which references the above QueueIOManagers
-            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID());
+            final KeyPair myKeys = Crypto.generateKeyPair();
+            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, myKeys.getPublic());
             final Scuttlemutt scuttlemutt = new Scuttlemutt(ioManager, dawgId, storageManager);
 
             // stash the ioManager in the scuttlemuttMap.
@@ -122,8 +119,9 @@ public class NetworkSimulation {
 
     /**
      * Obtains the StorageManager associated with the passed deviceLabel.
-     * @param deviceLabel  The label associated with the desired StorageManager.
-     * @return  The StorageManager associated with the passed label.
+     * 
+     * @param deviceLabel The label associated with the desired StorageManager.
+     * @return The StorageManager associated with the passed label.
      */
     public StorageManager getStorageManager(final String deviceLabel) {
         if (!this.queueIOManagerMap.containsKey(deviceLabel)) {

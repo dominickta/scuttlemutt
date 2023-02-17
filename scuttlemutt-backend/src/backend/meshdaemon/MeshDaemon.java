@@ -1,18 +1,21 @@
 package backend.meshdaemon;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.crypto.SecretKey;
+
 import backend.iomanager.IOManager;
 import storagemanager.StorageManager;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.*;
-
-import javax.crypto.SecretKey;
 
 /**
  * Controls input/output logic and an internal Bark queue.
@@ -28,16 +31,21 @@ public class MeshDaemon {
     /**
      * Constructs a new MeshDaemon.
      * 
-     * @param ioManager The underlying IOManager.
-     * @param storageManager   The place to store messages + conversations meant for us.
+     * @param ioManager      The underlying IOManager.
+     * @param storageManager The place to store messages + conversations meant for
+     *                       us.
      */
-    public MeshDaemon(final IOManager ioManager, final StorageManager storageManager, final DawgIdentifier currentUser) {
+    public MeshDaemon(final IOManager ioManager, final StorageManager storageManager,
+            final DawgIdentifier currentUser) {
         // Shared state between input and output
         Set<Bark> seenBarks = new HashSet<>();
 
+        // grab the private key
+        PrivateKey privateKey = storageManager.lookupPrivateKey();
+
         this.currentUser = currentUser;
         this.queue = new LinkedBlockingQueue<>();
-        this.input = new MeshInput(ioManager, queue, storageManager, currentUser, seenBarks);
+        this.input = new MeshInput(ioManager, queue, storageManager, privateKey, seenBarks);
         this.output = new MeshOutput(ioManager, queue, seenBarks);
         this.storageManager = storageManager;
 
@@ -67,15 +75,16 @@ public class MeshDaemon {
      * @returns UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
-        final SecretKey encryptionKey = this.storageManager.lookupKeyForDawgIdentifier(recipient.getUniqueId());
-        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, encryptionKey);
+        PublicKey theirPubKey = recipient.getPublicKey();
+        final SecretKey aesKey = this.storageManager.lookupSecretKeyForPublicKey(theirPubKey);
+        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, aesKey);
 
-        // update the Conversation object stored in the StorageManager to include the Bark.
-        Conversation c = this.storageManager.lookupConversation(Collections.singletonList(recipient.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
+        // update Conversation object stored in the StorageManager to include the Bark.
+        Conversation c = this.storageManager.lookupConversation(theirPubKey);
         if (c == null) {
-            // if we've never initiated a conversation with the sender before, create + store a new Conversation.
-            c = new Conversation(Collections.singletonList(recipient),
-                    Collections.singletonList(barkMessage.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
+            // if we've never initiated a conversation with the sender before, create +
+            // store a new Conversation.
+            c = new Conversation(recipient, Collections.singletonList(barkMessage.getUniqueId()));
             this.storageManager.storeConversation(c);
         } else {
             // update existing obj

@@ -1,7 +1,6 @@
 package types;
 
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -54,8 +53,7 @@ public class Bark {
             final DawgIdentifier sender,
             final DawgIdentifier receiver,
             final Long orderNum,
-            final SecretKey encryptionKey,
-            final PublicKey theirPublicKey) {
+            final SecretKey encryptionKey) {
 
         // verify that the contents are less than the max message size.
         if (contents.length() > MAX_MESSAGE_SIZE) {
@@ -71,7 +69,7 @@ public class Bark {
 
         // build a header and encrypt it
         BarkHeader barkHeader = new BarkHeader(sender, receiver, orderNum, fillerCount);
-        this.encryptedHeader = barkHeader.toEncryptedBytes(theirPublicKey);
+        this.encryptedHeader = barkHeader.toEncryptedBytes(receiver.getPublicKey());
 
         // encrypt the contents.
         this.encryptedContents = Crypto.encrypt(contents.getBytes(), encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
@@ -105,7 +103,8 @@ public class Bark {
      * Returns the contents of the Bark after decrypting them using the passed key.
      * 
      * @param encryptionKey The key to decrypt the Bark's contents with.
-     * @return The decrypted contents of the Bark.
+     * @return The decrypted contents of the Bark or null if you dont have
+     *         permission.
      */
     public String getContents(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
         BarkHeader barkHeader = BarkHeader.fromEncryptedBytes(this.encryptedContents, myPrivateKey);
@@ -182,7 +181,8 @@ public class Bark {
 
     @Override
     public String toString() {
-        return "encryptedContents:  " + Arrays.toString(this.encryptedContents) + "\tuniqueId:  "
+        return "encryptedContents:  " + Arrays.toString(this.encryptedContents) + "encryptedHeader:  "
+                + Arrays.toString(this.encryptedHeader) + "\tuniqueId:  "
                 + this.uniqueId.toString();
     }
 }

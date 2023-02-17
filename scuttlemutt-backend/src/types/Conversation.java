@@ -1,60 +1,50 @@
 package types;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import javax.crypto.SecretKey;
-
-import crypto.Crypto;
-import types.serialization.SerializationUtils;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * Contains the information for a given conversation.
  *
- * NOTE:  This class is currently rather sparse.  We likely still want this class for tracking message conversation
- * metadata though.  In the future, we can add more to this class as necessary.
+ * NOTE: This class is currently rather sparse. We likely still want this class
+ * for tracking message conversation
+ * metadata though. In the future, we can add more to this class as necessary.
  */
 public class Conversation {
     private static final Gson GSON = new GsonBuilder().setLenient().create();
 
     // class variables
-    private final List<DawgIdentifier> userList;
-    private final List<UUID> barkList;  // a List of the UUIDs of the Barks associated with the conversation.
-                                        // The ordering of the list == the ordering of the barks.
-
+    private final DawgIdentifier otherPerson; // whom we are talking to
+    private final List<UUID> barkList; // a List of the UUIDs of the Barks associated with the conversation.
+                                       // The ordering of the list == the ordering of the barks.
 
     /**
      * Constructs a Conversation object.
-     * @param userList  A List specifying the users involved in the Conversation.
-     * @param barkList  A List containing the UUIDs of the Barks in the Conversation.
+     * 
+     * @param otherPerson The DawgIdentifier of the other person we are talking to.
+     * @param barkList    A List containing the UUIDs of the Barks in the
+     *                    Conversation.
      */
-    public Conversation(final List<DawgIdentifier> userList, final List<UUID> barkList) {
-        this.userList = userList;
+    public Conversation(final DawgIdentifier otherPerson, final List<UUID> barkList) {
+        this.otherPerson = otherPerson;
         this.barkList = new ArrayList<UUID>(barkList);
     }
 
     /**
      * Second constructor for when no Barks exist yet.
-     * @param userList  A List specifying the users involved in the Conversation.
+     * 
+     * @param otherPerson Whom we are talking to.
      */
-    public Conversation(final List<DawgIdentifier> userList) {
-        this(userList, new ArrayList<UUID>());
+    public Conversation(final DawgIdentifier otherPerson) {
+        this(otherPerson, new ArrayList<UUID>());
     }
 
-    public List<DawgIdentifier> getUserList() {
-        return List.copyOf(userList);
-    }
-
-    public List<UUID> getUserUUIDList() {
-        return userList.stream()
-                .map(DawgIdentifier::getUniqueId)
-                .collect(Collectors.toList());
+    public DawgIdentifier getOtherPerson() {
+        return this.otherPerson;
     }
 
     public List<UUID> getBarkUUIDList() {
@@ -64,12 +54,13 @@ public class Conversation {
     /**
      * Adds the passed UUID of a Bark to the List of stored Bark UUIDs.
      *
-     * NOTE:  The database operates via storing serialized representations of the Conversation object.  In order to
-     * propagate any new Bark UUIDs to the database, we _must_ re-serialize the Conversation objects + overwrite the
-     * Conversation object in the database.  Simply updating the object + trusting storage-by-reference does _not_ work
-     * here.
+     * NOTE: The database operates via storing serialized representations of the
+     * Conversation object. In order to propagate any new Bark UUIDs to the
+     * database, we _must_ re-serialize the Conversation objects + overwrite the
+     * Conversation object in the database. Simply updating the object + trusting
+     * storage-by-reference does _not_ work here.
      *
-     * @param barkUUID  The UUID being stored.
+     * @param barkUUID The UUID being stored.
      */
     public void storeBarkUUID(final UUID barkUUID) {
         this.barkList.add(barkUUID);
@@ -81,8 +72,6 @@ public class Conversation {
      * @return a byte[] containing the bytes which represent the Conversation.
      */
     public byte[] toNetworkBytes() {
-        // TODO:  Add encryption here.
-
         return GSON.toJson(this).getBytes();
     }
 
@@ -101,11 +90,11 @@ public class Conversation {
         if (!(o instanceof Conversation)) {
             return false;
         }
-        return this.getUserList().equals(((Conversation) o).getUserList());
+        return this.getOtherPerson().equals(((Conversation) o).getOtherPerson());
     }
 
     @Override
     public String toString() {
-        return userList.toString();
+        return "A conversation between me and " + otherPerson.toString();
     }
 }

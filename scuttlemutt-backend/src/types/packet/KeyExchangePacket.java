@@ -1,15 +1,17 @@
 package types.packet;
 
-import types.serialization.SerializationUtils;
-
 import java.security.Key;
+import java.security.PublicKey;
 
 import javax.crypto.SecretKey;
+
+import types.serialization.SerializationUtils;
 
 /**
  * This class represents the key-exchange packets sent by the IOManager.
  */
 public class KeyExchangePacket extends Packet {
+    private final String keyType;
     private final byte[] keyBytes;
 
     /**
@@ -18,11 +20,26 @@ public class KeyExchangePacket extends Packet {
      * @param secretKey The symmetric key being sent by the packet.
      */
     public KeyExchangePacket(final SecretKey secretKey) {
+        this.keyType = "secretKey";
         this.keyBytes = SerializationUtils.serializeKey(secretKey);
     }
 
-    public SecretKey getKey() {
-        return SerializationUtils.deserializeSecretKey(keyBytes);
+    /**
+     * Constructs the packet.
+     *
+     * @param pubKey The asymmetric key being sent by the packet.
+     */
+    public KeyExchangePacket(final PublicKey pubKey) {
+        this.keyType = "publicKey";
+        this.keyBytes = SerializationUtils.serializeKey(pubKey);
+    }
+
+    public Key getKey() {
+        if (this.keyType == "secretKey") {
+            return SerializationUtils.deserializeSecretKey(keyBytes);
+        } else {
+            return SerializationUtils.deserializePublicKey(keyBytes);
+        }
     }
 
     @Override

@@ -1,16 +1,17 @@
 package backend.meshdaemon;
 
-import backend.iomanager.IOManager;
-import storagemanager.StorageManager;
-import types.Bark;
-import types.packet.BarkPacket;
-import types.Conversation;
-import types.DawgIdentifier;
-
+import java.security.PrivateKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+
+import backend.iomanager.IOManager;
+import storagemanager.StorageManager;
+import types.Bark;
+import types.Conversation;
+import types.DawgIdentifier;
+import types.packet.BarkPacket;
 
 /**
  * Monitors the incoming requests from the IOManager.
@@ -20,7 +21,7 @@ public class MeshInput implements Runnable {
     private final IOManager ioManager;
     private final StorageManager storage;
     private final BlockingQueue<Bark> queue;
-    private final DawgIdentifier currentUser;
+    private final PrivateKey myPrivateKey;
 
     private final Set<Bark> seenBarks;
 
@@ -30,16 +31,16 @@ public class MeshInput implements Runnable {
      * @param ioManager   The underlying IOManager.
      * @param queue       The queue of outgoing barks to forward
      * @param storage     A StorageManager to store Barks addressed to us.
-     * @param currentUser  The DawgIdentifier for the current user.
-     * @param seenBarks  A Set containing the Barks we have seen before.
+     * @param currentUser The DawgIdentifier for the current user.
+     * @param seenBarks   A Set containing the Barks we have seen before.
      */
     public MeshInput(final IOManager ioManager, final BlockingQueue<Bark> queue,
-            final StorageManager storage, final DawgIdentifier currentUser,
+            final StorageManager storage, final PrivateKey myPrivateKey,
             final Set<Bark> seenBarks) {
         this.ioManager = ioManager;
         this.queue = queue;
         this.storage = storage;
-        this.currentUser = currentUser;
+        this.myPrivateKey = myPrivateKey;
         this.seenBarks = seenBarks;
     }
 
@@ -51,7 +52,7 @@ public class MeshInput implements Runnable {
     }
 
     public void handleInput() {
-        // TODO: Add BarkPacket verification (e.g. with signing)
+        // TODO: Add BarkPacket verification (e.g. crypto signatures)
 
         // Check if ioManager is connected so .call function in Iomanager doesn't fail
         BarkPacket barkPacket = ioManager.meshReceive(BarkPacket.class);
@@ -63,16 +64,17 @@ public class MeshInput implements Runnable {
                 continue;
             }
 
-            if (this.currentUser.equals(bark.getReceiver())) {
+            if (bark.isForMe(this.myPrivateKey)) {
                 // this is for us, store for later
                 storage.storeBark(bark);
 
-                // update the Conversation object stored in the StorageManager to include the Bark.
-                Conversation c = this.storage.lookupConversation(Collections.singletonList(bark.getSender().getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
+                // update Conversation object stored in the StorageManager to include the Bark.
+                DawgIdentifier sender = bark.getSender(this.myPrivateKey);
+                Conversation c = this.storage.lookupConversation(sender.getPublicKey());
                 if (c == null) {
-                    // if we've never initiated a conversation with the sender before, create + store a new Conversation.
-                    c = new Conversation(Collections.singletonList(bark.getSender()),
-                            Collections.singletonList(bark.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
+                    // if we've never initiated a conversation with the sender before, create +
+                    // store a new Conversation.
+                    c = new Conversation(sender, Collections.singletonList(bark.getUniqueId()));
                     this.storage.storeConversation(c);
                 } else {
                     // update existing obj
@@ -80,7 +82,7 @@ public class MeshInput implements Runnable {
                     this.storage.storeConversation(c);
                 }
 
-            } else if (!this.currentUser.equals(bark.getSender())) {
+            } else {
                 this.queue.add(bark); // put it on output buffer
             }
         }

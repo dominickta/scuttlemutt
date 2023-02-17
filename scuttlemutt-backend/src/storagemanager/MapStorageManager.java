@@ -1,13 +1,7 @@
 package storagemanager;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import types.Bark;
-import types.Conversation;
-import types.DawgIdentifier;
-import types.serialization.SerializationUtils;
-
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,11 +10,20 @@ import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import types.Bark;
+import types.Conversation;
+import types.DawgIdentifier;
+import types.serialization.SerializationUtils;
+
 /**
  * Implements the StorageManager interface using a Map-based backend.
  *
- * NOTE:  We serialize/deserialize the object to copy it.  We want to copy/clone it so that we aren't modifying items
- * stored in memory.  Since the objects contain private fields, serialization allows us to easily clone them without
+ * NOTE: We serialize/deserialize the object to copy it. We want to copy/clone
+ * it so that we aren't modifying items stored in memory. Since the objects
+ * contain private fields, serialization allows us to easily clone them without
  * adding extra constructors/classes/methods/etc.
  */
 public class MapStorageManager implements StorageManager {
@@ -28,15 +31,17 @@ public class MapStorageManager implements StorageManager {
 
     // maps
     private final Map<UUID, String> barkMap;
-    private final Map<UUID, String> dawgIdentifierMap;
-    private final Map<List<UUID>, String> conversationMap;
-    private final Map<UUID, String> keyMap;
+    private final Map<String, PublicKey> deviceMap;
+    private final Map<PublicKey, String> dawgIdentifierMap;
+    private final Map<PublicKey, String> conversationMap;
+    private final Map<PublicKey, String> keyMap;
 
     public MapStorageManager() {
-        this.barkMap = new HashMap<UUID, String>();
-        this.dawgIdentifierMap = new HashMap<UUID, String>();
-        this.conversationMap = new HashMap<List<UUID>, String>();
-        this.keyMap = new HashMap<UUID, String>();
+        this.barkMap = new HashMap<>();
+        this.deviceMap = new HashMap<>();
+        this.dawgIdentifierMap = new HashMap<>();
+        this.conversationMap = new HashMap<>();
+        this.keyMap = new HashMap<>();
     }
 
     @Override
@@ -49,8 +54,8 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier lookupDawgIdentifier(final UUID dawgIdentifierUuid) {
-        final String serializedObject = this.dawgIdentifierMap.getOrDefault(dawgIdentifierUuid, null);
+    public DawgIdentifier lookupDawgIdentifier(final PublicKey theirPublicKey) {
+        final String serializedObject = this.dawgIdentifierMap.getOrDefault(theirPublicKey, null);
         if (serializedObject == null) {
             return null;
         }
@@ -58,8 +63,8 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public Conversation lookupConversation(final List<UUID> userUuidList) {
-        final String serializedObject = this.conversationMap.getOrDefault(userUuidList, null);
+    public Conversation lookupConversation(final PublicKey theirPublicKey) {
+        final String serializedObject = this.conversationMap.getOrDefault(theirPublicKey, null);
         if (serializedObject == null) {
             return null;
         }
@@ -67,12 +72,21 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public SecretKey lookupKeyForDawgIdentifier(final UUID dawgIdentifierUuid) {
-        final String serializedObject = this.keyMap.getOrDefault(dawgIdentifierUuid, null);
+    public SecretKey lookupSecretKeyForPublicKey(final PublicKey theirPublicKey) {
+        final String serializedObject = this.keyMap.getOrDefault(theirPublicKey, null);
         if (serializedObject == null) {
             return null;
         }
         return SerializationUtils.deserializeSecretKey(serializedObject.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public PublicKey lookupPublicKeyForDeviceId(final String deviceId) {
+        final PublicKey publicKey = this.deviceMap.getOrDefault(deviceId, null);
+        if (publicKey == null) {
+            return null;
+        }
+        return publicKey;
     }
 
     @Override
@@ -82,17 +96,22 @@ public class MapStorageManager implements StorageManager {
 
     @Override
     public void storeDawgIdentifier(final DawgIdentifier dawgIdentifier) {
-        this.dawgIdentifierMap.put(dawgIdentifier.getUniqueId(), GSON.toJson(dawgIdentifier));
+        this.dawgIdentifierMap.put(dawgIdentifier.getPublicKey(), GSON.toJson(dawgIdentifier));
     }
 
     @Override
     public void storeConversation(final Conversation conversation) {
-        this.conversationMap.put(conversation.getUserUUIDList(), GSON.toJson(conversation));
+        this.conversationMap.put(conversation.getOtherPerson().getPublicKey(), GSON.toJson(conversation));
     }
 
     @Override
-    public void storeKeyForDawgIdentifier(UUID dawgIdentifierUuid, SecretKey key) {
-        this.keyMap.put(dawgIdentifierUuid, new String(SerializationUtils.serializeKey(key)));
+    public void storeSecretKeyForPublicKey(PublicKey publicKey, SecretKey key) {
+        this.keyMap.put(publicKey, new String(SerializationUtils.serializeKey(key)));
+    }
+
+    @Override
+    public void storePublicKeyForDeviceId(final String deviceId, final PublicKey publicKey) {
+        this.deviceMap.put(deviceId, publicKey);
     }
 
     @Override
@@ -105,8 +124,8 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier deleteDawgIdentifier(final UUID dawgIdentifierUuid) {
-        final String serializedObject = this.dawgIdentifierMap.remove(dawgIdentifierUuid);
+    public DawgIdentifier deleteDawgIdentifier(final PublicKey publicKey) {
+        final String serializedObject = this.dawgIdentifierMap.remove(publicKey);
         if (serializedObject == null) {
             return null;
         }
@@ -114,8 +133,8 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public Conversation deleteConversation(final List<UUID> userUuidList) {
-        final String serializedObject = this.conversationMap.remove(userUuidList);
+    public Conversation deleteConversation(final PublicKey publicKey) {
+        final String serializedObject = this.conversationMap.remove(publicKey);
         if (serializedObject == null) {
             return null;
         }
@@ -123,12 +142,21 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public SecretKey deleteKeyForDawgIdentifier(UUID dawgIdentifierUuid) {
-        final String serializedObject = this.keyMap.remove(dawgIdentifierUuid);
+    public SecretKey deleteSecretKeyForPublicKey(final PublicKey publicKey) {
+        final String serializedObject = this.keyMap.remove(publicKey);
         if (serializedObject == null) {
             return null;
         }
         return SerializationUtils.deserializeSecretKey(serializedObject.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public PublicKey deletePublicKeyForDeviceId(final String deviceId) {
+        final PublicKey publicKey = this.deviceMap.remove(deviceId);
+        if (publicKey == null) {
+            return null;
+        }
+        return publicKey;
     }
 
     @Override

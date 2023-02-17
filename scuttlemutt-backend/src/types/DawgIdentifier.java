@@ -1,9 +1,10 @@
 package types;
 
+import java.security.PublicKey;
+import java.util.Base64;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import java.util.UUID;
 
 /**
  * Represents a unique identifier for users on the network.
@@ -12,27 +13,28 @@ public class DawgIdentifier {
     private static final Gson GSON = new GsonBuilder().setLenient().create();
 
     // class variables
-    private final String userContact;
-    private final UUID muttNetworkUUID;
+    private final String username;
+    private final PublicKey userPublicKey;
 
     /**
      * Constructs a new DawgIdentifier.
-     * @param userContact  The human-readable name for the user.
-     * @param scuttlemuttNetworkUUID  A UUID that is directly associated with the user.  This will be provided during
-     *                                initialization.
+     * 
+     * @param username      The human-readable name for the user.
+     * @param userPublicKey The user's public key, provided during
+     *                      initialization.
      */
-    public DawgIdentifier(final String userContact, final UUID scuttlemuttNetworkUUID) {
-        this.userContact = userContact;
-        this.muttNetworkUUID = scuttlemuttNetworkUUID;
+    public DawgIdentifier(final String username, final PublicKey userPublicKey) {
+        this.username = username;
+        this.userPublicKey = userPublicKey;
     }
 
     // public methods
-    public String getUserContact() {
-        return this.userContact;
+    public String getUsername() {
+        return this.username;
     }
 
-    public UUID getUniqueId() {
-        return this.muttNetworkUUID;
+    public PublicKey getPublicKey() {
+        return this.userPublicKey;
     }
 
     // overrides
@@ -41,7 +43,7 @@ public class DawgIdentifier {
         if (!(o instanceof DawgIdentifier)) {
             return false;
         }
-        return this.getUniqueId().equals(((DawgIdentifier) o).getUniqueId());
+        return this.getPublicKey().equals(((DawgIdentifier) o).getPublicKey());
     }
 
     /**
@@ -64,6 +66,7 @@ public class DawgIdentifier {
 
     @Override
     public String toString() {
-        return "userContact:  " + this.userContact + "\tmuttNetworkUUID:  " + this.muttNetworkUUID.toString();
+        String pubKey = Base64.getEncoder().encodeToString(this.userPublicKey.getEncoded());
+        return this.username + " (0x" + pubKey + ")";
     }
 }

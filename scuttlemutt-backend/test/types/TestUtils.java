@@ -3,10 +3,8 @@ package types;
 import static java.lang.Thread.sleep;
 import static types.Bark.MAX_MESSAGE_SIZE;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -33,17 +31,15 @@ public class TestUtils {
                 generateRandomizedDawgIdentifier(),
                 generateRandomizedDawgIdentifier(),
                 r.nextLong(),
-                Crypto.DUMMY_SECRETKEY
-        );
+                Crypto.DUMMY_SECRETKEY);
     }
 
     public static DawgIdentifier generateRandomizedDawgIdentifier() {
-        return new DawgIdentifier(RandomStringUtils.random(15),
-                UUID.randomUUID());
+        return new DawgIdentifier(RandomStringUtils.random(15), Crypto.ALICE_KEYPAIR.getPublic());
     }
 
     public static Conversation generateRandomizedConversation() {
-        return new Conversation(Collections.singletonList(generateRandomizedDawgIdentifier()));
+        return new Conversation(generateRandomizedDawgIdentifier());
     }
 
     public static void sleepOneSecond() {
