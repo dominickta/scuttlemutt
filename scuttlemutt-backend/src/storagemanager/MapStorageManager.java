@@ -1,5 +1,6 @@
 package storagemanager;
 
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +35,7 @@ public class MapStorageManager implements StorageManager {
     private final Map<UUID, String> conversationMap;
     private final Map<UUID, SecretKey> secretKeyMap;
     private final Map<UUID, PublicKey> publicKeyMap;
+    private PrivateKey privateKey;
 
     public MapStorageManager() {
         this.barkMap = new HashMap<>();
@@ -83,6 +85,11 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
+    public PrivateKey lookupPrivateKey() {
+        return this.privateKey;
+    }
+
+    @Override
     public void storeBark(final Bark bark) {
         this.barkMap.put(bark.getUniqueId(), GSON.toJson(bark));
     }
@@ -110,6 +117,11 @@ public class MapStorageManager implements StorageManager {
     @Override
     public void storePublicKeyForUUID(final UUID id, final PublicKey key) {
         this.publicKeyMap.put(id, key);
+    }
+
+    @Override
+    public void storePrivateKey(PrivateKey privateKey) {
+        this.privateKey = privateKey;
     }
 
     @Override
@@ -149,6 +161,13 @@ public class MapStorageManager implements StorageManager {
     @Override
     public PublicKey deletePublicKeyForUUID(final UUID id) {
         return this.publicKeyMap.remove(id);
+    }
+
+    @Override
+    public PrivateKey deletePrivateKey() {
+        PrivateKey privateKey = this.privateKey;
+        this.privateKey = null;
+        return privateKey;
     }
 
     @Override

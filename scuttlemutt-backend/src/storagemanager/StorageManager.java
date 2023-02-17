@@ -1,5 +1,6 @@
 package storagemanager;
 
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,7 @@ public interface StorageManager {
     PublicKey lookupPublicKeyForDeviceId(final String deviceId);
     SecretKey lookupSecretKeyForUUID(final UUID id);
     PublicKey lookupPublicKeyForUUID(final UUID id);
+    PrivateKey lookupPrivateKey();
 
     // store*() methods
     //
@@ -33,6 +35,7 @@ public interface StorageManager {
     void storePublicKeyForDeviceId(final String deviceId, final PublicKey publicKey);
     void storeSecretKeyForUUID(final UUID id, final SecretKey key);
     void storePublicKeyForUUID(final UUID id, final PublicKey key);
+    void storePrivateKey(final PrivateKey privateKey);
 
     // delete*() methods
     //
@@ -43,6 +46,7 @@ public interface StorageManager {
     PublicKey deletePublicKeyForDeviceId(final String deviceId);
     SecretKey deleteSecretKeyForUUID(final UUID id);
     PublicKey deletePublicKeyForUUID(final UUID id);
+    PrivateKey deletePrivateKey();
 
     // list*() methods
     List<Conversation> listAllConversations();

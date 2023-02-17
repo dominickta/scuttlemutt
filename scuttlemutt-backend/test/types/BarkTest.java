@@ -201,7 +201,7 @@ public class BarkTest {
         DawgIdentifier bob = new DawgIdentifier("bob", UUID.randomUUID());
         SecretKey secret = Crypto.DUMMY_SECRETKEY;
         final Bark b = new Bark(validMessage, alice, bob, 0L, Crypto.BOB_KEYPAIR.getPublic(), secret);
-        assertEquals(bob, b.getOrderNum(Crypto.BOB_KEYPAIR.getPrivate(), Crypto.DUMMY_SECRETKEY));
+        assertEquals(0L, b.getOrderNum(Crypto.BOB_KEYPAIR.getPrivate(), Crypto.DUMMY_SECRETKEY));
     }
 
     @Test

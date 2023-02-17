@@ -1,6 +1,8 @@
 package backend.scuttlemutt;
 
+import java.security.KeyPair;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -10,6 +12,7 @@ import javax.crypto.SecretKey;
 
 import backend.iomanager.IOManager;
 import backend.meshdaemon.MeshDaemon;
+import crypto.Crypto;
 import storagemanager.StorageManager;
 import types.Bark;
 import types.Conversation;
@@ -37,6 +40,14 @@ public class Scuttlemutt {
         this.ioManager = inputIoManager;
         this.storageManager = storageManager;
         this.meshDaemon = new MeshDaemon(this.ioManager, this.storageManager, this.dawgIdentifier);
+
+        // only generate a new keypair if we don't already have one
+        if (getPrivateKey() == null) {
+            // create a keypair and store them in the storage manager
+            KeyPair keys = Crypto.generateKeyPair();
+            this.storageManager.storePrivateKey(keys.getPrivate());
+            this.storageManager.storePublicKeyForUUID(dawgIdentifier.getUUID(), keys.getPublic());
+        }
     }
 
     /**
@@ -60,8 +71,18 @@ public class Scuttlemutt {
         return this.storageManager.lookupSecretKeyForUUID(otherDeviceId.getUUID());
     }
 
+    /**
+     * Returns the PrivateKey of the current device.
+     */
     public PrivateKey getPrivateKey() {
         return this.storageManager.lookupPrivateKey();
+    }
+
+    /**
+     * Returns the PublicKey of the current device.
+     */
+    public PublicKey getPublicKey() {
+        return this.storageManager.lookupPublicKeyForUUID(this.dawgIdentifier.getUUID());
     }
 
     /**
@@ -128,8 +149,9 @@ public class Scuttlemutt {
         return this.storageManager.lookupDawgIdentifier(uuid) != null;
     }
 
-    public void addContact(final DawgIdentifier dawgIdentifier, final SecretKey secretKey) {
+    public void addContact(final DawgIdentifier dawgIdentifier, final PublicKey publicKey, final SecretKey secretKey) {
         this.storageManager.storeDawgIdentifier(dawgIdentifier);
+        this.storageManager.storePublicKeyForUUID(dawgIdentifier.getUUID(), publicKey);
         this.storageManager.storeSecretKeyForUUID(dawgIdentifier.getUUID(), secretKey);
     }
 

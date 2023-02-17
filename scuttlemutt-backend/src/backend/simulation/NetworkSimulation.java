@@ -141,13 +141,13 @@ public class NetworkSimulation {
             throw new UnsupportedOperationException("Cannot connect a device to itself!");
         }
 
-        // save a symmetric key for the connection in both devices.
+        // save (a)symmetric keys for the connection in both devices.
         final SecretKey secretKey = Crypto.generateSecretKey();
         final Scuttlemutt device1 = scuttlemuttMap.get(device1Label);
         final Scuttlemutt device2 = scuttlemuttMap.get(device2Label);
-        device1.addContact(device2.getDawgIdentifier(), secretKey);
-        device2.addContact(device1.getDawgIdentifier(), secretKey);
-
+        device1.addContact(device2.getDawgIdentifier(), device2.getPublicKey(), secretKey);
+        device2.addContact(device1.getDawgIdentifier(), device2.getPublicKey(), secretKey);
+        
         // Build queues to connect devices
         final BlockingQueue<Packet> q1to2 = new LinkedBlockingQueue<Packet>();
         final BlockingQueue<Packet> q2to1 = new LinkedBlockingQueue<Packet>();

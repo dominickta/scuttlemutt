@@ -60,7 +60,7 @@ public class MeshInputTest {
 
         this.meshQueue = new LinkedBlockingQueue<>();
         this.seenBarks = new HashSet<>();
-        PrivateKey privateKey = Crypto.ALICE_KEYPAIR.getPrivate();
+        PrivateKey privateKey = Crypto.BOB_KEYPAIR.getPrivate();
         StorageManager storage = new MapStorageManager();
 
         this.meshInput = new MeshInput(ioManager, meshQueue, storage, privateKey, Crypto.DUMMY_SECRETKEY, seenBarks);
