@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
+import javax.crypto.SecretKey;
+
 import backend.iomanager.IOManager;
 import storagemanager.StorageManager;
 import types.Bark;
@@ -22,7 +24,7 @@ public class MeshInput implements Runnable {
     private final StorageManager storage;
     private final BlockingQueue<Bark> queue;
     private final PrivateKey myPrivateKey;
-
+    private final SecretKey encryptionKey;
     private final Set<Bark> seenBarks;
 
     /**
@@ -36,11 +38,12 @@ public class MeshInput implements Runnable {
      */
     public MeshInput(final IOManager ioManager, final BlockingQueue<Bark> queue,
             final StorageManager storage, final PrivateKey myPrivateKey,
-            final Set<Bark> seenBarks) {
+            final SecretKey encryptionKey, final Set<Bark> seenBarks) {
         this.ioManager = ioManager;
         this.queue = queue;
         this.storage = storage;
         this.myPrivateKey = myPrivateKey;
+        this.encryptionKey = encryptionKey;
         this.seenBarks = seenBarks;
     }
 
@@ -69,8 +72,8 @@ public class MeshInput implements Runnable {
                 storage.storeBark(bark);
 
                 // update Conversation object stored in the StorageManager to include the Bark.
-                DawgIdentifier sender = bark.getSender(this.myPrivateKey);
-                Conversation c = this.storage.lookupConversation(sender.getPublicKey());
+                DawgIdentifier sender = bark.getSender(this.myPrivateKey, this.encryptionKey);
+                Conversation c = this.storage.lookupConversation(sender.getUUID());
                 if (c == null) {
                     // if we've never initiated a conversation with the sender before, create +
                     // store a new Conversation.

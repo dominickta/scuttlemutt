@@ -18,10 +18,11 @@ public interface StorageManager {
     //
     // returns "null" if not found.
     Bark lookupBark(final UUID barkUuid);
-    DawgIdentifier lookupDawgIdentifier(final PublicKey theirPublicKey);
-    Conversation lookupConversation(final PublicKey theirPublicKey);
-    SecretKey lookupSecretKeyForPublicKey(final PublicKey publicKey);
+    DawgIdentifier lookupDawgIdentifier(final UUID id);
+    Conversation lookupConversation(final UUID id);
     PublicKey lookupPublicKeyForDeviceId(final String deviceId);
+    SecretKey lookupSecretKeyForUUID(final UUID id);
+    PublicKey lookupPublicKeyForUUID(final UUID id);
 
     // store*() methods
     //
@@ -29,20 +30,21 @@ public interface StorageManager {
     void storeBark(final Bark bark);
     void storeDawgIdentifier(final DawgIdentifier dawgIdentifier);
     void storeConversation(final Conversation conversation);
-    void storeSecretKeyForPublicKey(final PublicKey publicKey, final SecretKey key);
     void storePublicKeyForDeviceId(final String deviceId, final PublicKey publicKey);
+    void storeSecretKeyForUUID(final UUID id, final SecretKey key);
+    void storePublicKeyForUUID(final UUID id, final PublicKey key);
 
     // delete*() methods
     //
     // returns the object which was deleted.  if no object was found, returns null.
     Bark deleteBark(final UUID barkUuid);
-    DawgIdentifier deleteDawgIdentifier(final PublicKey publicKey);
-    Conversation deleteConversation(final PublicKey publicKey);
-    SecretKey deleteSecretKeyForPublicKey(final PublicKey publicKey);
+    DawgIdentifier deleteDawgIdentifier(final UUID id);
+    Conversation deleteConversation(final UUID id);
     PublicKey deletePublicKeyForDeviceId(final String deviceId);
+    SecretKey deleteSecretKeyForUUID(final UUID id);
+    PublicKey deletePublicKeyForUUID(final UUID id);
 
     // list*() methods
     List<Conversation> listAllConversations();
-
     List<DawgIdentifier> getAllDawgIdentifiers();
 }

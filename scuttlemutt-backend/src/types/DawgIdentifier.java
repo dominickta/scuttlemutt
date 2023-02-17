@@ -1,12 +1,9 @@
 package types;
 
-import java.security.PublicKey;
-import java.util.Base64;
+import java.util.UUID;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import types.serialization.SerializationUtils;
 
 /**
  * Represents a unique identifier for users on the network.
@@ -16,7 +13,7 @@ public class DawgIdentifier {
 
     // class variables
     private final String username;
-    private final byte[] userPublicKey;
+    private final UUID dawgId;
 
     /**
      * Constructs a new DawgIdentifier.
@@ -25,9 +22,9 @@ public class DawgIdentifier {
      * @param userPublicKey The user's public key, provided during
      *                      initialization.
      */
-    public DawgIdentifier(final String username, final PublicKey userPublicKey) {
+    public DawgIdentifier(final String username, final UUID dawgId) {
         this.username = username;
-        this.userPublicKey = SerializationUtils.serializeKey(userPublicKey);
+        this.dawgId = dawgId;
     }
 
     // public methods
@@ -35,8 +32,8 @@ public class DawgIdentifier {
         return this.username;
     }
 
-    public PublicKey getPublicKey() {
-        return SerializationUtils.deserializePublicKey(this.userPublicKey);
+    public UUID getUUID() {
+        return this.dawgId;
     }
 
     // overrides
@@ -45,7 +42,7 @@ public class DawgIdentifier {
         if (!(o instanceof DawgIdentifier)) {
             return false;
         }
-        return this.getPublicKey().equals(((DawgIdentifier) o).getPublicKey());
+        return this.getUUID().equals(((DawgIdentifier) o).getUUID());
     }
 
     /**
@@ -68,7 +65,6 @@ public class DawgIdentifier {
 
     @Override
     public String toString() {
-        String pubKey = Base64.getEncoder().encodeToString(getPublicKey().getEncoded());
-        return this.username + " (0x" + pubKey + ")";
+        return this.username + " (" + getUUID() + ")";
     }
 }

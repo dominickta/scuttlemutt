@@ -42,10 +42,11 @@ public class MeshDaemon {
 
         // grab the private key
         PrivateKey privateKey = storageManager.lookupPrivateKey();
+        SecretKey secretKey = storageManager.lookupSecretKeyForUUID(currentUser.getUUID());
 
         this.currentUser = currentUser;
         this.queue = new LinkedBlockingQueue<>();
-        this.input = new MeshInput(ioManager, queue, storageManager, privateKey, seenBarks);
+        this.input = new MeshInput(ioManager, queue, storageManager, privateKey, secretKey, seenBarks);
         this.output = new MeshOutput(ioManager, queue, seenBarks);
         this.storageManager = storageManager;
 
@@ -75,12 +76,14 @@ public class MeshDaemon {
      * @returns UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
-        PublicKey recipientPubKey = recipient.getPublicKey();
-        final SecretKey aesKey = this.storageManager.lookupSecretKeyForPublicKey(recipientPubKey);
-        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, aesKey);
+        UUID recipientId = recipient.getUUID();
+        final SecretKey recipientSecretKey = this.storageManager.lookupSecretKeyForUUID(recipientId);
+        final PublicKey recipientPublicKey = this.storageManager.lookupPublicKeyForUUID(recipientId);
+        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, recipientPublicKey,
+                recipientSecretKey);
 
         // update Conversation object stored in the StorageManager to include the Bark.
-        Conversation c = this.storageManager.lookupConversation(recipientPubKey);
+        Conversation c = this.storageManager.lookupConversation(recipientId);
         if (c == null) {
             // if we've never initiated a conversation with the sender before, create +
             // store a new Conversation.

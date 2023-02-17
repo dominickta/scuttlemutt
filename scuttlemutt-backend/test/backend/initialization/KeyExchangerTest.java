@@ -78,7 +78,7 @@ public class KeyExchangerTest {
         // stored.
         final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(this.otherDeviceId,
                 Crypto.ALICE_KEYPAIR.getPublic());
-        final SecretKey storedKey = this.storageManager.lookupSecretKeyForPublicKey(dawgId.getPublicKey());
+        final SecretKey storedKey = this.storageManager.lookupSecretKeyForUUID(dawgId.getUUID());
         assertEquals(expectedKey, storedKey);
     }
 }

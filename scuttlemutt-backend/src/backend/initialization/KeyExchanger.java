@@ -3,6 +3,7 @@ package backend.initialization;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -126,7 +127,7 @@ public class KeyExchanger {
                 .getKey();
 
         // create a DawgIdentifier to represent the other party.
-        final DawgIdentifier dawgId = new DawgIdentifier(senderId, senderPublicKey);
+        final DawgIdentifier dawgId = new DawgIdentifier(senderId, UUID.randomUUID());
 
         // at this point, we have keys from both parties. let's determine which one
         // should be used
@@ -137,7 +138,7 @@ public class KeyExchanger {
                 : localSecretKey;
 
         // store the chosenKey.
-        this.storageManager.storeSecretKeyForPublicKey(dawgId.getPublicKey(), chosenKey);
+        this.storageManager.storeSecretKeyForUUID(dawgId.getUUID(), chosenKey);
 
         // store + return the dawgId.
         this.storageManager.storeDawgIdentifier(dawgId);

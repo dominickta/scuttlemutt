@@ -1,12 +1,10 @@
 package backend.scuttlemutt;
 
-import static java.util.stream.Collectors.toList;
-
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
@@ -47,7 +45,7 @@ public class Scuttlemutt {
      * @return deep copy of user's DawgIdentifier so public key can't be modified
      */
     public DawgIdentifier getDawgIdentifier() {
-        return new DawgIdentifier(this.dawgIdentifier.getUsername(), this.dawgIdentifier.getPublicKey());
+        return new DawgIdentifier(this.dawgIdentifier.getUsername(), this.dawgIdentifier.getUUID());
     }
 
     /**
@@ -59,7 +57,7 @@ public class Scuttlemutt {
      *         DawgIdentifier.
      */
     public SecretKey getSecretKey(final DawgIdentifier otherDeviceId) {
-        return this.storageManager.lookupSecretKeyForPublicKey(otherDeviceId.getPublicKey());
+        return this.storageManager.lookupSecretKeyForUUID(otherDeviceId.getUUID());
     }
 
     public PrivateKey getPrivateKey() {
@@ -97,10 +95,10 @@ public class Scuttlemutt {
     public List<String> getMessagesForConversation(final Conversation conversation) {
         // get the encryption key associated with the Conversation.
         PrivateKey myPrivateKey = getPrivateKey();
-        final PublicKey theirPublicKey = conversation.getOtherPerson().getPublicKey();
-        final SecretKey decryptionKey = this.storageManager.lookupSecretKeyForPublicKey(theirPublicKey);
+        final UUID otherPersonId = conversation.getOtherPerson().getUUID();
+        final SecretKey decryptionKey = this.storageManager.lookupSecretKeyForUUID(otherPersonId);
         return getBarksForConversation(conversation).stream().map(b -> b.getContents(myPrivateKey, decryptionKey))
-                .collect(toList());
+                .collect(Collectors.toList());
     }
 
     /**
@@ -126,28 +124,28 @@ public class Scuttlemutt {
         return this.storageManager.getAllDawgIdentifiers();
     }
 
-    public boolean haveContact(final PublicKey theirPublicKey) {
-        return this.storageManager.lookupDawgIdentifier(theirPublicKey) != null;
+    public boolean haveContact(final UUID uuid) {
+        return this.storageManager.lookupDawgIdentifier(uuid) != null;
     }
 
     public void addContact(final DawgIdentifier dawgIdentifier, final SecretKey secretKey) {
         this.storageManager.storeDawgIdentifier(dawgIdentifier);
-        this.storageManager.storeSecretKeyForPublicKey(dawgIdentifier.getPublicKey(), secretKey);
+        this.storageManager.storeSecretKeyForUUID(dawgIdentifier.getUUID(), secretKey);
     }
 
     public void removeContact(final DawgIdentifier dawgIdentifier) {
         // verify that the DawgIdentifier is currently stored.
-        if (this.storageManager.lookupDawgIdentifier(dawgIdentifier.getPublicKey()) == null) {
+        if (this.storageManager.lookupDawgIdentifier(dawgIdentifier.getUUID()) == null) {
             String msg = "Attempted to delete a nonexistent DawgIdentifier! ";
             throw new RuntimeException(msg + this.dawgIdentifier.toString());
         }
 
-        this.storageManager.deleteDawgIdentifier(dawgIdentifier.getPublicKey());
+        this.storageManager.deleteDawgIdentifier(dawgIdentifier.getUUID());
     }
 
     public Conversation getConversation(final DawgIdentifier dawgIdentifier) {
         // attempt to lookup the conversation.
-        final Conversation c = this.storageManager.lookupConversation(dawgIdentifier.getPublicKey());
+        final Conversation c = this.storageManager.lookupConversation(dawgIdentifier.getUUID());
         if (c == null) {
             return null;
         }

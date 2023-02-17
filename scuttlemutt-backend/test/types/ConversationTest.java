@@ -14,12 +14,10 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 
-import crypto.Crypto;
-
 public class ConversationTest {
     // test variables
-    private DawgIdentifier user1 = new DawgIdentifier(RandomStringUtils.random(15), Crypto.ALICE_KEYPAIR.getPublic());;
-    private DawgIdentifier user2 = new DawgIdentifier(RandomStringUtils.random(15), Crypto.BOB_KEYPAIR.getPublic());;
+    private DawgIdentifier user1 = new DawgIdentifier(RandomStringUtils.random(15), UUID.randomUUID());
+    private DawgIdentifier user2 = new DawgIdentifier(RandomStringUtils.random(15), UUID.randomUUID());
 
     @Test
     public void testConstructor_createsObjectSuccessfully() {
@@ -78,7 +76,7 @@ public class ConversationTest {
     @Test
     public void testStoreBark_successfullyStoresBark() {
         // create Conversation object with empty Bark UUID List.
-        final Conversation c = new Conversation((user1));
+        final Conversation c = new Conversation(user1);
 
         // create a new Bark.
         final Bark b = TestUtils.generateRandomizedBark();

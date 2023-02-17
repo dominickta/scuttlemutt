@@ -1,6 +1,7 @@
 package types;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ import crypto.Crypto;
  * Represents a "bark" (message) sent by the user.
  * 
  * The Bark stores the following bytes:
- * [ ~16 byte UUID ][ ~72 byte header ][ ~160 byte message ]
+ * [ ~16 byte UUID ][ ~32 byte header ][ ~1000 byte payload ]
  * 
  * The Bark itself is not encrypted, the Bark’s contents are encrypted — the
  * header can be decrypted with each device’s public key, and the contents can
@@ -37,22 +38,28 @@ public class Bark {
     // class variables
     private final UUID uniqueId;
     private final byte[] encryptedHeader;
+    private final byte[] encryptedSender;
+    private final byte[] encryptedReceiver;
+    private final byte[] encryptedOrderNum;
+    private final byte[] encryptedFillerCount;
     private final byte[] encryptedContents;
 
     /**
      * Constructs a new Bark.
      *
-     * @param contents      The contents of the message.
-     * @param sender        The DawgIdentifier of the sender of the message.
-     * @param receiver      The DawgIdentifier of the receiver of the message.
-     * @param orderNum      The number of the message in the conversation order.
-     * @param encryptionKey The symmetric SecretKey used to encrypt the contents of
-     *                      the Bark.
+     * @param contents          The contents of the message.
+     * @param sender            The DawgIdentifier of the sender of the message.
+     * @param receiver          The DawgIdentifier of the receiver of the message.
+     * @param orderNum          The number of the message in the conversation order.
+     * @param receiverPublicKey The public key of the receiver.
+     * @param encryptionKey     The symmetric SecretKey used to encrypt the contents
+     *                          of the Bark.
      */
     public Bark(String contents,
             final DawgIdentifier sender,
             final DawgIdentifier receiver,
             final Long orderNum,
+            final PublicKey receiverPublicKey,
             final SecretKey encryptionKey) {
 
         // verify that the contents are less than the max message size.
@@ -67,11 +74,18 @@ public class Bark {
         int fillerCount = MAX_MESSAGE_SIZE - contents.length();
         contents += RandomStringUtils.randomAlphanumeric(fillerCount);
 
-        // build a header and encrypt it
-        BarkHeader barkHeader = new BarkHeader(sender, receiver, orderNum, fillerCount);
-        this.encryptedHeader = barkHeader.toEncryptedBytes(receiver.getPublicKey());
+        // encrypt the uuid with an asymmetric key (small size limit)
+        this.encryptedHeader = Crypto.encrypt(GSON.toJson(sender.getUUID()).getBytes(), receiverPublicKey,
+                Crypto.ASYMMETRIC_KEY_TYPE);
 
-        // encrypt the contents.
+        // encrypt the rest with the associated symmetric key
+        this.encryptedSender = Crypto.encrypt(GSON.toJson(sender).getBytes(), encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
+        this.encryptedReceiver = Crypto.encrypt(GSON.toJson(receiver).getBytes(), encryptionKey,
+                Crypto.SYMMETRIC_KEY_TYPE);
+        this.encryptedOrderNum = Crypto.encrypt(GSON.toJson(orderNum).getBytes(), encryptionKey,
+                Crypto.SYMMETRIC_KEY_TYPE);
+        this.encryptedFillerCount = Crypto.encrypt(GSON.toJson(fillerCount).getBytes(), encryptionKey,
+                Crypto.SYMMETRIC_KEY_TYPE);
         this.encryptedContents = Crypto.encrypt(contents.getBytes(), encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
     }
 
@@ -83,6 +97,10 @@ public class Bark {
     public Bark(Bark bark) {
         this.uniqueId = bark.uniqueId;
         this.encryptedHeader = bark.encryptedHeader;
+        this.encryptedSender = bark.encryptedSender;
+        this.encryptedReceiver = bark.encryptedReceiver;
+        this.encryptedOrderNum = bark.encryptedOrderNum;
+        this.encryptedFillerCount = bark.encryptedFillerCount;
         this.encryptedContents = bark.encryptedContents;
     }
 
@@ -96,7 +114,14 @@ public class Bark {
      * @return true if this packet is for me, false otherwise
      */
     public boolean isForMe(final PrivateKey myPrivateKey) {
-        return BarkHeader.fromEncryptedBytes(this.encryptedContents, myPrivateKey) != null;
+        try {
+            byte[] bytes = Crypto.decrypt(this.encryptedHeader, myPrivateKey, Crypto.ASYMMETRIC_KEY_TYPE);
+            UUID id = GSON.fromJson(new String(bytes), UUID.class);
+            return id != null;
+        } catch (Exception e) {
+            // TODO: handle exception
+            return false;
+        }
     }
 
     /**
@@ -107,40 +132,57 @@ public class Bark {
      *         permission.
      */
     public String getContents(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
-        BarkHeader barkHeader = BarkHeader.fromEncryptedBytes(this.encryptedContents, myPrivateKey);
-        if (barkHeader == null) {
+        if (!isForMe(myPrivateKey)) {
             return null;
         }
+
         // decrypt the Bark's contents.
         final byte[] rawBytes = Crypto.decrypt(this.encryptedContents, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
         final String decryptedContents = new String(rawBytes);
 
         // return the decrypted contents with the filler chars trimmed off.
-        return decryptedContents.substring(0, decryptedContents.length() - barkHeader.getFillerCount());
+        int fillerCount = getFillerCount(myPrivateKey, encryptionKey);
+        return decryptedContents.substring(0, decryptedContents.length() - fillerCount);
     }
 
-    public DawgIdentifier getSender(final PrivateKey myPrivateKey) {
-        BarkHeader barkHeader = BarkHeader.fromEncryptedBytes(this.encryptedContents, myPrivateKey);
-        if (barkHeader == null) {
+    public DawgIdentifier getSender(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
+        if (!isForMe(myPrivateKey)) {
             return null;
         }
-        return barkHeader.getSender();
+
+        // decrypt the Bark's contents.
+        final byte[] rawBytes = Crypto.decrypt(this.encryptedSender, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
+        return GSON.fromJson(new String(rawBytes), DawgIdentifier.class);
     }
 
-    public DawgIdentifier getReceiver(final PrivateKey myPrivateKey) {
-        BarkHeader barkHeader = BarkHeader.fromEncryptedBytes(this.encryptedContents, myPrivateKey);
-        if (barkHeader == null) {
+    public DawgIdentifier getReceiver(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
+        if (!isForMe(myPrivateKey)) {
             return null;
         }
-        return barkHeader.getReceiver();
+
+        // decrypt the Bark's contents.
+        final byte[] rawBytes = Crypto.decrypt(this.encryptedReceiver, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
+        return GSON.fromJson(new String(rawBytes), DawgIdentifier.class);
     }
 
-    public Long getOrderNum(final PrivateKey myPrivateKey) {
-        BarkHeader barkHeader = BarkHeader.fromEncryptedBytes(this.encryptedContents, myPrivateKey);
-        if (barkHeader == null) {
+    public Long getOrderNum(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
+        if (!isForMe(myPrivateKey)) {
             return null;
         }
-        return barkHeader.getOrderNum();
+
+        // decrypt the Bark's contents.
+        final byte[] rawBytes = Crypto.decrypt(this.encryptedOrderNum, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
+        return GSON.fromJson(new String(rawBytes), Long.class);
+    }
+
+    public Integer getFillerCount(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
+        if (!isForMe(myPrivateKey)) {
+            return null;
+        }
+
+        // decrypt the Bark's contents.
+        final byte[] rawBytes = Crypto.decrypt(this.encryptedFillerCount, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
+        return GSON.fromJson(new String(rawBytes), Integer.class);
     }
 
     public UUID getUniqueId() {

@@ -55,14 +55,14 @@ public class MapStorageManagerTest {
         this.mapStorageManager.storeDawgIdentifier(m);
 
         // lookup the object in the storage manager.
-        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(m.getPublicKey());
+        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(m.getUUID());
         assertEquals(m, obtainedDawgIdentifier);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteDawgIdentifier(m.getPublicKey());
+        this.mapStorageManager.deleteDawgIdentifier(m.getUUID());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupDawgIdentifier(m.getPublicKey()));
+        assertNull(this.mapStorageManager.lookupDawgIdentifier(m.getUUID()));
     }
 
     @Test
@@ -72,37 +72,37 @@ public class MapStorageManagerTest {
 
         // lookup the object in the storage manager.
         final Conversation obtainedConversation = this.mapStorageManager
-                .lookupConversation(c.getOtherPerson().getPublicKey());
+                .lookupConversation(c.getOtherPerson().getUUID());
         assertEquals(c, obtainedConversation);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteConversation(c.getOtherPerson().getPublicKey());
+        this.mapStorageManager.deleteConversation(c.getOtherPerson().getUUID());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupConversation(c.getOtherPerson().getPublicKey()));
+        assertNull(this.mapStorageManager.lookupConversation(c.getOtherPerson().getUUID()));
     }
 
     @Test
     public void testKeyStorageLifecycle() {
         // create the object in the storage manager.
-        this.mapStorageManager.storeSecretKeyForPublicKey(m.getPublicKey(), k1);
+        this.mapStorageManager.storeSecretKeyForUUID(m.getUUID(), k1);
 
         // lookup the object in the storage manager.
-        final SecretKey obtainedKey = this.mapStorageManager.lookupSecretKeyForPublicKey(m.getPublicKey());
+        final SecretKey obtainedKey = this.mapStorageManager.lookupSecretKeyForUUID(m.getUUID());
         assertEquals(k1, obtainedKey);
 
         // update the key in the storage manager.
-        this.mapStorageManager.storeSecretKeyForPublicKey(m.getPublicKey(), k2);
+        this.mapStorageManager.storeSecretKeyForUUID(m.getUUID(), k2);
 
         // lookup the object in the storage manager, verify that it was updated.
-        final SecretKey obtainedUpdatedKey = this.mapStorageManager.lookupSecretKeyForPublicKey(m.getPublicKey());
+        final SecretKey obtainedUpdatedKey = this.mapStorageManager.lookupSecretKeyForUUID(m.getUUID());
         assertEquals(k2, obtainedUpdatedKey);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteSecretKeyForPublicKey(m.getPublicKey());
+        this.mapStorageManager.deleteSecretKeyForUUID(m.getUUID());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupSecretKeyForPublicKey(m.getPublicKey()));
+        assertNull(this.mapStorageManager.lookupSecretKeyForUUID(m.getUUID()));
     }
 
     @Test

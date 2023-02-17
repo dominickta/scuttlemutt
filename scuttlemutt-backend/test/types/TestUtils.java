@@ -5,6 +5,7 @@ import static types.Bark.MAX_MESSAGE_SIZE;
 
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -31,11 +32,12 @@ public class TestUtils {
                 generateRandomizedDawgIdentifier(),
                 generateRandomizedDawgIdentifier(),
                 r.nextLong(),
+                Crypto.ALICE_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
     }
 
     public static DawgIdentifier generateRandomizedDawgIdentifier() {
-        return new DawgIdentifier(RandomStringUtils.random(15), Crypto.ALICE_KEYPAIR.getPublic());
+        return new DawgIdentifier(RandomStringUtils.randomAlphanumeric(15), UUID.randomUUID());
     }
 
     public static Conversation generateRandomizedConversation() {

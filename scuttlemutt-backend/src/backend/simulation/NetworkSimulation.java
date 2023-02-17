@@ -1,11 +1,11 @@
 package backend.simulation;
 
-import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -51,8 +51,7 @@ public class NetworkSimulation {
             storageManagerMap.put(deviceLabel, storageManager);
 
             // create a Scuttlemutt object which references the above QueueIOManagers
-            final KeyPair myKeys = Crypto.generateKeyPair();
-            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, myKeys.getPublic());
+            final DawgIdentifier dawgId = new DawgIdentifier(deviceLabel, UUID.randomUUID());
             final Scuttlemutt scuttlemutt = new Scuttlemutt(ioManager, dawgId, storageManager);
 
             // stash the ioManager in the scuttlemuttMap.
