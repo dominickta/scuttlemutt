@@ -101,7 +101,7 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
                 } else {
                     var msgs: MutableList<FrontEndMessage> = mutableListOf()
                     val barks : List<Bark>? = mutt.getBarksForConversation(conv)
-                    val key : SecretKey = mutt.getKey(conv.userList.get(0))
+                    val key : SecretKey = mutt.getSecretKey(conv.userList.get(0))
                     if (barks == null) {
                         _currUiState.postValue(ConversationUiState(contactName, listOf()))
                         Log.d(TAG, "Set empty barks for: $contactName")

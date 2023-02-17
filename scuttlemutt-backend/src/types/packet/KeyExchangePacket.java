@@ -35,7 +35,7 @@ public class KeyExchangePacket extends Packet {
     }
 
     public Key getKey() {
-        if (this.keyType == "secretKey") {
+        if (this.keyType.equals("secretKey")) {
             return SerializationUtils.deserializeSecretKey(keyBytes);
         } else {
             return SerializationUtils.deserializePublicKey(keyBytes);
@@ -53,5 +53,10 @@ public class KeyExchangePacket extends Packet {
     @Override
     public int hashCode() {
         return this.getKey().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "type: " + this.keyType + " bytes: " + this.keyBytes;
     }
 }

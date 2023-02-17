@@ -34,7 +34,8 @@ public class Crypto {
     public static final KeyPair ALICE_KEYPAIR = Crypto.generateKeyPair();
     public static final KeyPair BOB_KEYPAIR = Crypto.generateKeyPair();
     public static final SecretKey DUMMY_SECRETKEY = Crypto.generateSecretKey();
-    private static final int SYMMETRIC_KEY_SIZE = 128;  // the size of the symmetric key.
+    private static final int SYMMETRIC_KEY_SIZE = 128; // the size of the symmetric key.
+
     /**
      * Generates a new 4096-bit RSA KeyPair.
      * 
@@ -73,14 +74,16 @@ public class Crypto {
     /**
      * Encrypts the byte array payload with the given key.
      * 
-     * @param payload   the byte array to encrypt
-     * @param key the key to encrypt with
-     * @param keyType the type of the Key.  Use the String constants defined in this class for this param.
+     * @param payload the byte array to encrypt
+     * @param key     the key to encrypt with
+     * @param keyType the type of the Key. Use the String constants defined in this
+     *                class for this param.
      * @return the encrypted (ciphertext) byte array, or empty on error
      */
     public static byte[] encrypt(final byte[] payload, final Key key, final String keyType) {
         byte[] result = {};
         try {
+            // TODO: encrypt fails if payload is not a multiple of 16
             Cipher encryptCipher = Cipher.getInstance(keyType);
             encryptCipher.init(Cipher.ENCRYPT_MODE, key);
             result = encryptCipher.doFinal(payload, 0, payload.length);
@@ -113,9 +116,10 @@ public class Crypto {
     /**
      * Decrypts the byte array payload with the given key.
      * 
-     * @param payload    the byte array to decrypt
-     * @param key the key to decrypt with
-     * @param keyType the type of the Key.  Use the String constants defined in this class for this param.
+     * @param payload the byte array to decrypt
+     * @param key     the key to decrypt with
+     * @param keyType the type of the Key. Use the String constants defined in this
+     *                class for this param.
      * @return the decrypted (plaintext) byte array, or empty on error
      */
     public static byte[] decrypt(final byte[] payload, final Key key, final String keyType) {

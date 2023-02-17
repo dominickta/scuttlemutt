@@ -6,6 +6,8 @@ import java.util.Base64;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import types.serialization.SerializationUtils;
+
 /**
  * Represents a unique identifier for users on the network.
  */
@@ -14,7 +16,7 @@ public class DawgIdentifier {
 
     // class variables
     private final String username;
-    private final PublicKey userPublicKey;
+    private final byte[] userPublicKey;
 
     /**
      * Constructs a new DawgIdentifier.
@@ -25,7 +27,7 @@ public class DawgIdentifier {
      */
     public DawgIdentifier(final String username, final PublicKey userPublicKey) {
         this.username = username;
-        this.userPublicKey = userPublicKey;
+        this.userPublicKey = SerializationUtils.serializeKey(userPublicKey);
     }
 
     // public methods
@@ -34,7 +36,7 @@ public class DawgIdentifier {
     }
 
     public PublicKey getPublicKey() {
-        return this.userPublicKey;
+        return SerializationUtils.deserializePublicKey(this.userPublicKey);
     }
 
     // overrides
@@ -66,7 +68,7 @@ public class DawgIdentifier {
 
     @Override
     public String toString() {
-        String pubKey = Base64.getEncoder().encodeToString(this.userPublicKey.getEncoded());
+        String pubKey = Base64.getEncoder().encodeToString(getPublicKey().getEncoded());
         return this.username + " (0x" + pubKey + ")";
     }
 }

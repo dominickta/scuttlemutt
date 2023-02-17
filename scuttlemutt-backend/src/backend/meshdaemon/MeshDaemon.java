@@ -75,12 +75,12 @@ public class MeshDaemon {
      * @returns UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
-        PublicKey theirPubKey = recipient.getPublicKey();
-        final SecretKey aesKey = this.storageManager.lookupSecretKeyForPublicKey(theirPubKey);
+        PublicKey recipientPubKey = recipient.getPublicKey();
+        final SecretKey aesKey = this.storageManager.lookupSecretKeyForPublicKey(recipientPubKey);
         final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, aesKey);
 
         // update Conversation object stored in the StorageManager to include the Bark.
-        Conversation c = this.storageManager.lookupConversation(theirPubKey);
+        Conversation c = this.storageManager.lookupConversation(recipientPubKey);
         if (c == null) {
             // if we've never initiated a conversation with the sender before, create +
             // store a new Conversation.

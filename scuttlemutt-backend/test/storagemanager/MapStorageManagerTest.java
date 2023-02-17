@@ -1,8 +1,9 @@
 package storagemanager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
+import javax.crypto.SecretKey;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,10 +13,6 @@ import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
 import types.TestUtils;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import javax.crypto.SecretKey;
 
 public class MapStorageManagerTest {
 
@@ -58,14 +55,14 @@ public class MapStorageManagerTest {
         this.mapStorageManager.storeDawgIdentifier(m);
 
         // lookup the object in the storage manager.
-        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(m.getUniqueId());
+        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(m.getPublicKey());
         assertEquals(m, obtainedDawgIdentifier);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteDawgIdentifier(m.getUniqueId());
+        this.mapStorageManager.deleteDawgIdentifier(m.getPublicKey());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupDawgIdentifier(m.getUniqueId()));
+        assertNull(this.mapStorageManager.lookupDawgIdentifier(m.getPublicKey()));
     }
 
     @Test
@@ -74,37 +71,38 @@ public class MapStorageManagerTest {
         this.mapStorageManager.storeConversation(c);
 
         // lookup the object in the storage manager.
-        final Conversation obtainedConversation = this.mapStorageManager.lookupConversation(c.getUserUUIDList());
+        final Conversation obtainedConversation = this.mapStorageManager
+                .lookupConversation(c.getOtherPerson().getPublicKey());
         assertEquals(c, obtainedConversation);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteConversation(c.getUserUUIDList());
+        this.mapStorageManager.deleteConversation(c.getOtherPerson().getPublicKey());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupConversation(c.getUserUUIDList()));
+        assertNull(this.mapStorageManager.lookupConversation(c.getOtherPerson().getPublicKey()));
     }
 
     @Test
     public void testKeyStorageLifecycle() {
         // create the object in the storage manager.
-        this.mapStorageManager.storeKeyForDawgIdentifier(m.getUniqueId(), k1);
+        this.mapStorageManager.storeSecretKeyForPublicKey(m.getPublicKey(), k1);
 
         // lookup the object in the storage manager.
-        final SecretKey obtainedKey = this.mapStorageManager.lookupKeyForDawgIdentifier(m.getUniqueId());
+        final SecretKey obtainedKey = this.mapStorageManager.lookupSecretKeyForPublicKey(m.getPublicKey());
         assertEquals(k1, obtainedKey);
 
         // update the key in the storage manager.
-        this.mapStorageManager.storeKeyForDawgIdentifier(m.getUniqueId(), k2);
+        this.mapStorageManager.storeSecretKeyForPublicKey(m.getPublicKey(), k2);
 
         // lookup the object in the storage manager, verify that it was updated.
-        final SecretKey obtainedUpdatedKey = this.mapStorageManager.lookupKeyForDawgIdentifier(m.getUniqueId());
+        final SecretKey obtainedUpdatedKey = this.mapStorageManager.lookupSecretKeyForPublicKey(m.getPublicKey());
         assertEquals(k2, obtainedUpdatedKey);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteKeyForDawgIdentifier(m.getUniqueId());
+        this.mapStorageManager.deleteSecretKeyForPublicKey(m.getPublicKey());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupKeyForDawgIdentifier(m.getUniqueId()));
+        assertNull(this.mapStorageManager.lookupSecretKeyForPublicKey(m.getPublicKey()));
     }
 
     @Test

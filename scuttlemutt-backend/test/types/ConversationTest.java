@@ -19,7 +19,7 @@ import crypto.Crypto;
 public class ConversationTest {
     // test variables
     private DawgIdentifier user1 = new DawgIdentifier(RandomStringUtils.random(15), Crypto.ALICE_KEYPAIR.getPublic());;
-    private DawgIdentifier user2 = new DawgIdentifier(RandomStringUtils.random(15), Crypto.ALICE_KEYPAIR.getPublic());;
+    private DawgIdentifier user2 = new DawgIdentifier(RandomStringUtils.random(15), Crypto.BOB_KEYPAIR.getPublic());;
 
     @Test
     public void testConstructor_createsObjectSuccessfully() {

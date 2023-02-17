@@ -26,10 +26,10 @@ public class DawgIdentifierTest {
     }
 
     @Test
-    public void testEquals_differentUsernameAndKeyButSameUUID_returnsTrue() {
+    public void testEquals_differentUsernameAndKeyButSamePubKey_returnsTrue() {
         // Create two DawgIdentifier objects with the same UUID but different usernames.
         final DawgIdentifier m1 = new DawgIdentifier(userName1, pubKey1);
-        final DawgIdentifier m2 = new DawgIdentifier(userName2, pubKey2);
+        final DawgIdentifier m2 = new DawgIdentifier(userName2, pubKey1);
 
         // verify that the two DawgIdentifier objects are equal.
         assertEquals(m1, m2);

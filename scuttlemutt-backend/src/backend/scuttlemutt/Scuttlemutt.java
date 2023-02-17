@@ -58,8 +58,12 @@ public class Scuttlemutt {
      * @return the SecretKey used to chat with the device associated with the passed
      *         DawgIdentifier.
      */
-    public SecretKey getKey(final DawgIdentifier otherDeviceId) {
+    public SecretKey getSecretKey(final DawgIdentifier otherDeviceId) {
         return this.storageManager.lookupSecretKeyForPublicKey(otherDeviceId.getPublicKey());
+    }
+
+    public PrivateKey getPrivateKey() {
+        return this.storageManager.lookupPrivateKey();
     }
 
     /**
@@ -92,7 +96,7 @@ public class Scuttlemutt {
      */
     public List<String> getMessagesForConversation(final Conversation conversation) {
         // get the encryption key associated with the Conversation.
-        PrivateKey myPrivateKey = storageManager.lookupPrivateKey();
+        PrivateKey myPrivateKey = getPrivateKey();
         final PublicKey theirPublicKey = conversation.getOtherPerson().getPublicKey();
         final SecretKey decryptionKey = this.storageManager.lookupSecretKeyForPublicKey(theirPublicKey);
         return getBarksForConversation(conversation).stream().map(b -> b.getContents(myPrivateKey, decryptionKey))

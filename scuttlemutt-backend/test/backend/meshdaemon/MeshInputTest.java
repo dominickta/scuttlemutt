@@ -1,5 +1,9 @@
 package backend.meshdaemon;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -14,17 +18,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import backend.iomanager.QueueIOManager;
+import crypto.Crypto;
 import storagemanager.MapStorageManager;
 import storagemanager.StorageManager;
 import types.Bark;
-import types.DawgIdentifier;
 import types.TestUtils;
 import types.packet.BarkPacket;
 import types.packet.Packet;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static java.lang.Thread.sleep;
 
 /**
  * Runs tests for MeshInput.
@@ -60,10 +60,10 @@ public class MeshInputTest {
 
         this.meshQueue = new LinkedBlockingQueue<>();
         this.seenBarks = new HashSet<>();
-        DawgIdentifier dawgIdentifier = TestUtils.generateRandomizedDawgIdentifier();
+        PrivateKey privateKey = Crypto.ALICE_KEYPAIR.getPrivate();
         StorageManager storage = new MapStorageManager();
 
-        this.meshInput = new MeshInput(ioManager, meshQueue, storage, dawgIdentifier, seenBarks);
+        this.meshInput = new MeshInput(ioManager, meshQueue, storage, privateKey, seenBarks);
     }
 
     /**
@@ -136,13 +136,13 @@ public class MeshInputTest {
         }
 
         // Mark half of the packets as seen before and shuffle
-        for (int i = 0; i < num_packets/2; i++) {
+        for (int i = 0; i < num_packets / 2; i++) {
             seenBarks.add(packets.get(i).packetBarks.get(0));
         }
         Collections.shuffle(packets);
 
         // Re-add half of the packets for repeats and shuffle
-        for (int i = 0; i < num_packets/2; i++) {
+        for (int i = 0; i < num_packets / 2; i++) {
             packets.add(packets.get(i));
         }
         Collections.shuffle(packets);
@@ -166,6 +166,6 @@ public class MeshInputTest {
         }
 
         // Make sure that we got the expected size (and ignored the marked packets)
-        assertEquals(num_packets - num_packets/2, outputs.size());
+        assertEquals(num_packets - num_packets / 2, outputs.size());
     }
 }

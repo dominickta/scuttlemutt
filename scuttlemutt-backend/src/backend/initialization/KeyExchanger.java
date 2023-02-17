@@ -13,36 +13,35 @@ import storagemanager.StorageManager;
 import types.DawgIdentifier;
 import types.packet.KeyExchangePacket;
 
+// TODO (justin): Refactor KeyExchanger to do it all in one go.
+
 /**
- * This class is used to exchange SecretKeys (symmetric keys) between two
- * connected devices.
+ * This class is used to exchange keys (symmetric and asymmetric keys) between
+ * two connected devices.
  *
- * NOTE: Since the key exchange process is meant to be exclusively P2P, we don't
- * want them to be repropagated over the
- * mesh network. As a result, this process is entirely separated from the
- * MeshDaemon.
- * 
  * The key exchange handshake will need to first exchange public keys and then
  * exchange secret keys. So: sendPublicKey, receivePublicKey, sendSecretKey,
  * then receiveSecretKey.
+ *
+ * NOTE: Since the key exchange process is meant to be exclusively P2P, we don't
+ * want them to be repropagated over the mesh network. As a result, this process
+ * is entirely separated from the MeshDaemon.
  */
 public class KeyExchanger {
     private final IOManager ioManager;
     private final StorageManager storageManager;
 
     /**
-     * Scuttlemutt's SecretKey exchange mechanism works as follows:
+     * Scuttlemutt's key exchange mechanism works as follows:
      * - Establish encrypted connection between the two devices. (not done here)
      * - Generate a SecretKey for the connection + send it to the other device.
      * - Once you receive the SecretKey from the other device, hash the two keys.
-     * Whichever
-     * key has a greater value, keep that one. This allows both devices to converge
-     * upon one key.
+     * Whichever key has a greater value, keep that one. This allows both devices to
+     * converge upon one key.
      *
-     * The keysBeingExchanged Map maintains records of the locally-generated keys
-     * for which we're
-     * currently exchanging. Once the exchange is completed, the local key is
-     * removed from the Map.
+     * The secretKeysBeingExchanged map maintains records of the locally-generated
+     * keys for which we're currently exchanging. Once the exchange is completed,
+     * the local key is removed from the Map.
      */
     private final Map<String, SecretKey> secretKeysBeingExchanged;
 

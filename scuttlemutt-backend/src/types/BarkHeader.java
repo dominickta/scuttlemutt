@@ -1,5 +1,6 @@
 package types;
 
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
@@ -22,14 +23,14 @@ public class BarkHeader {
                                    // always at the end of the String.
 
     /**
-     * Constructs a new Bark.
+     * Constructs a new BarkHeader.
      *
      * @param contents      The contents of the message.
      * @param sender        The DawgIdentifier of the sender of the message.
      * @param receiver      The DawgIdentifier of the receiver of the message.
      * @param orderNum      The number of the message in the conversation order.
      * @param encryptionKey The asymmetric PrivateKey used to encrypt the contents
-     *                      of the Bark.
+     *                      of the BarkHeader.
      */
     public BarkHeader(final DawgIdentifier sender,
             final DawgIdentifier receiver,
@@ -60,12 +61,12 @@ public class BarkHeader {
     }
 
     /**
-     * Returns a byte[] containing the bytes which represent the Bark.
+     * Returns a byte[] containing the bytes which represent the BarkHeader.
      *
-     * @return a byte[] containing the bytes which represent the Bark.
+     * @return a byte[] containing the bytes which represent the BarkHeader.
      */
     public byte[] toEncryptedBytes(PublicKey publicKey) {
-        byte[] rawBytes = GSON.toJson(this).getBytes();
+        byte[] rawBytes = GSON.toJson(this).getBytes(StandardCharsets.UTF_8);
         return Crypto.encrypt(rawBytes, publicKey, Crypto.ASYMMETRIC_KEY_TYPE);
     }
 
@@ -74,12 +75,13 @@ public class BarkHeader {
      *
      * @return a BarkHeader derived from the passed byte[].
      */
-    public static BarkHeader fromEncryptedBytes(final byte[] barkHeaderBytes, final PrivateKey priavateKey) {
+    public static BarkHeader fromEncryptedBytes(final byte[] barkHeaderBytes, final PrivateKey privateKey) {
         try {
-            byte[] decryptedBytes = Crypto.decrypt(barkHeaderBytes, priavateKey, Crypto.ASYMMETRIC_KEY_TYPE);
-            return GSON.fromJson(new String(decryptedBytes), BarkHeader.class);
+            byte[] decryptedBytes = Crypto.decrypt(barkHeaderBytes, privateKey, Crypto.ASYMMETRIC_KEY_TYPE);
+            return GSON.fromJson(new String(decryptedBytes, StandardCharsets.UTF_8), BarkHeader.class);
         } catch (Exception e) {
             // either decryption or json deserialization failed
+            e.printStackTrace();
             return null;
         }
     }
