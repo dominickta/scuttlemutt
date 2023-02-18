@@ -74,7 +74,7 @@ public class KeyExchangerTest {
         final SecretKey expectedKey = localKey.hashCode() < sentKey.hashCode() ? sentKey : localKey;
 
         // receive the SecretKey using the KeyExchanger, verify that the expectedKey is stored.
-        final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(this.otherDeviceId);
+        final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(this.otherDeviceId, sentKePacket);
         final SecretKey storedKey = this.storageManager.lookupKeyForDawgIdentifier(dawgId.getUniqueId());
         assertEquals(expectedKey, storedKey);
     }

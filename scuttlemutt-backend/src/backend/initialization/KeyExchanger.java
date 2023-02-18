@@ -78,10 +78,9 @@ public class KeyExchanger {
      *                  for the sender in the IOManager.
      * @return a DawgIdentifier for the specified sender which contains the sender's public key.
      */
-    public DawgIdentifier receiveSecretKey(final String senderId) {
+    public DawgIdentifier receiveSecretKey(final String senderId, KeyExchangePacket packet) {
         // receive the SecretKey.
-        final SecretKey otherSecretKey = (SecretKey) this.ioManager.singleDeviceReceive(senderId, KeyExchangePacket.class)
-                .getKey();
+        final SecretKey otherSecretKey = (SecretKey) packet.getKey();
 
         // create a DawgIdentifier to represent the other party.
         final DawgIdentifier dawgId = new DawgIdentifier(senderId, UUID.randomUUID());
@@ -96,6 +95,7 @@ public class KeyExchanger {
 
         // store + return the dawgId.
         this.storageManager.storeDawgIdentifier(dawgId);
+        System.out.println("CHOSEN KEY IS: " + chosenKey);
         return dawgId;
     }
 }

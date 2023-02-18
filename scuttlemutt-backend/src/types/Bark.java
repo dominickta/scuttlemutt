@@ -91,9 +91,14 @@ public class Bark {
     public String getContents(final SecretKey encryptionKey) {
         // decrypt the Bark's contents.
         final String decryptedContents = new String(Crypto.decrypt(this.encryptedContents, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE));
-
+        System.out.println("DECRYPTED CONTENTS " + decryptedContents);
         // return the decrypted contents with the filler chars trimmed off.
-        return decryptedContents.substring(0, decryptedContents.length() - this.fillerCount);
+        if(decryptedContents.length() > this.fillerCount){
+            return decryptedContents.substring(0, decryptedContents.length() - this.fillerCount);
+        }else{
+            return "";
+        }
+
     }
 
     public DawgIdentifier getSender() {
