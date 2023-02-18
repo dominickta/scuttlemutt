@@ -39,8 +39,6 @@ public class Scuttlemutt {
         this.dawgIdentifier = dawgIdentifier;
         this.ioManager = inputIoManager;
         this.storageManager = storageManager;
-        this.meshDaemon = new MeshDaemon(this.ioManager, this.storageManager, this.dawgIdentifier);
-
         // only generate a new keypair if we don't already have one
         if (getPrivateKey() == null) {
             // create a keypair and store them in the storage manager
@@ -48,6 +46,9 @@ public class Scuttlemutt {
             this.storageManager.storePrivateKey(keys.getPrivate());
             this.storageManager.storePublicKeyForUUID(dawgIdentifier.getUUID(), keys.getPublic());
         }
+        
+        // keys must be initialized befor the mesh daemon is constructed.
+        this.meshDaemon = new MeshDaemon(this.ioManager, this.storageManager, this.dawgIdentifier);
     }
 
     /**
