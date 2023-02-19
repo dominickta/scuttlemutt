@@ -1,12 +1,14 @@
 package backend.scuttlemutt;
 
+import java.security.Key;
 import java.util.*;
 import backend.iomanager.IOManager;
 import backend.meshdaemon.MeshDaemon;
 import storagemanager.StorageManager;
-import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
+
 import static java.util.stream.Collectors.toList;
 
 import javax.crypto.SecretKey;
@@ -46,13 +48,30 @@ public class Scuttlemutt {
     }
 
     /**
-     * Returns the SecretKey used to chat with the device associated with the passed DawgIdentifier.
+     * Returns the latest Key on record used to chat with the device associated with the
+     * passed DawgIdentifier.
      *
      * @param otherDeviceId  A DawgIdentifier used to identify the other device.
-     * @return the SecretKey used to chat with the device associated with the passed DawgIdentifier.
+     * @return the Key used to chat with the device associated with the passed DawgIdentifier.
      */
-    public SecretKey getKey(final DawgIdentifier otherDeviceId){
-        return this.storageManager.lookupKeyForDawgIdentifier(otherDeviceId.getUniqueId());
+    public Key getLatestKey(final DawgIdentifier otherDeviceId) {
+        // get a List of the most recently known Keys.
+        final List<Key> knownKeys = this.getListOfHistoricalKeys(otherDeviceId);
+
+        // obtain the last (and therefore newest) Key in the List.
+        return knownKeys.get(knownKeys.size() - 1);
+    }
+
+    /**
+     * Returns a List<Key> containing some of the Keys historically known to have been used to chat
+     * with the device associated with the passed DawgIdentifier.
+     *
+     * @param otherDeviceId  A DawgIdentifier used to identify the other device.
+     * @return a List<Key> containing some of the Keys historically known to have been used to chat
+     *         with the device associated with the passed DawgIdentifier.
+     */
+    public List<Key> getListOfHistoricalKeys(final DawgIdentifier otherDeviceId) {
+        return this.storageManager.lookupKeysForDawgIdentifier(otherDeviceId.getUniqueId());
     }
 
     /**
@@ -82,32 +101,20 @@ public class Scuttlemutt {
      * Returns a List<String> containing the messages of the passed Conversation.
      *
      * @param conversation the Conversation whose messages we're obtaining.
-     * @return a List<String> containing the messages of the passed Conversation.
+     * @return a List<Message> containing the messages of the passed Conversation.
      */
-    public List<String> getMessagesForConversation(final Conversation conversation) {
-        // get the encryption key associated with the Conversation.
-        final SecretKey decryptionKey = this.storageManager.lookupKeyForDawgIdentifier(conversation.getUserList().get(0).getUniqueId());
+    public List<Message> getMessagesForConversation(final Conversation conversation) {
+        final List<Message> messages = new ArrayList<Message>();
+        for (final UUID messageUuid : conversation.getMessageUUIDList()) {
+            final Message m = this.storageManager.lookupMessage(messageUuid);
 
-        return getBarksForConversation(conversation).stream().map(b -> b.getContents(decryptionKey)).collect(toList());
-    }
-
-    /**
-     * Returns a List<Bark> containing the barks of the passed Conversation.
-     *
-     * @param conversation the Conversation whose barks we're obtaining.
-     * @return a List<Bark> containing the barks of the passed Conversation, or
-     *         null.
-     */
-    public List<Bark> getBarksForConversation(final Conversation conversation) {
-        final List<Bark> barks = new ArrayList<Bark>();
-        for (final UUID uuid : conversation.getBarkUUIDList()) {
-            final Bark bark = this.storageManager.lookupBark(uuid);
-            if (bark == null) {
-                return null;
+            // we only store a message if one is found, otherwise we can just fail silently since
+            // there's no way to get a message we don't have.
+            if (m != null) {
+                messages.add(m);
             }
-            barks.add(bark);
         }
-        return barks;
+        return messages;
     }
 
     public List<DawgIdentifier> getAllContacts() {

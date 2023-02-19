@@ -67,7 +67,7 @@ public class MeshDaemon {
      * @returns UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
-        final SecretKey encryptionKey = this.storageManager.lookupKeyForDawgIdentifier(recipient.getUniqueId());
+        final SecretKey encryptionKey = (SecretKey) this.storageManager.lookupLatestKeyForDawgIdentifier(recipient.getUniqueId());
         final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, encryptionKey);
 
         // update the Conversation object stored in the StorageManager to include the Bark.
@@ -79,7 +79,7 @@ public class MeshDaemon {
             this.storageManager.storeConversation(c);
         } else {
             // update existing obj
-            c.storeBarkUUID(barkMessage.getUniqueId());
+            c.storeMessageUUID(barkMessage.getUniqueId());
             this.storageManager.storeConversation(c);
         }
 

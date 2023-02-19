@@ -1,8 +1,8 @@
 package types.packet;
 
-import types.serialization.SerializationUtils;
-
 import java.security.Key;
+
+import types.serialization.SerializationUtils;
 
 import javax.crypto.SecretKey;
 
@@ -21,8 +21,8 @@ public class KeyExchangePacket extends Packet {
         this.keyBytes = SerializationUtils.serializeKey(secretKey);
     }
 
-    public SecretKey getKey() {
-        return SerializationUtils.deserializeSecretKey(keyBytes);
+    public Key getKey() {
+        return SerializationUtils.deserializeKey(keyBytes);
     }
 
     @Override

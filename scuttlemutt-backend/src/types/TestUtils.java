@@ -46,6 +46,12 @@ public class TestUtils {
         return new Conversation(Collections.singletonList(generateRandomizedDawgIdentifier()));
     }
 
+    public static Message generateRandomizedMessage() {
+        return new Message(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE),
+                r.nextLong()
+        );
+    }
+
     public static void sleepOneSecond() {
         // allow request to complete.
         try {
