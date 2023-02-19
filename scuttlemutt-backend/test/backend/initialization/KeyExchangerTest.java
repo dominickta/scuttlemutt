@@ -68,14 +68,14 @@ public class KeyExchangerTest {
         // send a KeyExchange packet to m1.
         final KeyExchangePacket sentKePacket = TestUtils.generateRandomizedKeyExchangePacket();
         this.q2to1.add(sentKePacket);
-        final SecretKey sentKey = sentKePacket.getKey();
+        final SecretKey sentKey = (SecretKey) sentKePacket.getKey();
 
         // figure out which SecretKey we should expect to have stored (the one with the lower hashCode).
         final SecretKey expectedKey = localKey.hashCode() < sentKey.hashCode() ? sentKey : localKey;
 
         // receive the SecretKey using the KeyExchanger, verify that the expectedKey is stored.
         final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(this.otherDeviceId);
-        final SecretKey storedKey = this.storageManager.lookupKeyForDawgIdentifier(dawgId.getUniqueId());
+        final SecretKey storedKey = (SecretKey) this.storageManager.lookupLatestKeyForDawgIdentifier(dawgId.getUniqueId());
         assertEquals(expectedKey, storedKey);
     }
 }

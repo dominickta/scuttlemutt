@@ -6,6 +6,13 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static types.Bark.MAX_MESSAGE_SIZE;
 
+import java.security.Key;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.crypto.SecretKey;
+
 import crypto.Crypto;
 
 public class BarkTest {
@@ -25,7 +32,7 @@ public class BarkTest {
     }
 
     @Test
-    public void testConstructor_isNotEncrypted_contentsSafeSize_createsObjectSuccessfully() {
+    public void testConstructor_contentsSafeSize_createsObjectSuccessfully() {
         // Successfully create a Bark object with the valid message String.
         final Bark b = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
@@ -33,6 +40,54 @@ public class BarkTest {
                 0L,
                 Crypto.generateSecretKey()
         );
+    }
+
+    @Test
+    public void testGetContents_keyListContainsValidKey_returnsMessageSuccessfully() {
+        final SecretKey validKey = Crypto.generateSecretKey();
+
+        // create a Bark object with the valid message String.
+        final Bark b = new Bark(validMessage,
+                TestUtils.generateRandomizedDawgIdentifier(),
+                TestUtils.generateRandomizedDawgIdentifier(),
+                0L,
+                validKey
+        );
+
+        // create the keyList.  To make things a bit more difficult, make validKey not the last object.
+        // (this means that getContents() needs to iterate to the correct Key.)
+        final SecretKey otherKey = Crypto.generateSecretKey();
+        final List<Key> keyList = new ArrayList<Key>();
+        keyList.add(validKey);
+        keyList.add(otherKey);
+
+        // call getContents().
+        final String contents = b.getContents(keyList).get();
+        assertEquals(validMessage, contents);
+    }
+
+    @Test
+    public void testGetContents_noValidKeyInList_returnsOptionalEmpty() {
+
+        // create a Bark object with the valid message String.
+        final Bark b = new Bark(validMessage,
+                TestUtils.generateRandomizedDawgIdentifier(),
+                TestUtils.generateRandomizedDawgIdentifier(),
+                0L,
+                Crypto.DUMMY_SECRETKEY
+        );
+
+        // create the keyList.  To make things a bit more difficult, make validKey not the last object.
+        // (this means that getContents() needs to iterate to the correct Key.)
+        final SecretKey invalidKey = Crypto.generateSecretKey();
+        final List<Key> keyList = new ArrayList<Key>();
+        keyList.add(invalidKey);
+
+        // call getContents().
+        final Optional<String> contents = b.getContents(keyList);
+
+        // assert that we were unable to successfully decrypt the contents.
+        assertFalse(contents.isPresent());
     }
 
     @Test

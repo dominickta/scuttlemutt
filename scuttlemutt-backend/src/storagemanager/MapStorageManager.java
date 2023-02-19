@@ -5,16 +5,16 @@ import com.google.gson.GsonBuilder;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 import types.serialization.SerializationUtils;
 
-import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import javax.crypto.SecretKey;
 
 /**
  * Implements the StorageManager interface using a Map-based backend.
@@ -31,12 +31,14 @@ public class MapStorageManager implements StorageManager {
     private final Map<UUID, String> dawgIdentifierMap;
     private final Map<List<UUID>, String> conversationMap;
     private final Map<UUID, String> keyMap;
+    private final Map<UUID, String> messageMap;
 
     public MapStorageManager() {
         this.barkMap = new HashMap<UUID, String>();
         this.dawgIdentifierMap = new HashMap<UUID, String>();
         this.conversationMap = new HashMap<List<UUID>, String>();
         this.keyMap = new HashMap<UUID, String>();
+        this.messageMap = new HashMap<UUID, String>();
     }
 
     @Override
@@ -67,12 +69,21 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public SecretKey lookupKeyForDawgIdentifier(final UUID dawgIdentifierUuid) {
+    public List<Key> lookupKeysForDawgIdentifier(final UUID dawgIdentifierUuid) {
         final String serializedObject = this.keyMap.getOrDefault(dawgIdentifierUuid, null);
         if (serializedObject == null) {
             return null;
         }
-        return SerializationUtils.deserializeSecretKey(serializedObject.getBytes(StandardCharsets.UTF_8));
+        return SerializationUtils.deserializeKeyList(serializedObject);
+    }
+
+    @Override
+    public Message lookupMessage(UUID messageUuid) {
+        final String serializedObject = this.messageMap.getOrDefault(messageUuid, null);
+        if (serializedObject == null) {
+            return null;
+        }
+        return GSON.fromJson(serializedObject, Message.class);
     }
 
     @Override
@@ -91,8 +102,32 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public void storeKeyForDawgIdentifier(UUID dawgIdentifierUuid, SecretKey key) {
-        this.keyMap.put(dawgIdentifierUuid, new String(SerializationUtils.serializeKey(key)));
+    public void storeKeyForDawgIdentifier(UUID dawgIdentifierUuid, Key key) {
+        // lookup to see if we're already storing a List of Keys for this UUID.  if we are storing
+        // a List of Keys, we'll want to store an updated List of the Keys.
+        final List<Key> keyList;
+        final String serializedObject = this.keyMap.get(dawgIdentifierUuid);
+        if (serializedObject != null) {
+            keyList = SerializationUtils.deserializeKeyList(serializedObject);
+        } else {
+            keyList = new ArrayList<Key>();
+        }
+
+        // see if the obtained keyList is at the maximum size.  if it is, remove the oldest entry
+        // at index == 0.
+        if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
+            keyList.remove(0);
+        }
+
+        // append the new Key to the end of the List.
+        keyList.add(key);
+
+        this.keyMap.put(dawgIdentifierUuid, SerializationUtils.serializeKeyList(keyList));
+    }
+
+    @Override
+    public void storeMessage(final Message message) {
+        this.messageMap.put(message.getUniqueId(), GSON.toJson(message));
     }
 
     @Override
@@ -123,12 +158,21 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public SecretKey deleteKeyForDawgIdentifier(UUID dawgIdentifierUuid) {
+    public List<Key> deleteKeysForDawgIdentifier(UUID dawgIdentifierUuid) {
         final String serializedObject = this.keyMap.remove(dawgIdentifierUuid);
         if (serializedObject == null) {
             return null;
         }
-        return SerializationUtils.deserializeSecretKey(serializedObject.getBytes(StandardCharsets.UTF_8));
+        return SerializationUtils.deserializeKeyList(serializedObject);
+    }
+
+    @Override
+    public Message deleteMessage(UUID messageUuid) {
+        final String serializedObject = this.messageMap.remove(messageUuid);
+        if (serializedObject == null) {
+            return null;
+        }
+        return GSON.fromJson(serializedObject, Message.class);
     }
 
     @Override

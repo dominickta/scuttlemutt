@@ -8,12 +8,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
 
-import crypto.Crypto;
 import types.Bark;
 import types.packet.BarkPacket;
 import types.DawgIdentifier;
 import types.TestUtils;
 
+import java.security.Key;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -85,8 +85,8 @@ public class NetworkSimulationTest {
         final String destinationLabel = deviceLabels.get(1);
         final Scuttlemutt destinationDevice = simulation.getScuttlemutt(destinationLabel);
         final DawgIdentifier dstDawgId = destinationDevice.getDawgIdentifier();
-        final SecretKey key = simulation.getStorageManager(destinationLabel)
-                .lookupKeyForDawgIdentifier(sender.getDawgIdentifier().getUniqueId());
+        final List<Key> keys = simulation.getStorageManager(destinationLabel)
+                .lookupKeysForDawgIdentifier(sender.getDawgIdentifier().getUniqueId());
 
         // send the message.
         sender.sendMessage(msg, dstDawgId);
@@ -95,7 +95,7 @@ public class NetworkSimulationTest {
         try {
             final QueueIOManager destinationIOManager = simulation.getQueueIOManager(destinationLabel);
             final Bark receivedMsg = destinationIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
-            assertEquals(msg, receivedMsg.getContents(key));
+            assertEquals(msg, receivedMsg.getContents(keys).get());
         } catch (IOManagerException e) {
             // this should never happen, print stack trace if it does.
             e.printStackTrace();
