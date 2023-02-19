@@ -6,14 +6,10 @@ import android.util.Log
 import androidx.lifecycle.*
 import backend.scuttlemutt.Scuttlemutt
 import com.scuttlemutt.app.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import types.Bark
+import kotlinx.coroutines.*
 import types.DawgIdentifier
 import types.Message
 import java.util.*
-import javax.crypto.SecretKey
 
 class ConversationViewModelFactory (private val mainViewModel: MainViewModel, private val mutt: Scuttlemutt, private val initContactName: String) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
@@ -37,12 +33,8 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
     private val _currUiState = MutableLiveData(ConversationUiState(contactName = contactName, messages = listOf()))
     val currUiState: LiveData<ConversationUiState> = _currUiState
 
-    // TODO: how will new messages from the database be automatically updated? previously flows were used, currently no way to do this
-
-    init {
-//        setChat(initContactName)
-//        Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
-    }
+    // Job that loops to retrieve new barks
+    var barkUpdater : Job? = null
 
     fun addMessage(msg: String) {
         viewModelScope.launch {
@@ -58,69 +50,76 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
     fun setChat(newChatPartnerName: String) {
         Log.d(TAG, "Changing contact to: $newChatPartnerName")
         contactName = newChatPartnerName
-        //Set to default value
-        contactID = mutt.dawgIdentifier
         _currUiState.value!!.contactName = contactName
-        viewModelScope.launch {
-            withContext(Dispatchers.Default) {
-                if (!mutt.haveContact(mutt.dawgIdentifier.uniqueId)) {
-                    Log.d(TAG, "Adding myself because I'm not in the database yet")
-                    mutt.addContact(mutt.dawgIdentifier, MyKey) // add myself
-                    mutt.sendMessage("talking to myself", mutt.dawgIdentifier)
-                }
-                if (!mutt.haveContact(ADawgTag.uniqueId)) {
-                    Log.d(TAG, "Adding ADawg because not in the database yet")
-                    mutt.addContact(ADawgTag, AKey)
-                    mutt.sendMessage("hey ADawg, this is me", ADawgTag)
-                }
-                if (!mutt.haveContact(BDawgTag.uniqueId)) {
-                    Log.d(TAG, "Adding BDawg because not in the database yet")
-                    mutt.addContact(BDawgTag, BKey)
-                    mutt.sendMessage("hey BDawg, this is me", BDawgTag)
-                }
-                if (!mutt.haveContact(CDawgTag.uniqueId)) {
-                    Log.d(TAG, "Adding CDawg because not in the database yet")
-                    mutt.addContact(CDawgTag, CKey)
-                }
-                Log.d(TAG, "Added messages")
-                val contactNames: MutableList<String> = mutableListOf()
-                for (id in mutt.allContacts) {
-                    contactNames.add(id.userContact)
-                    if (id.userContact == newChatPartnerName) {
-                        contactID = id
-                    }
-                }
-                withContext(Dispatchers.Main) {
-                    mainViewModel.setNewContactList(contactNames)
-                }
-                Log.d(TAG, "beepbeep")
+        _currUiState.postValue(ConversationUiState(contactName, listOf()))
 
-                val conv = mutt.getConversation(Collections.singletonList(contactID))
-                if (conv == null) {
-                    _currUiState.postValue(ConversationUiState(contactName, listOf()))
-                    Log.d(TAG, "Set empty barks for: $contactName")
-                } else {
-                    var msgs: MutableList<FrontEndMessage> = mutableListOf()
-                    val backendMsgs : MutableList<Message>? = mutt.getMessagesForConversation(conv)
-                    if (backendMsgs == null) {
-                        _currUiState.postValue(ConversationUiState(contactName, listOf()))
-                        Log.d(TAG, "Set empty barks for: $contactName")
-                    } else {
-                        for (m in backendMsgs) {
-                            Log.d(TAG, "Message is $m")
-                            msgs.add(0,
-                                FrontEndMessage(
-                                    author = conv.userList.get(0).userContact,
-                                    content = m.plaintextMessage,
-                                    timestamp = m.orderNum.toString()
-                                )
-                            )
-                        }
-                        _currUiState.postValue(ConversationUiState(contactName, msgs))
-                        Log.d(TAG, "Set new barks for: $contactName")
-                    }
+        barkUpdater?.cancel() // ? is a Kotlin safe call
+        barkUpdater = viewModelScope.launch(Dispatchers.Default) {
+            Log.d(TAG, "Starting barkupdater")
+            initContacts()
+            Log.d(TAG, "looping contacts")
+            val contactNames: MutableList<String> = mutableListOf()
+            for (id in mutt.allContacts) {
+                contactNames.add(id.userContact)
+                if (id.userContact == newChatPartnerName) {
+                    contactID = id
                 }
             }
+            Log.d(TAG, "starting job")
+            while (coroutineContext.isActive) {
+                val conv = mutt.getConversation(Collections.singletonList(contactID))
+                if (conv == null) {
+                    if (_currUiState.value!!.messages.isNotEmpty()) {
+                        _currUiState.postValue(ConversationUiState(contactName, listOf()))
+                        Log.d(TAG, "Set empty barks for: $contactName")
+                    }
+                    continue
+                }
+                var msgs: MutableList<FrontEndMessage> = mutableListOf()
+                val backendMsgs : MutableList<Message>? = mutt.getMessagesForConversation(conv)
+                if (backendMsgs == null) {
+                    if (_currUiState.value!!.messages.isNotEmpty()) {
+                        _currUiState.postValue(ConversationUiState(contactName, listOf()))
+                        Log.d(TAG, "Set empty barks for: $contactName")
+                    }
+                    continue
+                }
+                for (m in backendMsgs) {
+//                    Log.d(TAG, "Message is $m")
+                    msgs.add(0,
+                        FrontEndMessage(
+                            author = conv.userList.get(0).userContact,
+                            content = m.plaintextMessage,
+                            timestamp = m.orderNum.toString()
+                        )
+                    )
+                }
+                if (_currUiState.value!!.messages != msgs) {
+                    _currUiState.postValue(ConversationUiState(contactName, msgs))
+                    Log.d(TAG, "Set new barks for: $contactName")
+                }
+            }
+        }
+    }
+    private fun initContacts() {
+        if (!mutt.haveContact(mutt.dawgIdentifier.uniqueId)) {
+            Log.d(TAG, "Adding myself because I'm not in the database yet")
+            mutt.addContact(mutt.dawgIdentifier, MyKey) // add myself
+            mutt.sendMessage("talking to myself", mutt.dawgIdentifier)
+        }
+        if (!mutt.haveContact(ADawgTag.uniqueId)) {
+            Log.d(TAG, "Adding ADawg because not in the database yet")
+            mutt.addContact(ADawgTag, AKey)
+            mutt.sendMessage("hey ADawg, this is me", ADawgTag)
+        }
+        if (!mutt.haveContact(BDawgTag.uniqueId)) {
+            Log.d(TAG, "Adding BDawg because not in the database yet")
+            mutt.addContact(BDawgTag, BKey)
+            mutt.sendMessage("hey BDawg, this is me", BDawgTag)
+        }
+        if (!mutt.haveContact(CDawgTag.uniqueId)) {
+            Log.d(TAG, "Adding CDawg because not in the database yet")
+            mutt.addContact(CDawgTag, CKey)
         }
     }
 
