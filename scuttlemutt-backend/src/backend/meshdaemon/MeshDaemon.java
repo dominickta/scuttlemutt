@@ -5,6 +5,7 @@ import storagemanager.StorageManager;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -64,24 +65,30 @@ public class MeshDaemon {
      * @param contents  The message contents.
      * @param recipient The DawgIdentifier of who is receiving the message.
      * @param seqId     The sequence number for this message.
-     * @returns UUID of sent bark
+     * @return UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
         final SecretKey encryptionKey = (SecretKey) this.storageManager.lookupLatestKeyForDawgIdentifier(recipient.getUniqueId());
         final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, encryptionKey);
+
+        // create a plaintext object to represent the Message.
+        final Message message = new Message(contents, seqId);
 
         // update the Conversation object stored in the StorageManager to include the Bark.
         Conversation c = this.storageManager.lookupConversation(Collections.singletonList(recipient.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
         if (c == null) {
             // if we've never initiated a conversation with the sender before, create + store a new Conversation.
             c = new Conversation(Collections.singletonList(recipient),
-                    Collections.singletonList(barkMessage.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
+                    Collections.singletonList(message.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
             this.storageManager.storeConversation(c);
         } else {
             // update existing obj
-            c.storeMessageUUID(barkMessage.getUniqueId());
+            c.storeMessageUUID(message.getUniqueId());
             this.storageManager.storeConversation(c);
         }
+
+        // store the plaintext Message object in the database.
+        this.storageManager.storeMessage(message);
 
         // store the Bark in the database.
         this.storageManager.storeBark(barkMessage);
