@@ -146,7 +146,7 @@ public class NetworkSimulation {
         final Scuttlemutt device1 = scuttlemuttMap.get(device1Label);
         final Scuttlemutt device2 = scuttlemuttMap.get(device2Label);
         device1.addContact(device2.getDawgIdentifier(), device2.getPublicKey(), secretKey);
-        device2.addContact(device1.getDawgIdentifier(), device2.getPublicKey(), secretKey);
+        device2.addContact(device1.getDawgIdentifier(), device1.getPublicKey(), secretKey);
         
         // Build queues to connect devices
         final BlockingQueue<Packet> q1to2 = new LinkedBlockingQueue<Packet>();

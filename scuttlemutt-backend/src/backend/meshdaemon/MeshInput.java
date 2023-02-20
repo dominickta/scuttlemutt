@@ -66,7 +66,6 @@ public class MeshInput implements Runnable {
             if (!this.seenBarks.add(bark)) {
                 continue;
             }
-
             if (bark.isForMe(this.myPrivateKey)) {
                 // this is for us! let's create a plaintext Message object from
                 // the Bark and store it for later usage.

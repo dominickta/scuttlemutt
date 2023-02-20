@@ -2,8 +2,10 @@ package backend.simulation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +22,7 @@ import org.powermock.reflect.Whitebox;
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
 import backend.scuttlemutt.Scuttlemutt;
+import storagemanager.StorageManager;
 import types.Bark;
 import types.DawgIdentifier;
 import types.TestUtils;
@@ -76,28 +79,37 @@ public class NetworkSimulationTest {
 
     @Test
     public void testScuttlemutt_sendMessage_verifyDestinationScuttlemuttObjectRecievedMessage() {
-        // get the sender Scuttlemutt object.
-        final Scuttlemutt sender = simulation.getScuttlemutt(deviceLabels.get(0));
-
+        // get the Scuttlemutt for the devices.
+        final String aliceLabel = deviceLabels.get(0);
+        final String bobLabel = deviceLabels.get(1);
+        final Scuttlemutt alice = simulation.getScuttlemutt(aliceLabel);
+        final Scuttlemutt bob = simulation.getScuttlemutt(bobLabel);
+        final DawgIdentifier aliceId = alice.getDawgIdentifier();
+        final DawgIdentifier bobId = bob.getDawgIdentifier();
+        final StorageManager aliceStorage = simulation.getStorageManager(aliceLabel);
+        final StorageManager bobStorage = simulation.getStorageManager(bobLabel);
+        
         // create a message to send to a specific party.
         // NOTE: The message should be small enough to fit in a single Bark object.
         final String msg = RandomStringUtils.randomAlphanumeric(15);
-        final String destinationLabel = deviceLabels.get(1);
-        final Scuttlemutt destinationDevice = simulation.getScuttlemutt(destinationLabel);
-        final DawgIdentifier dstDawgId = destinationDevice.getDawgIdentifier();
-        final List<SecretKey> keys = simulation.getStorageManager(destinationLabel)
-                .lookupSecretKeysForUUID(sender.getDawgIdentifier().getUUID());
+        final List<SecretKey> keys = bobStorage.lookupSecretKeysForUUID(aliceId.getUUID());
+        assertTrue(keys.size() == 1);
 
-        // send the message.
-        sender.sendMessage(msg, dstDawgId);
+        // verify that the keys are correct
+        final PublicKey bobPubKey = aliceStorage.lookupPublicKeyForUUID(bobId.getUUID());
+        final PublicKey alicePubKey = bobStorage.lookupPublicKeyForUUID(aliceId.getUUID());
+        assertEquals(bobPubKey, bob.getPublicKey());
+        assertEquals(alicePubKey, alice.getPublicKey());
 
-        // verify that the intended destination device successfully received the
-        // message.
+        // send the message using `sendMessage`
+        alice.sendMessage(msg, bobId);
+
+        // verify that bob successfully received the message from alice.
         try {
-            final QueueIOManager destinationIOManager = simulation.getQueueIOManager(destinationLabel);
-            final Bark receivedMsg = destinationIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
-            final PrivateKey privateKey = destinationDevice.getPrivateKey();
-            assertEquals(msg, receivedMsg.getContents(privateKey, keys));
+            final QueueIOManager bobIOManager = simulation.getQueueIOManager(bobLabel);
+            final Bark receivedBark = bobIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
+            final PrivateKey privateKey = bob.getPrivateKey();
+            assertEquals(msg, receivedBark.getContents(privateKey, keys));
         } catch (IOManagerException e) {
             // this should never happen, print stack trace if it does.
             e.printStackTrace();
