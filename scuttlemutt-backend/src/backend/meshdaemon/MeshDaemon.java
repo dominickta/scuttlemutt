@@ -16,6 +16,7 @@ import storagemanager.StorageManager;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 
 /**
  * Controls input/output logic and an internal Bark queue.
@@ -42,11 +43,10 @@ public class MeshDaemon {
 
         // grab the private key
         PrivateKey privateKey = storageManager.lookupPrivateKey();
-        SecretKey secretKey = storageManager.lookupSecretKeyForUUID(currentUser.getUUID());
 
         this.currentUser = currentUser;
         this.queue = new LinkedBlockingQueue<>();
-        this.input = new MeshInput(ioManager, queue, storageManager, privateKey, secretKey, seenBarks);
+        this.input = new MeshInput(ioManager, queue, storageManager, privateKey, seenBarks);
         this.output = new MeshOutput(ioManager, queue, seenBarks);
         this.storageManager = storageManager;
 
@@ -73,27 +73,30 @@ public class MeshDaemon {
      * @param contents  The message contents.
      * @param recipient The DawgIdentifier of who is receiving the message.
      * @param seqId     The sequence number for this message.
-     * @returns UUID of sent bark
+     * @return UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
         UUID recipientId = recipient.getUUID();
-        final SecretKey recipientSecretKey = this.storageManager.lookupSecretKeyForUUID(recipientId);
+        final SecretKey recipientSecretKey = this.storageManager.lookupLatestKeyForDawgIdentifier(recipientId);
         final PublicKey recipientPublicKey = this.storageManager.lookupPublicKeyForUUID(recipientId);
         final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, recipientPublicKey,
                 recipientSecretKey);
-
-        // update Conversation object stored in the StorageManager to include the Bark.
+        // create a plaintext object to represent the Message.
+        final Message message = new Message(contents, seqId);
         Conversation c = this.storageManager.lookupConversation(recipientId);
         if (c == null) {
             // if we've never initiated a conversation with the sender before, create +
             // store a new Conversation.
-            c = new Conversation(recipient, Collections.singletonList(barkMessage.getUniqueId()));
+            c = new Conversation(recipient, Collections.singletonList(message.getUniqueId()));
             this.storageManager.storeConversation(c);
         } else {
             // update existing obj
-            c.storeBarkUUID(barkMessage.getUniqueId());
+            c.storeMessageUUID(message.getUniqueId());
             this.storageManager.storeConversation(c);
         }
+
+        // store the plaintext Message object in the database.
+        this.storageManager.storeMessage(message);
 
         // store the Bark in the database.
         this.storageManager.storeBark(barkMessage);

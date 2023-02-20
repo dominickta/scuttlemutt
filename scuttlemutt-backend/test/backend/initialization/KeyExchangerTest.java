@@ -63,7 +63,8 @@ public class KeyExchangerTest {
         final Map<String, SecretKey> internalKeyExchangeMap = new HashMap<String, SecretKey>();
         final SecretKey localKey = Crypto.generateSecretKey();
         internalKeyExchangeMap.put(this.otherDeviceId, localKey);
-        Whitebox.setInternalState(this.keyExchanger, "secretKeysBeingExchanged", internalKeyExchangeMap, KeyExchanger.class);
+        Whitebox.setInternalState(this.keyExchanger, "secretKeysBeingExchanged", internalKeyExchangeMap,
+                KeyExchanger.class);
 
         // send a KeyExchange packet to m1.
         final KeyExchangePacket sentKePacket = TestUtils.generateRandomizedKeyExchangePacket();
@@ -78,7 +79,7 @@ public class KeyExchangerTest {
         // stored.
         final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(this.otherDeviceId,
                 Crypto.ALICE_KEYPAIR.getPublic());
-        final SecretKey storedKey = this.storageManager.lookupSecretKeyForUUID(dawgId.getUUID());
+        final SecretKey storedKey = this.storageManager.lookupLatestKeyForDawgIdentifier(dawgId.getUUID());
         assertEquals(expectedKey, storedKey);
     }
 }

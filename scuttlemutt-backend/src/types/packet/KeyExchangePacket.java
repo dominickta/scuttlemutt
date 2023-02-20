@@ -33,13 +33,9 @@ public class KeyExchangePacket extends Packet {
         this.keyType = "publicKey";
         this.keyBytes = SerializationUtils.serializeKey(pubKey);
     }
-
+    
     public Key getKey() {
-        if (this.keyType.equals("secretKey")) {
-            return SerializationUtils.deserializeSecretKey(keyBytes);
-        } else {
-            return SerializationUtils.deserializePublicKey(keyBytes);
-        }
+        return SerializationUtils.deserializeKey(keyBytes);
     }
 
     @Override

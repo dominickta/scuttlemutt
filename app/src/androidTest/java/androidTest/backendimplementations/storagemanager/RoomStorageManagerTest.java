@@ -21,14 +21,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.security.Key;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.crypto.SecretKey;
 
 import crypto.Crypto;
+import storagemanager.StorageManager;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 import types.TestUtils;
 
 /**
@@ -139,28 +143,70 @@ public class RoomStorageManagerTest {
     @Test
     public void testKeyStorageLifecycle() {
         final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
-        final SecretKey k1 = Crypto.generateSecretKey();
-        final SecretKey k2 = Crypto.generateSecretKey();
 
-        // create the object in the storage manager.
-        this.storageManager.storeKeyForDawgIdentifier(d.getUniqueId(), k1);
+        // create a List of Key objects to store in the storage manager.
+        // we want to store the maximum allowed number of Keys.
+        final List<Key> keyList = new ArrayList<Key>();
+        for (int i = 0; i < StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE; i++) {
+            keyList.add(Crypto.generateSecretKey());
+        }
 
-        // lookup the object in the storage manager.
-        final SecretKey obtainedKey = this.storageManager.lookupKeyForDawgIdentifier(d.getUniqueId());
-        assertEquals(k1, obtainedKey);
+        // store the Key objects one-by-one in the storage manager and verify that the stored
+        // List<Key> is updated along the way.
+        for (int i = 0; i < StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE; i++) {
+            final Key currentKey = keyList.get(i);
 
-        // update the key in the storage manager.
-        this.storageManager.storeKeyForDawgIdentifier(d.getUniqueId(), k2);
+            // store the currentKey.
+            this.storageManager.storeKeyForDawgIdentifier(d.getUniqueId(), currentKey);
 
-        // lookup the object in the storage manager, verify that it was updated.
-        final SecretKey obtainedUpdatedKey = this.storageManager.lookupKeyForDawgIdentifier(d.getUniqueId());
-        assertEquals(k2, obtainedUpdatedKey);
+            // verify that the Key was successfully stored in the List.
+            final List<Key> obtainedKeys = this.storageManager.lookupKeysForDawgIdentifier(d.getUniqueId());
+            assertEquals(currentKey, obtainedKeys.get(obtainedKeys.size() - 1));
+            assertEquals(i + 1, obtainedKeys.size());  // assert the List contains all Keys added so far.
+        }
+
+        // verify that the oldest key is removed from the stored List when we add Keys after hitting
+        // the size limit.
+        final Key extraKey = Crypto.generateSecretKey();
+        this.storageManager.storeKeyForDawgIdentifier(d.getUniqueId(), extraKey);
+        final List<Key> obtainedKeys = this.storageManager.lookupKeysForDawgIdentifier(d.getUniqueId());
+
+        // assert that obtainedKeys == the maximum number of Keys we allow to be stored.
+        assertEquals(StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE, obtainedKeys.size());
+
+        // assert that the returned List is as follows:
+        // - contains all contents of the original List except the first element, with each element
+        //   shifted down one index.
+        // - the extraKey is appended to the end of the List.
+        final List<Key> expectedKeyList = new ArrayList<Key>(keyList);
+        expectedKeyList.remove(0);
+        expectedKeyList.add(extraKey);
+        assertEquals(expectedKeyList, obtainedKeys);
+
 
         // successfully delete the object.
-        this.storageManager.deleteKeyForDawgIdentifier(d.getUniqueId());
+        this.storageManager.deleteKeysForDawgIdentifier(d.getUniqueId());
 
         // verify that the object was deleted.
-        assertNull(this.storageManager.lookupKeyForDawgIdentifier(d.getUniqueId()));
+        assertNull(this.storageManager.lookupKeysForDawgIdentifier(d.getUniqueId()));
+    }
+
+    @Test
+    public void testMessageStorageLifecycle() {
+        final Message m = TestUtils.generateRandomizedMessage();
+
+        // create the object in the storage manager.
+        this.storageManager.storeMessage(m);
+
+        // lookup the object in the storage manager.
+        final Message obtainedMessage = this.storageManager.lookupMessage(m.getUniqueId());
+        assertEquals(m, obtainedMessage);
+
+        // successfully delete the object.
+        this.storageManager.deleteMessage(m.getUniqueId());
+
+        // verify that the object was deleted.
+        assertNull(this.storageManager.lookupMessage(m.getUniqueId()));
     }
 
     @Test

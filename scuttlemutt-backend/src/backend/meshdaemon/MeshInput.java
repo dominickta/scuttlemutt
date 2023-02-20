@@ -4,6 +4,7 @@ import java.security.PrivateKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 
 import javax.crypto.SecretKey;
@@ -13,6 +14,7 @@ import storagemanager.StorageManager;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 import types.packet.BarkPacket;
 
 /**
@@ -24,7 +26,6 @@ public class MeshInput implements Runnable {
     private final StorageManager storage;
     private final BlockingQueue<Bark> queue;
     private final PrivateKey myPrivateKey;
-    private final SecretKey encryptionKey;
     private final Set<Bark> seenBarks;
 
     /**
@@ -38,12 +39,11 @@ public class MeshInput implements Runnable {
      */
     public MeshInput(final IOManager ioManager, final BlockingQueue<Bark> queue,
             final StorageManager storage, final PrivateKey myPrivateKey,
-            final SecretKey encryptionKey, final Set<Bark> seenBarks) {
+            final Set<Bark> seenBarks) {
         this.ioManager = ioManager;
         this.queue = queue;
         this.storage = storage;
         this.myPrivateKey = myPrivateKey;
-        this.encryptionKey = encryptionKey;
         this.seenBarks = seenBarks;
     }
 
@@ -68,23 +68,41 @@ public class MeshInput implements Runnable {
             }
 
             if (bark.isForMe(this.myPrivateKey)) {
-                // this is for us, store for later
-                storage.storeBark(bark);
+                // this is for us! let's create a plaintext Message object from
+                // the Bark and store it for later usage.
+                storage.storeBark(bark); // TODO @John: can i delete this line?
 
-                // update Conversation object stored in the StorageManager to include the Bark.
-                DawgIdentifier sender = bark.getSender(this.myPrivateKey, this.encryptionKey);
-                Conversation c = this.storage.lookupConversation(sender.getUUID());
+                // first, let's extract the contents of the message and the
+                // ordering number from
+                final UUID senderId = bark.getSenderUUID(myPrivateKey);
+                final List<SecretKey> secretKeys = this.storage.lookupSecretKeysForUUID(senderId);
+                final DawgIdentifier sender = bark.getSender(this.myPrivateKey, secretKeys);
+                final String messageContents = bark.getContents(this.myPrivateKey, secretKeys);
+
+                // if we were unable to successfully decrypt the Bark, toss it out.
+                if (messageContents != null) {
+                    continue;
+                }
+
+                // obtain the message ordering num from the Bark.
+                final Long messageOrderingNum = bark.getOrderNum(this.myPrivateKey, secretKeys);
+
+                // create + store the Message object.
+                final Message message = new Message(messageContents, messageOrderingNum);
+                storage.storeMessage(message);
+
+                // update the Conversation stored in the StorageManager to include the Message.
+                Conversation c = this.storage.lookupConversation(senderId);
                 if (c == null) {
                     // if we've never initiated a conversation with the sender before, create +
                     // store a new Conversation.
-                    c = new Conversation(sender, Collections.singletonList(bark.getUniqueId()));
+                    c = new Conversation(sender, Collections.singletonList(message.getUniqueId()));
                     this.storage.storeConversation(c);
                 } else {
                     // update existing obj
-                    c.storeBarkUUID(bark.getUniqueId());
+                    c.storeMessageUUID(message.getUniqueId());
                     this.storage.storeConversation(c);
                 }
-
             } else {
                 this.queue.add(bark); // put it on output buffer
             }

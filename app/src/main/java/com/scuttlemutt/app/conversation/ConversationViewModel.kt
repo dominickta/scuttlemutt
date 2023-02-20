@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import types.Bark
 import types.DawgIdentifier
+import types.Message
 import java.util.*
 import javax.crypto.SecretKey
 
@@ -100,19 +101,18 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
                     Log.d(TAG, "Set empty barks for: $contactName")
                 } else {
                     var msgs: MutableList<FrontEndMessage> = mutableListOf()
-                    val barks : List<Bark>? = mutt.getBarksForConversation(conv)
-                    val key : SecretKey = mutt.getSecretKey(conv.userList.get(0))
-                    if (barks == null) {
+                    val backendMsgs : MutableList<Message>? = mutt.getMessagesForConversation(conv)
+                    if (backendMsgs == null) {
                         _currUiState.postValue(ConversationUiState(contactName, listOf()))
                         Log.d(TAG, "Set empty barks for: $contactName")
                     } else {
-                        for (bark in barks) {
-                            Log.d(TAG, "Bark is $bark")
+                        for (m in backendMsgs) {
+                            Log.d(TAG, "Message is $m")
                             msgs.add(0,
                                 FrontEndMessage(
-                                    author = bark.sender.userContact,
-                                    content = bark.getContents(key),
-                                    timestamp = bark.orderNum.toString()
+                                    author = conv.userList.get(0).userContact,
+                                    content = m.plaintextMessage,
+                                    timestamp = m.orderNum.toString()
                                 )
                             )
                         }

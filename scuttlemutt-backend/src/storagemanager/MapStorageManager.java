@@ -16,6 +16,7 @@ import com.google.gson.GsonBuilder;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 
 /**
  * Implements the StorageManager interface using a Map-based backend.
@@ -29,21 +30,24 @@ public class MapStorageManager implements StorageManager {
     private static final Gson GSON = new GsonBuilder().setLenient().create();
 
     // maps
-    private final Map<UUID, String> barkMap;
-    private final Map<String, PublicKey> deviceMap;
-    private final Map<UUID, DawgIdentifier> dawgIdentifierMap;
-    private final Map<UUID, String> conversationMap;
-    private final Map<UUID, SecretKey> secretKeyMap;
-    private final Map<UUID, PublicKey> publicKeyMap;
     private PrivateKey privateKey;
+    private final Map<UUID, String> barkMap;
+    private final Map<UUID, Message> messageMap;
+    private final Map<String, PublicKey> deviceMap;
+    private final Map<UUID, PublicKey> publicKeyMap;
+    private final Map<UUID, String> conversationMap;
+    private final Map<UUID, List<SecretKey>> secretKeysMap;
+    private final Map<UUID, DawgIdentifier> dawgIdentifierMap;
 
     public MapStorageManager() {
         this.barkMap = new HashMap<>();
+        this.messageMap = new HashMap<>();
         this.deviceMap = new HashMap<>();
         this.dawgIdentifierMap = new HashMap<>();
         this.conversationMap = new HashMap<>();
-        this.secretKeyMap = new HashMap<>();
+        this.secretKeysMap = new HashMap<>();
         this.publicKeyMap = new HashMap<>();
+        this.privateKey = null;
     }
 
     @Override
@@ -75,8 +79,8 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public SecretKey lookupSecretKeyForUUID(final UUID id) {
-        return this.secretKeyMap.getOrDefault(id, null);
+    public List<SecretKey> lookupSecretKeysForUUID(final UUID id) {
+        return this.secretKeysMap.getOrDefault(id, null);
     }
 
     @Override
@@ -87,6 +91,11 @@ public class MapStorageManager implements StorageManager {
     @Override
     public PrivateKey lookupPrivateKey() {
         return this.privateKey;
+    }
+
+    @Override
+    public Message lookupMessage(UUID id) {
+        return this.messageMap.getOrDefault(id, null);
     }
 
     @Override
@@ -111,7 +120,13 @@ public class MapStorageManager implements StorageManager {
 
     @Override
     public void storeSecretKeyForUUID(final UUID id, final SecretKey key) {
-        this.secretKeyMap.put(id, key);
+        // see if the obtained keyList is at the maximum size. if it is, remove the
+        // oldest entry at index == 0.
+        List<SecretKey> keyList = this.secretKeysMap.get(id);
+        if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
+            keyList.remove(0);
+        }
+        keyList.add(key);
     }
 
     @Override
@@ -122,6 +137,11 @@ public class MapStorageManager implements StorageManager {
     @Override
     public void storePrivateKey(PrivateKey privateKey) {
         this.privateKey = privateKey;
+    }
+
+    @Override
+    public void storeMessage(final Message message) {
+        this.messageMap.put(message.getUniqueId(), message);
     }
 
     @Override
@@ -154,8 +174,8 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public SecretKey deleteSecretKeyForUUID(final UUID id) {
-        return this.secretKeyMap.remove(id);
+    public List<SecretKey> deleteKeysForUUID(final UUID id) {
+        return this.secretKeysMap.remove(id);
     }
 
     @Override
@@ -168,6 +188,11 @@ public class MapStorageManager implements StorageManager {
         PrivateKey privateKey = this.privateKey;
         this.privateKey = null;
         return privateKey;
+    }
+
+    @Override
+    public Message deleteMessage(UUID messageUuid) {
+        return this.messageMap.remove(messageUuid);
     }
 
     @Override

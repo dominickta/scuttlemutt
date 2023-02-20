@@ -119,11 +119,18 @@ public class Crypto {
     /**
      * Decrypts the byte array payload with the given key.
      * 
+<<<<<<< HEAD
      * @param payload the byte array to decrypt
      * @param key     the key to decrypt with
      * @param keyType the type of the Key. Use the String constants defined in this
      *                class for this param.
      * @return the decrypted (plaintext) byte array, or empty on error
+=======
+     * @param payload    the byte array to decrypt
+     * @param key the key to decrypt with
+     * @param keyType the type of the Key.  Use the String constants defined in this class for this param.
+     * @return the decrypted (plaintext) byte array, or null on error
+>>>>>>> main
      */
     public static byte[] decrypt(final byte[] payload, final Key key, final String keyType) {
         byte[] result = {};
@@ -135,24 +142,29 @@ public class Crypto {
             // Thrown when a particular cryptographic algorithm is requested
             // but is not available in the environment. (Never: RSA is common)
             e.printStackTrace();
+            return null;
         } catch (NoSuchPaddingException e) {
             // Thrown when a particular padding mechanism is requested but is
             // not available in the environment. (Never: don't request padding?)
             e.printStackTrace();
+            return null;
         } catch (InvalidKeyException e) {
             // Invalid Keys: invalid encoding, wrong length, uninitialized, etc.
             // This could happen, but shouldn't.
             e.printStackTrace();
+            return null;
         } catch (IllegalBlockSizeException e) {
             // Thrown when the length of data provided to a block cipher is
             // incorrect, i.e., does not match the block size of the cipher.
             // I don't know if will happen, I think it's automatic.
             e.printStackTrace();
+            return null;
         } catch (BadPaddingException e) {
             // Thrown when a particular padding mechanism is expected for the
             // input data but the data is not padded properly.
             // I don't know if will happen, I think it's automatic.
             e.printStackTrace();
+            return null;
         }
         return result;
     }

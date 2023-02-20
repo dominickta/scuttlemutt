@@ -1,8 +1,11 @@
 package types;
 
+import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
@@ -17,14 +20,11 @@ import crypto.Crypto;
 /**
  * Represents a "bark" (message) sent by the user.
  * 
- * The Bark stores the following bytes:
- * [ ~16 byte UUID ][ ~32 byte header ][ ~1000 byte payload ]
- * 
- * The Bark itself is not encrypted, the Bark’s contents are encrypted — the
- * header can be decrypted with each device’s public key, and the contents can
- * be decrypted by using the AES key associated with the sender inside the
- * header, which you can only get at if you can decrypt the header. Only the
- * sender and recipient know the AES key they use to send messages.
+ * All of the bark fields are encrypted. The header is the senders UUID
+ * encrypted
+ * with the public keyof the receiver. Only the receiver can decrypt it to
+ * figure
+ * out which symmetric keys to use for
  */
 public class Bark {
     private static final Gson GSON = new GsonBuilder().setLenient().create();
@@ -75,18 +75,14 @@ public class Bark {
         contents += RandomStringUtils.randomAlphanumeric(fillerCount);
 
         // encrypt the uuid with an asymmetric key (small size limit)
-        this.encryptedHeader = Crypto.encrypt(GSON.toJson(sender.getUUID()).getBytes(), receiverPublicKey,
-                Crypto.ASYMMETRIC_KEY_TYPE);
+        this.encryptedHeader = encrypt(sender.getUUID(), receiverPublicKey);
 
         // encrypt the rest with the associated symmetric key
-        this.encryptedSender = Crypto.encrypt(GSON.toJson(sender).getBytes(), encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
-        this.encryptedReceiver = Crypto.encrypt(GSON.toJson(receiver).getBytes(), encryptionKey,
-                Crypto.SYMMETRIC_KEY_TYPE);
-        this.encryptedOrderNum = Crypto.encrypt(GSON.toJson(orderNum).getBytes(), encryptionKey,
-                Crypto.SYMMETRIC_KEY_TYPE);
-        this.encryptedFillerCount = Crypto.encrypt(GSON.toJson(fillerCount).getBytes(), encryptionKey,
-                Crypto.SYMMETRIC_KEY_TYPE);
-        this.encryptedContents = Crypto.encrypt(contents.getBytes(), encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
+        this.encryptedSender = encrypt(sender, encryptionKey);
+        this.encryptedReceiver = encrypt(receiver, encryptionKey);
+        this.encryptedOrderNum = encrypt(orderNum, encryptionKey);
+        this.encryptedFillerCount = encrypt(fillerCount, encryptionKey);
+        this.encryptedContents = encrypt(contents, encryptionKey);
     }
 
     /**
@@ -115,9 +111,7 @@ public class Bark {
      */
     public boolean isForMe(final PrivateKey myPrivateKey) {
         try {
-            byte[] bytes = Crypto.decrypt(this.encryptedHeader, myPrivateKey, Crypto.ASYMMETRIC_KEY_TYPE);
-            UUID id = GSON.fromJson(new String(bytes), UUID.class);
-            return id != null;
+            return getSenderUUID(myPrivateKey) != null;
         } catch (Exception e) {
             // TODO: handle exception
             return false;
@@ -125,64 +119,76 @@ public class Bark {
     }
 
     /**
+     * Returns the uuid of the sender
+     * 
+     * @param myPrivateKey the private key of the current user
+     * @return the uuid of the sender
+     */
+    public UUID getSenderUUID(final PrivateKey myPrivateKey) {
+        String keyType = Crypto.ASYMMETRIC_KEY_TYPE;
+        byte[] bytes = Crypto.decrypt(this.encryptedHeader, myPrivateKey, keyType);
+        return GSON.fromJson(new String(bytes), UUID.class);
+    }
+
+    /**
      * Returns the contents of the Bark after decrypting them using the passed key.
      * 
-     * @param encryptionKey The key to decrypt the Bark's contents with.
-     * @return The decrypted contents of the Bark or null if you dont have
-     *         permission.
+     * @param myPrivateKey      The current user's private key.
+     * @param encryptionKeyList A List<SecretKey> to try to decrypt the Bark with.
+     * @return An Optional containing the decrypted contents of the Bark. If the
+     *         Bark was unable to be successfully decrypted, return
+     *         Optional.empty().
      */
-    public String getContents(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
+    public String getContents(final PrivateKey myPrivateKey, final List<SecretKey> encryptionKeyList) {
         if (!isForMe(myPrivateKey)) {
             return null;
         }
 
-        // decrypt the Bark's contents.
-        final byte[] rawBytes = Crypto.decrypt(this.encryptedContents, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
-        final String decryptedContents = new String(rawBytes);
+        Optional<String> contents = decrypt(encryptionKeyList, this.encryptedContents, String.class);
+        if (contents.isEmpty()) {
+            return null;
+        }
+        String content = contents.get();
 
         // return the decrypted contents with the filler chars trimmed off.
-        int fillerCount = getFillerCount(myPrivateKey, encryptionKey);
-        return decryptedContents.substring(0, decryptedContents.length() - fillerCount);
+        int fillerCount = getFillerCount(myPrivateKey, encryptionKeyList);
+        return content.substring(0, content.length() - fillerCount);
     }
 
-    public DawgIdentifier getSender(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
+    public DawgIdentifier getSender(final PrivateKey myPrivateKey, final List<SecretKey> encryptionKeyList) {
         if (!isForMe(myPrivateKey)) {
             return null;
         }
 
-        // decrypt the Bark's contents.
-        final byte[] rawBytes = Crypto.decrypt(this.encryptedSender, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
-        return GSON.fromJson(new String(rawBytes), DawgIdentifier.class);
+        Optional<DawgIdentifier> contents = decrypt(encryptionKeyList, this.encryptedSender, DawgIdentifier.class);
+        return contents.orElse(null);
     }
 
-    public DawgIdentifier getReceiver(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
+    public DawgIdentifier getReceiver(final PrivateKey myPrivateKey, final List<SecretKey> encryptionKeyList) {
         if (!isForMe(myPrivateKey)) {
             return null;
         }
 
-        // decrypt the Bark's contents.
-        final byte[] rawBytes = Crypto.decrypt(this.encryptedReceiver, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
-        return GSON.fromJson(new String(rawBytes), DawgIdentifier.class);
+        Optional<DawgIdentifier> contents = decrypt(encryptionKeyList, this.encryptedReceiver, DawgIdentifier.class);
+        return contents.orElse(null);
     }
 
-    public Long getOrderNum(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
+    public Long getOrderNum(final PrivateKey myPrivateKey, final List<SecretKey> encryptionKeyList) {
         if (!isForMe(myPrivateKey)) {
             return null;
         }
 
-        // decrypt the Bark's contents.
-        final byte[] rawBytes = Crypto.decrypt(this.encryptedOrderNum, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
-        return GSON.fromJson(new String(rawBytes), Long.class);
+        Optional<Long> contents = decrypt(encryptionKeyList, this.encryptedOrderNum, Long.class);
+        return contents.orElse(null);
     }
 
-    public Integer getFillerCount(final PrivateKey myPrivateKey, final SecretKey encryptionKey) {
+    public Integer getFillerCount(final PrivateKey myPrivateKey, final List<SecretKey> encryptionKeyList) {
         if (!isForMe(myPrivateKey)) {
             return null;
         }
 
-        // decrypt the Bark's contents.
-        final byte[] rawBytes = Crypto.decrypt(this.encryptedFillerCount, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
-        return GSON.fromJson(new String(rawBytes), Integer.class);
+        Optional<Integer> contents = decrypt(encryptionKeyList, this.encryptedFillerCount, Integer.class);
+        return contents.orElse(null);
     }
 
     public UUID getUniqueId() {
@@ -226,5 +232,54 @@ public class Bark {
         return "encryptedContents:  " + Arrays.toString(this.encryptedContents) + "encryptedHeader:  "
                 + Arrays.toString(this.encryptedHeader) + "\tuniqueId:  "
                 + this.uniqueId.toString();
+    }
+
+    /**
+     * A simple helper function to encrypt an object to a JSON string as bytes
+     * 
+     * @param obj the object to encrypt
+     * @param key the key to encrypt the object with
+     * @return the bytes of the encrypted object
+     */
+    private byte[] encrypt(Object obj, Key key) {
+        String keyType;
+        if (key instanceof PublicKey) {
+            keyType = Crypto.ASYMMETRIC_KEY_TYPE;
+        } else {
+            keyType = Crypto.SYMMETRIC_KEY_TYPE;
+        }
+        return Crypto.encrypt(GSON.toJson(obj).getBytes(), key, keyType);
+    }
+
+    /**
+     * Try to decrypt the Bark's contents using the passed List of Keys. Since it is
+     * most likely that the most recent key is the one used for encryption, we
+     * iterate backwards through the List.
+     * 
+     * @param <T>        The type of object to return if successful
+     * @param keys       the list of secret keys to try
+     * @param ciphertext the array of bytes to try decrypting
+     * @param asType     the class of the type of the object to return
+     * @return either an instance of the decrypted object or empty
+     */
+    private <T> Optional<T> decrypt(final List<SecretKey> keys, byte[] ciphertext, Class<T> asType) {
+        byte[] decryptedMessageBytes = new byte[0];
+        for (int i = keys.size() - 1; i >= 0; i--) {
+            final SecretKey currentKey = keys.get(i);
+            decryptedMessageBytes = Crypto.decrypt(ciphertext, currentKey, Crypto.SYMMETRIC_KEY_TYPE);
+
+            // if bytes is not null, decryption was successful: terminate
+            if (decryptedMessageBytes != null) {
+                break;
+            }
+        }
+
+        // if we were never able to successfully decrypt the Bark, return empty
+        if (decryptedMessageBytes == null || decryptedMessageBytes.length == 0) {
+            return Optional.empty();
+        }
+
+        final String decryptedContents = new String(decryptedMessageBytes);
+        return Optional.of(GSON.fromJson(decryptedContents, asType));
     }
 }

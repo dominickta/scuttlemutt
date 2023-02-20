@@ -17,23 +17,24 @@ import com.google.gson.GsonBuilder;
 public class Conversation {
     private static final Gson GSON = new GsonBuilder().setLenient().create();
 
-    // class variables
-    private final DawgIdentifier otherPerson; // whom we are talking to
-    private final List<UUID> barkList; // a List of the UUIDs of the Barks associated with the conversation.
-                                       // The ordering of the list == the ordering of the barks.
-
+    // Whom we are talking to.
+    private final DawgIdentifier otherPerson;
+    
+    // A List of the UUIDs of the Messages associated with the conversation.
+    // The ordering of the list == the ordering of the Messages.
+    private final List<UUID> messageList;
+    
     /**
      * Constructs a Conversation object.
      * 
      * @param otherPerson The DawgIdentifier of the other person we are talking to.
-     * @param barkList    A List containing the UUIDs of the Barks in the
-     *                    Conversation.
+     * @param messageList  A List containing the UUIDs of the Messages in the Conversation.
      */
-    public Conversation(final DawgIdentifier otherPerson, final List<UUID> barkList) {
+    public Conversation(final DawgIdentifier otherPerson, final List<UUID> messageList) {
         this.otherPerson = otherPerson;
-        this.barkList = new ArrayList<UUID>(barkList);
+        this.messageList = new ArrayList<UUID>(messageList);
     }
-
+    
     /**
      * Second constructor for when no Barks exist yet.
      * 
@@ -47,23 +48,22 @@ public class Conversation {
         return this.otherPerson;
     }
 
-    public List<UUID> getBarkUUIDList() {
-        return List.copyOf(barkList);
+    public List<UUID> getMessageUUIDList() {
+        return List.copyOf(messageList);
     }
 
     /**
-     * Adds the passed UUID of a Bark to the List of stored Bark UUIDs.
+     * Adds the passed UUID of a Message to the List of stored Message UUIDs.
      *
-     * NOTE: The database operates via storing serialized representations of the
-     * Conversation object. In order to propagate any new Bark UUIDs to the
-     * database, we _must_ re-serialize the Conversation objects + overwrite the
-     * Conversation object in the database. Simply updating the object + trusting
-     * storage-by-reference does _not_ work here.
+     * NOTE:  The database operates via storing serialized representations of the Conversation object.  In order to
+     * propagate any new Message UUIDs to the database, we _must_ re-serialize the Conversation objects + overwrite the
+     * Conversation object in the database.  Simply updating the object + trusting storage-by-reference does _not_ work
+     * here.
      *
-     * @param barkUUID The UUID being stored.
+     * @param messageUUID  The UUID being stored.
      */
-    public void storeBarkUUID(final UUID barkUUID) {
-        this.barkList.add(barkUUID);
+    public void storeMessageUUID(final UUID messageUUID) {
+        this.messageList.add(messageUUID);
     }
 
     /**

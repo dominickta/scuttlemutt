@@ -1,25 +1,123 @@
 package types.serialization;
 
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.SerializationException;
+
+import com.google.common.primitives.Bytes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
 import crypto.Crypto;
 
 public class SerializationUtils {
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
 
-    public static byte[] serializeKey(final Key k) {
-        return Base64.getEncoder().encode(k.getEncoded());
+    // used to indicate key type in serialized String form.
+    private static final byte[] SERIALIZED_SECRETKEY_PREFIX_BYTES = "secretkey:".getBytes();
+    private static final byte[] SERIALIZED_PUBLICKEY_PREFIX_BYTES = "publickey:".getBytes();
+
+    public static String serializeKeyList(final List<Key> keyList) {
+        // create a List to store the JSONs for each serialized Key.
+        final List<String> keyJsonList = new ArrayList<String>();
+
+        // stash the JSONs for the Keys in the List.
+        for (final Key k : keyList) {
+            keyJsonList.add(new String(SerializationUtils.serializeKey(k)));
+        }
+
+        // serialize the keyJsonList and return it.
+        return GSON.toJson(keyJsonList);
     }
 
-    public static SecretKey deserializeSecretKey(final byte[] keyBytes) {
-        final byte[] encodedKey = Base64.getDecoder().decode(keyBytes);
-        return new SecretKeySpec(encodedKey, 0, encodedKey.length, Crypto.SYMMETRIC_KEY_TYPE);
+    public static List<Key> deserializeKeyList(final String serializedKeyList) {
+        // deserialize the serializedKeyList to a List<String>.
+        final Type arrayListStringType = new TypeToken<ArrayList<String>>() {}.getType();
+        final List<String> keyJsonList = GSON.fromJson(serializedKeyList, arrayListStringType);
+
+        // convert the JSONs to Key objects + store them.
+        final List<Key> keyList = new ArrayList<Key>();
+        for (final String json : keyJsonList) {
+            keyList.add(deserializeKey(json.getBytes(StandardCharsets.UTF_8)));
+        }
+
+        // return the Key objects.
+        return keyList;
+    }
+
+    public static byte[] serializeKey(final Key k) {
+        final byte[] encodedBytes = Base64.getEncoder().encode(k.getEncoded());
+
+        // return the encoded bytes prepended with the key type.  this will help with deserialization later.
+        if (k instanceof SecretKey) {
+            return ArrayUtils.addAll(SERIALIZED_SECRETKEY_PREFIX_BYTES, encodedBytes);
+        } else if (k instanceof PublicKey) {
+            return ArrayUtils.addAll(SERIALIZED_PUBLICKEY_PREFIX_BYTES, encodedBytes);
+        }
+
+        // unsupported key type, throw an exception.
+        throw new SerializationException("Tried to serialize an unknown key type!");
+    }
+
+    public static Key deserializeKey(final byte[] serializedBytes) {
+
+        // Figure out the type of the Key serialized in the byte[], reassemble + return the Key.
+
+        // SecretKey type.
+        if (Bytes.indexOf(serializedBytes, SERIALIZED_SECRETKEY_PREFIX_BYTES) != -1) {
+            // trim off the prefix.
+            final byte[] keyBytes = Arrays.copyOfRange(serializedBytes,
+                    SERIALIZED_SECRETKEY_PREFIX_BYTES.length,
+                    serializedBytes.length);
+
+            // get the base64 encoded key.
+            final byte[] encodedKey = Base64.getDecoder().decode(keyBytes);
+
+            // return the SecretKey.
+            return new SecretKeySpec(encodedKey, 0, encodedKey.length, Crypto.SYMMETRIC_KEY_TYPE);
+
+        // PublicKey type.
+        } else if (Bytes.indexOf(serializedBytes, SERIALIZED_PUBLICKEY_PREFIX_BYTES) != -1) {
+            // trim off the prefix.
+            final byte[] keyBytes = Arrays.copyOfRange(serializedBytes,
+                    SERIALIZED_PUBLICKEY_PREFIX_BYTES.length,
+                    serializedBytes.length);
+
+            // get the base64 encoded key.
+            final byte[] encodedKey = Base64.getDecoder().decode(keyBytes);
+
+            // obtain and return the PublicKey.
+            try {
+                final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                final EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedKey);
+                final PublicKey deserializedKey;
+                deserializedKey = keyFactory.generatePublic(publicKeySpec);
+                return deserializedKey;
+            } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+                // if there's an error obtaining the PublicKey spec or the RSA algorithm, an exception occurs.
+                throw new RuntimeException(e);
+            }
+        }
+
+        // if we've reached this point, we were unable to deserialize the provided byte[] as a Key.
+        throw new SerializationException("Tried to deserialize an unknown key type!");
     }
 
     public static PublicKey deserializePublicKey(final byte[] keyBytes) {

@@ -6,7 +6,6 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
@@ -14,9 +13,9 @@ import backend.iomanager.IOManager;
 import backend.meshdaemon.MeshDaemon;
 import crypto.Crypto;
 import storagemanager.StorageManager;
-import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 
 /*
  * This class contains and organizes the content necessary to run the local device's node on the Scuttlemutt network.
@@ -46,7 +45,7 @@ public class Scuttlemutt {
             this.storageManager.storePrivateKey(keys.getPrivate());
             this.storageManager.storePublicKeyForUUID(dawgIdentifier.getUUID(), keys.getPublic());
         }
-        
+
         // keys must be initialized befor the mesh daemon is constructed.
         this.meshDaemon = new MeshDaemon(this.ioManager, this.storageManager, this.dawgIdentifier);
     }
@@ -68,8 +67,8 @@ public class Scuttlemutt {
      * @return the SecretKey used to chat with the device associated with the passed
      *         DawgIdentifier.
      */
-    public SecretKey getSecretKey(final DawgIdentifier otherDeviceId) {
-        return this.storageManager.lookupSecretKeyForUUID(otherDeviceId.getUUID());
+    public List<SecretKey> getSecretKeys(final DawgIdentifier otherDeviceId) {
+        return this.storageManager.lookupSecretKeysForUUID(otherDeviceId.getUUID());
     }
 
     /**
@@ -84,6 +83,35 @@ public class Scuttlemutt {
      */
     public PublicKey getPublicKey() {
         return this.storageManager.lookupPublicKeyForUUID(this.dawgIdentifier.getUUID());
+    }
+
+    /**
+     * Returns the latest SecretKey on record used to chat with the device
+     * associated with the passed DawgIdentifier.
+     *
+     * @param otherDeviceId A DawgIdentifier used to identify the other device.
+     * @return the SecretKey used to chat with the device associated with the passed
+     *         DawgIdentifier.
+     */
+    public SecretKey getLatestSecretKey(final DawgIdentifier otherDeviceId) {
+        // get a List of the most recently known Keys.
+        final List<SecretKey> knownKeys = this.getListOfHistoricalKeys(otherDeviceId);
+
+        // obtain the last (and therefore newest) Key in the List.
+        return knownKeys.get(knownKeys.size() - 1);
+    }
+
+    /**
+     * Returns a List<Key> containing some of the Keys historically known to have
+     * been used to chat with the device associated with the passed DawgIdentifier.
+     *
+     * @param otherDeviceId A DawgIdentifier used to identify the other device.
+     * @return a List<SecretKey> containing some of the Keys historically known to
+     *         have been used to chat with the device associated with the passed
+     *         DawgIdentifier.
+     */
+    public List<SecretKey> getListOfHistoricalKeys(final DawgIdentifier otherDeviceId) {
+        return this.storageManager.lookupSecretKeysForUUID(otherDeviceId.getUUID());
     }
 
     /**
@@ -112,34 +140,20 @@ public class Scuttlemutt {
      * Returns a List<String> containing the messages of the passed Conversation.
      *
      * @param conversation the Conversation whose messages we're obtaining.
-     * @return a List<String> containing the messages of the passed Conversation.
+     * @return a List<Message> containing the messages of the passed Conversation.
      */
-    public List<String> getMessagesForConversation(final Conversation conversation) {
-        // get the encryption key associated with the Conversation.
-        PrivateKey myPrivateKey = getPrivateKey();
-        final UUID otherPersonId = conversation.getOtherPerson().getUUID();
-        final SecretKey decryptionKey = this.storageManager.lookupSecretKeyForUUID(otherPersonId);
-        return getBarksForConversation(conversation).stream().map(b -> b.getContents(myPrivateKey, decryptionKey))
-                .collect(Collectors.toList());
-    }
+    public List<Message> getMessagesForConversation(final Conversation conversation) {
+        final List<Message> messages = new ArrayList<Message>();
+        for (final UUID messageUuid : conversation.getMessageUUIDList()) {
+            final Message m = this.storageManager.lookupMessage(messageUuid);
 
-    /**
-     * Returns a List<Bark> containing the barks of the passed Conversation.
-     *
-     * @param conversation the Conversation whose barks we're obtaining.
-     * @return a List<Bark> containing the barks of the passed Conversation, or
-     *         null.
-     */
-    public List<Bark> getBarksForConversation(final Conversation conversation) {
-        final List<Bark> barks = new ArrayList<Bark>();
-        for (final UUID uuid : conversation.getBarkUUIDList()) {
-            final Bark bark = this.storageManager.lookupBark(uuid);
-            if (bark == null) {
-                return null;
+            // we only store a message if one is found, otherwise we can just
+            // fail silently since there's no way to get a message we don't have.
+            if (m != null) {
+                messages.add(m);
             }
-            barks.add(bark);
         }
-        return barks;
+        return messages;
     }
 
     public List<DawgIdentifier> getAllContacts() {

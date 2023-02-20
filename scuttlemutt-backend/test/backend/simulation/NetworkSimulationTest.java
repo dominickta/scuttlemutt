@@ -85,8 +85,8 @@ public class NetworkSimulationTest {
         final String destinationLabel = deviceLabels.get(1);
         final Scuttlemutt destinationDevice = simulation.getScuttlemutt(destinationLabel);
         final DawgIdentifier dstDawgId = destinationDevice.getDawgIdentifier();
-        final SecretKey key = simulation.getStorageManager(destinationLabel)
-                .lookupSecretKeyForUUID(sender.getDawgIdentifier().getUUID());
+        final List<SecretKey> key = simulation.getStorageManager(destinationLabel)
+                .lookupSecretKeysForUUID(sender.getDawgIdentifier().getUUID());
 
         // send the message.
         sender.sendMessage(msg, dstDawgId);
