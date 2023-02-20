@@ -4,6 +4,7 @@ import backend.scuttlemutt.Scuttlemutt;
 import org.apache.commons.lang3.StringUtils;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -220,7 +221,7 @@ public class NetworkSimulationCLI {
             // lookup the number of msgs in the Conversation.
             // TODO:  Replace this with code which actually looks up full msgs instead of Barks.
             //   (if we don't do this though, the demo should still work given a short enough msg)
-            final int numMsgs = c.getBarkUUIDList().size();
+            final int numMsgs = c.getMessageUUIDList().size();
 
             // print out info about the Conversation.
             System.out.println("deviceIds:  " + deviceIdListString + "\tmsg count:  " + numMsgs);
@@ -231,11 +232,11 @@ public class NetworkSimulationCLI {
 
     private static void printMessages(final Conversation conversation) {
         // obtain the msgs.
-        final List<String> msgs = currentDevice.getMessagesForConversation(conversation);
+        final List<Message> msgs = currentDevice.getMessagesForConversation(conversation);
 
         // print the msgs out.
-        for (final String m : msgs) {
-            System.out.println(m);
+        for (final Message m : msgs) {
+            System.out.println(m.getPlaintextMessage());
         }
     }
 

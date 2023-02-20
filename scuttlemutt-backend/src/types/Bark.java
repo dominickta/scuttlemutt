@@ -4,7 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.RandomStringUtils;
 
+import java.security.InvalidKeyException;
+import java.security.Key;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
@@ -85,20 +89,41 @@ public class Bark {
 
     /**
      * Returns the contents of the Bark after decrypting them using the passed key.
-     * @param encryptionKey  The key to decrypt the Bark's contents with.
-     * @return  The decrypted contents of the Bark.
+     * @param encryptionKeyList  A List<Key> of Key objects to try to decrypt the Bark's contents with.
+     * @return  An Optional containing the decrypted contents of the Bark.  If the Bark was unable
+     *          to be successfully decrypted, return Optional.empty().
      */
-    public String getContents(final SecretKey encryptionKey) {
-        // decrypt the Bark's contents.
-        final String decryptedContents = new String(Crypto.decrypt(this.encryptedContents, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE));
-        System.out.println("DECRYPTED CONTENTS " + decryptedContents);
-        // return the decrypted contents with the filler chars trimmed off.
-        if(decryptedContents.length() > this.fillerCount){
-            return decryptedContents.substring(0, decryptedContents.length() - this.fillerCount);
-        }else{
-            return "";
+    public Optional<String> getContents(final List<Key> encryptionKeyList) {
+        // try to decrypt the Bark's contents using the passed List of Keys.
+        // since it is most likely that the most recent key is the one used for encryption, we iterate
+        // backwards through the List.
+        byte[] decryptedMessageBytes = new byte[0];
+        for (int i = encryptionKeyList.size() - 1; i >= 0; i--) {
+            final Key currentKey = encryptionKeyList.get(i);
+
+            // if the currentKey is not a SymmetricKey for some reason, throw an exception.
+            if (!(currentKey instanceof SecretKey)) {
+                throw new RuntimeException("Attempted to decrypt Bark contents with a Key type which is not a SecretKey.");
+            }
+
+            // attempt decryption.
+            decryptedMessageBytes = Crypto.decrypt(this.encryptedContents, currentKey, Crypto.SYMMETRIC_KEY_TYPE);
+
+            // if decryptedMessageBytes is not null, the decryption was successful and we should terminate the loop.
+            if (decryptedMessageBytes != null) {
+                break;
+            }
         }
 
+        // if we were never able to successfully decrypt the Bark, return Optional.empty().
+        if (decryptedMessageBytes == null || decryptedMessageBytes.length == 0) {
+            return Optional.empty();
+        }
+
+        final String decryptedContents = new String(decryptedMessageBytes);
+
+        // return the decrypted contents with the filler chars trimmed off.
+        return Optional.of(decryptedContents.substring(0, decryptedContents.length() - this.fillerCount));
     }
 
     public DawgIdentifier getSender() {

@@ -4,20 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.PublicKey;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import crypto.Crypto;
-
-import javax.crypto.SecretKey;
 
 public class ConversationTest {
     // test variables
@@ -81,16 +75,16 @@ public class ConversationTest {
     @Test
     public void testBarkListContructor_storesBarkUUIDs() {
         // construct a List of Barks.
-        final Supplier<Bark> barkSupplier = TestUtils::generateRandomizedBark;
-        final List<UUID> barkUUIDs = Stream.generate(barkSupplier)
-                .map(Bark::getUniqueId).limit(10)
+        final Supplier<Message> messageSupplier = TestUtils::generateRandomizedMessage;
+        final List<UUID> messageUuids = Stream.generate(messageSupplier)
+                .map(Message::getUniqueId).limit(10)
                 .collect(Collectors.toList());
 
         // construct the Conversation object.
-        final Conversation conversationWithBarks = new Conversation(userList1, barkUUIDs);
+        final Conversation conversationWithBarks = new Conversation(userList1, messageUuids);
 
         // verify that the Bark UUIDs were successfully stored in the Conversation.
-        assertEquals(barkUUIDs, conversationWithBarks.getBarkUUIDList());
+        assertEquals(messageUuids, conversationWithBarks.getMessageUUIDList());
     }
 
     @Test
@@ -99,13 +93,13 @@ public class ConversationTest {
         final Conversation c = new Conversation((userList1));
 
         // create a new Bark.
-        final Bark b = TestUtils.generateRandomizedBark();
+        final Message m = TestUtils.generateRandomizedMessage();
 
         // store a new Bark in the Conversation object.
-        c.storeBarkUUID(b.getUniqueId());
+        c.storeMessageUUID(m.getUniqueId());
 
         // assert that the Bark was successfully stored.
-        assertTrue(c.getBarkUUIDList().contains(b.getUniqueId()));
+        assertTrue(c.getMessageUUIDList().contains(m.getUniqueId()));
     }
 
 }
