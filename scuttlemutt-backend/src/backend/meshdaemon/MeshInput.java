@@ -3,12 +3,15 @@ package backend.meshdaemon;
 import backend.iomanager.IOManager;
 import storagemanager.StorageManager;
 import types.Bark;
+import types.Message;
 import types.packet.BarkPacket;
 import types.Conversation;
 import types.DawgIdentifier;
 
+import java.security.Key;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
@@ -64,19 +67,37 @@ public class MeshInput implements Runnable {
             }
 
             if (this.currentUser.equals(bark.getReceiver())) {
-                // this is for us, store for later
-                storage.storeBark(bark);
+                // this is for us!  let's create a plaintext Message object from the Bark + store it
+                // for later usage.
 
-                // update the Conversation object stored in the StorageManager to include the Bark.
-                Conversation c = this.storage.lookupConversation(Collections.singletonList(bark.getSender().getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
+                // first, let's extract the contents of the message + the ordering number from the Bark.
+                // TODO:  @Justin you may need to modify this section to obtain the ordering number using pubkeys.
+                final List<Key> messageContentsKeys = this.storage.lookupKeysForDawgIdentifier(bark.getSender().getUniqueId());
+                final Optional<String> messageContents = bark.getContents(messageContentsKeys);
+
+                // if we were unable to successfully decrypt the Bark, toss it out.
+                if (!messageContents.isPresent()) {
+                    continue;
+                }
+
+                // obtain the message ordering num from the Bark.
+                // TODO:  @Justin you may need to modify this section to obtain the ordering number using pubkeys.
+                final Long messageOrderingNum = bark.getOrderNum();
+
+                // create + store the Message object.
+                final Message message = new Message(messageContents.get(), messageOrderingNum, bark.getSender());
+                storage.storeMessage(message);
+
+                // update the Conversation object stored in the StorageManager to include the Message.
+                Conversation c = this.storage.lookupConversation(Collections.singletonList(bark.getSender().getUniqueId()));
                 if (c == null) {
                     // if we've never initiated a conversation with the sender before, create + store a new Conversation.
                     c = new Conversation(Collections.singletonList(bark.getSender()),
-                            Collections.singletonList(bark.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.
+                            Collections.singletonList(message.getUniqueId()));
                     this.storage.storeConversation(c);
                 } else {
                     // update existing obj
-                    c.storeBarkUUID(bark.getUniqueId());
+                    c.storeMessageUUID(bark.getUniqueId());
                     this.storage.storeConversation(c);
                 }
 

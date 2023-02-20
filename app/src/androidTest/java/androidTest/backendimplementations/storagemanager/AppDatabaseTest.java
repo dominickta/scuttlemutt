@@ -20,6 +20,10 @@ import com.scuttlemutt.app.backendimplementations.storagemanager.conversation.Co
 import com.scuttlemutt.app.backendimplementations.storagemanager.conversation.ConversationEntry;
 import com.scuttlemutt.app.backendimplementations.storagemanager.dawgidentifier.DawgIdentifierDao;
 import com.scuttlemutt.app.backendimplementations.storagemanager.dawgidentifier.DawgIdentifierEntry;
+import com.scuttlemutt.app.backendimplementations.storagemanager.key.KeyDao;
+import com.scuttlemutt.app.backendimplementations.storagemanager.key.KeyEntry;
+import com.scuttlemutt.app.backendimplementations.storagemanager.message.MessageDao;
+import com.scuttlemutt.app.backendimplementations.storagemanager.message.MessageEntry;
 
 import org.junit.After;
 import org.junit.Before;
@@ -27,11 +31,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.security.Key;
+import java.util.Collections;
 import java.util.List;
 
+import crypto.Crypto;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 import types.TestUtils;
 
 /**
@@ -58,6 +66,8 @@ public class AppDatabaseTest {
     BarkDao barkDao;
     ConversationDao conversationDao;
     DawgIdentifierDao dawgIdentifierDao;
+    KeyDao keyDao;
+    MessageDao messageDao;
 
     @Before
     public void setUp() {
@@ -69,6 +79,8 @@ public class AppDatabaseTest {
         this.barkDao = this.appDb.barkDao();
         this.conversationDao = this.appDb.conversationDao();
         this.dawgIdentifierDao = this.appDb.dawgIdentifierDao();
+        this.keyDao = this.appDb.keyDao();
+        this.messageDao = this.appDb.messageDao();
     }
 
     @After
@@ -155,6 +167,59 @@ public class AppDatabaseTest {
 
         // assert that the entry was deleted.
         assertNull(this.dawgIdentifierDao.findByUuid(de.uuid));
+    }
+
+    @Test
+    public void testKeyDaoLifecycle_insertEntry_findEntry_deleteEntry() {
+        // create the KeyEntry + DawgIdentifier + Key objects used for testing.
+        final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
+        final Key k = Crypto.DUMMY_SECRETKEY;
+        final KeyEntry ke = new KeyEntry(d.getUniqueId(), Collections.singletonList(k));
+
+        // insert the entry into the database.
+        this.keyDao.insertKeyEntry(ke);
+
+        // allow request to complete.
+        TestUtils.sleepOneSecond();
+
+        // lookup the entry + verify the returned value matches what we entered.
+        final KeyEntry obtainedEntry = this.keyDao.findByUuid(ke.uuid);
+        assertEquals(ke, obtainedEntry);
+
+        // delete the entry from the database.
+        this.keyDao.deleteKeyEntry(ke);
+
+        // allow request to complete.
+        TestUtils.sleepOneSecond();
+
+        // assert that the entry was deleted.
+        assertNull(this.keyDao.findByUuid(ke.uuid));
+    }
+
+    @Test
+    public void testMessageDaoLifecycle_insertEntry_findEntry_deleteEntry() {
+        // create the MessageEntry object used for testing.
+        final Message m = TestUtils.generateRandomizedMessage();
+        final MessageEntry me = new MessageEntry(m);
+
+        // insert the entry into the database.
+        this.messageDao.insertMessageEntry(me);
+
+        // allow request to complete.
+        TestUtils.sleepOneSecond();
+
+        // lookup the entry + verify the returned value matches what we entered.
+        final MessageEntry obtainedEntry = this.messageDao.findByUuid(me.uuid);
+        assertEquals(me, obtainedEntry);
+
+        // delete the entry from the database.
+        this.messageDao.deleteMessageEntry(me);
+
+        // allow request to complete.
+        TestUtils.sleepOneSecond();
+
+        // assert that the entry was deleted.
+        assertNull(this.conversationDao.findByUuidList(me.uuid));
     }
 
     @Test

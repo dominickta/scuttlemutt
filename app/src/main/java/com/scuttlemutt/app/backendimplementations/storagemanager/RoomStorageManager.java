@@ -6,17 +6,19 @@ import com.scuttlemutt.app.backendimplementations.storagemanager.bark.BarkEntry;
 import com.scuttlemutt.app.backendimplementations.storagemanager.conversation.ConversationEntry;
 import com.scuttlemutt.app.backendimplementations.storagemanager.dawgidentifier.DawgIdentifierEntry;
 import com.scuttlemutt.app.backendimplementations.storagemanager.key.KeyEntry;
+import com.scuttlemutt.app.backendimplementations.storagemanager.message.MessageEntry;
 
+import java.security.Key;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import javax.crypto.SecretKey;
 
 import storagemanager.StorageManager;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 
 /**
  * StorageManager class which interfaces with Android's Room DB for a backend.
@@ -58,12 +60,21 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
-    public SecretKey lookupKeyForDawgIdentifier(UUID dawgIdentifierUuid) {
+    public List<Key> lookupKeysForDawgIdentifier(UUID dawgIdentifierUuid) {
         // lookup the KeyEntry.
         final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
 
         // return the key if it was found.  otherwise, return null.
-        return ke != null ? ke.getKey() : null;
+        return ke != null ? ke.getKeys() : null;
+    }
+
+    @Override
+    public Message lookupMessage(UUID messageUuid) {
+        // lookup the MessageEntry.
+        final MessageEntry me = this.appDb.messageDao().findByUuid(messageUuid.toString());
+
+        // return the Message if a MessageEntry was found.  otherwise, return null.
+        return me != null ? me.toMessage() : null;
     }
 
     @Override
@@ -82,8 +93,34 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
-    public void storeKeyForDawgIdentifier(UUID dawgIdentifierUuid, SecretKey key) {
-        this.appDb.keyDao().insertKeyEntry(new KeyEntry(dawgIdentifierUuid, key));
+    public void storeKeyForDawgIdentifier(UUID dawgIdentifierUuid, Key key) {
+        // lookup to see if we're already storing a List of Keys for this UUID.  if we are storing
+        // a List of Keys, we'll want to store an updated List of the Keys.
+        final List<Key> keyList;
+        final KeyEntry existingKeyEntry = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
+        if (existingKeyEntry != null) {
+            keyList = existingKeyEntry.getKeys();
+        } else {
+            keyList = new ArrayList<Key>();
+        }
+
+        // see if the obtained keyList is at the maximum size.  if it is, remove the oldest entry
+        // at index == 0.
+        if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
+            keyList.remove(0);
+        }
+
+        // append the new Key to the end of the List.
+        keyList.add(key);
+
+        // construct a KeyEntry containing the new Key + store it.
+        final KeyEntry newKeyEntry = new KeyEntry(dawgIdentifierUuid, keyList);
+        this.appDb.keyDao().insertKeyEntry(newKeyEntry);
+    }
+
+    @Override
+    public void storeMessage(Message message) {
+        this.appDb.messageDao().insertMessageEntry(new MessageEntry(message));
     }
 
     @Override
@@ -126,7 +163,7 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
-    public SecretKey deleteKeyForDawgIdentifier(UUID dawgIdentifierUuid) {
+    public List<Key> deleteKeysForDawgIdentifier(UUID dawgIdentifierUuid) {
         // lookup the KeyEntry.
         final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
 
@@ -134,7 +171,19 @@ public class RoomStorageManager implements StorageManager {
         this.appDb.keyDao().deleteKeyEntry(ke);
 
         // return the Key object associated with the deleted KeyEntry.
-        return ke.getKey();
+        return ke.getKeys();
+    }
+
+    @Override
+    public Message deleteMessage(UUID messageUuid) {
+        // find the MessageEntry that needs to be deleted.
+        final MessageEntry me = this.appDb.messageDao().findByUuid(messageUuid.toString());
+
+        // delete the MessageEntry.
+        this.appDb.messageDao().deleteMessageEntry(me);
+
+        // return the Message object associated with the deleted MessageEntry.
+        return me.toMessage();
     }
 
     @Override

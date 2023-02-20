@@ -18,8 +18,12 @@ package com.scuttlemutt.app
 
 import androidx.lifecycle.*
 import backend.scuttlemutt.Scuttlemutt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * Used to communicate between screens.
@@ -47,8 +51,18 @@ class MainViewModel(private val mutt: Scuttlemutt) : ViewModel() {
     private val _drawerShouldBeOpened = MutableStateFlow(false)
     val drawerShouldBeOpened = _drawerShouldBeOpened.asStateFlow()
 
-    fun setNewContactList(newContacts: List<String>) {
-        _allContactNames.value = newContacts.toMutableList()
+    private var contactListUpdater: Job
+
+    init {
+        contactListUpdater = viewModelScope.launch(Dispatchers.Default){
+            while (coroutineContext.isActive) {
+                val contactNames: MutableList<String> = mutableListOf()
+                for (id in mutt.allContacts) {
+                    contactNames.add(id.userContact)
+                }
+                _allContactNames.postValue(contactNames)
+            }
+        }
     }
 
     fun setChannel(newChan: String) {

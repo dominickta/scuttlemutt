@@ -1,38 +1,37 @@
 package storagemanager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.security.Key;
+import java.util.ArrayList;
+import java.util.List;
+
 import crypto.Crypto;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 import types.TestUtils;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import javax.crypto.SecretKey;
 
 public class MapStorageManagerTest {
 
     // runtime-defined test objects
     private Bark b;
-    private DawgIdentifier m;
+    private DawgIdentifier d;
     private Conversation c;
-    private SecretKey k1, k2;
+    private Message m;
     private MapStorageManager mapStorageManager;
 
     @BeforeEach
     public void setup() {
         b = TestUtils.generateRandomizedBark();
-        m = TestUtils.generateRandomizedDawgIdentifier();
+        d = TestUtils.generateRandomizedDawgIdentifier();
         c = TestUtils.generateRandomizedConversation();
-        k1 = Crypto.generateSecretKey();
-        k2 = Crypto.generateSecretKey();
+        m = TestUtils.generateRandomizedMessage();
         this.mapStorageManager = new MapStorageManager();
     }
 
@@ -55,17 +54,17 @@ public class MapStorageManagerTest {
     @Test
     public void testDawgIdentifierStorageLifecycle() {
         // create the object in the storage manager.
-        this.mapStorageManager.storeDawgIdentifier(m);
+        this.mapStorageManager.storeDawgIdentifier(d);
 
         // lookup the object in the storage manager.
-        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(m.getUniqueId());
-        assertEquals(m, obtainedDawgIdentifier);
+        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(d.getUniqueId());
+        assertEquals(d, obtainedDawgIdentifier);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteDawgIdentifier(m.getUniqueId());
+        this.mapStorageManager.deleteDawgIdentifier(d.getUniqueId());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupDawgIdentifier(m.getUniqueId()));
+        assertNull(this.mapStorageManager.lookupDawgIdentifier(d.getUniqueId()));
     }
 
     @Test
@@ -86,25 +85,67 @@ public class MapStorageManagerTest {
 
     @Test
     public void testKeyStorageLifecycle() {
-        // create the object in the storage manager.
-        this.mapStorageManager.storeKeyForDawgIdentifier(m.getUniqueId(), k1);
+        // create a List of Key objects to store in the storage manager.
+        // we want to store the maximum allowed number of Keys.
+        final List<Key> keyList = new ArrayList<Key>();
+        for (int i = 0; i < StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE; i++) {
+            keyList.add(Crypto.generateSecretKey());
+        }
 
-        // lookup the object in the storage manager.
-        final SecretKey obtainedKey = this.mapStorageManager.lookupKeyForDawgIdentifier(m.getUniqueId());
-        assertEquals(k1, obtainedKey);
+        // store the Key objects one-by-one in the storage manager and verify that the stored
+        // List<Key> is updated along the way.
+        for (int i = 0; i < StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE; i++) {
+            final Key currentKey = keyList.get(i);
 
-        // update the key in the storage manager.
-        this.mapStorageManager.storeKeyForDawgIdentifier(m.getUniqueId(), k2);
+            // store the currentKey.
+            this.mapStorageManager.storeKeyForDawgIdentifier(d.getUniqueId(), currentKey);
 
-        // lookup the object in the storage manager, verify that it was updated.
-        final SecretKey obtainedUpdatedKey = this.mapStorageManager.lookupKeyForDawgIdentifier(m.getUniqueId());
-        assertEquals(k2, obtainedUpdatedKey);
+            // verify that the Key was successfully stored in the List.
+            final List<Key> obtainedKeys = this.mapStorageManager.lookupKeysForDawgIdentifier(d.getUniqueId());
+            assertEquals(currentKey, obtainedKeys.get(obtainedKeys.size() - 1));
+            assertEquals(i + 1, obtainedKeys.size());  // assert the List contains all Keys added so far.
+        }
+
+        // verify that the oldest key is removed from the stored List when we add Keys after hitting
+        // the size limit.
+        final Key extraKey = Crypto.generateSecretKey();
+        this.mapStorageManager.storeKeyForDawgIdentifier(d.getUniqueId(), extraKey);
+        final List<Key> obtainedKeys = this.mapStorageManager.lookupKeysForDawgIdentifier(d.getUniqueId());
+
+        // assert that obtainedKeys == the maximum number of Keys we allow to be stored.
+        assertEquals(StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE, obtainedKeys.size());
+
+        // assert that the returned List is as follows:
+        // - contains all contents of the original List except the first element, with each element
+        //   shifted down one index.
+        // - the extraKey is appended to the end of the List.
+        final List<Key> expectedKeyList = new ArrayList<Key>(keyList);
+        expectedKeyList.remove(0);
+        expectedKeyList.add(extraKey);
+        assertEquals(expectedKeyList, obtainedKeys);
+
 
         // successfully delete the object.
-        this.mapStorageManager.deleteKeyForDawgIdentifier(m.getUniqueId());
+        this.mapStorageManager.deleteKeysForDawgIdentifier(d.getUniqueId());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupKeyForDawgIdentifier(m.getUniqueId()));
+        assertNull(this.mapStorageManager.lookupKeysForDawgIdentifier(d.getUniqueId()));
+    }
+
+    @Test
+    public void testMessageStorageLifecycle() {
+        // create the object in the storage manager.
+        this.mapStorageManager.storeMessage(m);
+
+        // lookup the object in the storage manager.
+        final Message obtainedMessage = this.mapStorageManager.lookupMessage(m.getUniqueId());
+        assertEquals(m, obtainedMessage);
+
+        // successfully delete the object.
+        this.mapStorageManager.deleteMessage(m.getUniqueId());
+
+        // verify that the object was deleted.
+        assertNull(this.mapStorageManager.lookupMessage(m.getUniqueId()));
     }
 
     @Test

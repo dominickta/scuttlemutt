@@ -7,13 +7,20 @@ import com.google.gson.GsonBuilder;
 import com.scuttlemutt.app.backendimplementations.storagemanager.bark.BarkEntry;
 import com.scuttlemutt.app.backendimplementations.storagemanager.conversation.ConversationEntry;
 import com.scuttlemutt.app.backendimplementations.storagemanager.dawgidentifier.DawgIdentifierEntry;
+import com.scuttlemutt.app.backendimplementations.storagemanager.key.KeyEntry;
+import com.scuttlemutt.app.backendimplementations.storagemanager.message.MessageEntry;
 
 import org.junit.Test;
 
+import java.security.Key;
+
+import crypto.Crypto;
 import types.Bark;
 import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 import types.TestUtils;
+import types.serialization.SerializationUtils;
 
 /**
  * Tests the `*Entry` objects used to represent database entries.
@@ -58,6 +65,33 @@ public class EntryTypesTest {
         // verify that the contents of the entry are as expected.
         assertEquals(new String(d.toNetworkBytes()), de.dawgIdentifierJson);
         assertEquals(d.getUniqueId().toString(), de.uuid);
+    }
+
+    @Test
+    public void testKeyEntryCreation_successfullyCreatesKeyEntry() {
+        // create the DawgIdentifier and Key objects used for the entry.
+        final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
+        final Key k = Crypto.DUMMY_SECRETKEY;
+
+        // create the entry.
+        final KeyEntry ke = new KeyEntry(d.getUniqueId().toString(),
+                new String(SerializationUtils.serializeKey(k)));
+
+        // verify that the contents of the entry are as expected.
+        assertEquals(new String(SerializationUtils.serializeKey(k)), ke.keyListJson);
+        assertEquals(d.getUniqueId().toString(), ke.uuid);
+    }
+
+    @Test
+    public void testMessageEntryCreation_successfullyCreatesMessageEntry() {
+        // create the Message object used for the entry.
+        final Message m = TestUtils.generateRandomizedMessage();
+
+        // create the entry.
+        final MessageEntry me = new MessageEntry(m);
+
+        // verify that the contents of the entry are as expected.
+        assertEquals(new String(m.toNetworkBytes()), me.messageJson);
     }
 
     @Test
