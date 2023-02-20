@@ -45,7 +45,7 @@ public class SerializationUtilsTest {
         final byte[] pubKeyBytes = SerializationUtils.serializeKey(key);
 
         // deserialize the PublicKey's byte[].
-        final PublicKey deserializedKey = SerializationUtils.deserializePublicKey(pubKeyBytes);
+        final PublicKey deserializedKey = (PublicKey) SerializationUtils.deserializeKey(pubKeyBytes);
 
         // assert that the deserialized key is identical to the original PublicKey.
         assertArrayEquals(key.getEncoded(), deserializedKey.getEncoded());

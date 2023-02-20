@@ -2,6 +2,7 @@ package storagemanager;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,11 +123,12 @@ public class MapStorageManager implements StorageManager {
     public void storeSecretKeyForUUID(final UUID id, final SecretKey key) {
         // see if the obtained keyList is at the maximum size. if it is, remove the
         // oldest entry at index == 0.
-        List<SecretKey> keyList = this.secretKeysMap.get(id);
+        List<SecretKey> keyList = this.secretKeysMap.getOrDefault(id, new ArrayList<>());
         if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
             keyList.remove(0);
         }
         keyList.add(key);
+        this.secretKeysMap.put(id, keyList);
     }
 
     @Override

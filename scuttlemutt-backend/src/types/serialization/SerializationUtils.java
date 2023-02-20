@@ -20,7 +20,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.SerializationException;
 
-import com.google.common.primitives.Bytes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -49,7 +48,8 @@ public class SerializationUtils {
 
     public static List<Key> deserializeKeyList(final String serializedKeyList) {
         // deserialize the serializedKeyList to a List<String>.
-        final Type arrayListStringType = new TypeToken<ArrayList<String>>() {}.getType();
+        final Type arrayListStringType = new TypeToken<ArrayList<String>>() {
+        }.getType();
         final List<String> keyJsonList = GSON.fromJson(serializedKeyList, arrayListStringType);
 
         // convert the JSONs to Key objects + store them.
@@ -65,7 +65,8 @@ public class SerializationUtils {
     public static byte[] serializeKey(final Key k) {
         final byte[] encodedBytes = Base64.getEncoder().encode(k.getEncoded());
 
-        // return the encoded bytes prepended with the key type.  this will help with deserialization later.
+        // return the encoded bytes prepended with the key type. this will help with
+        // deserialization later.
         if (k instanceof SecretKey) {
             return ArrayUtils.addAll(SERIALIZED_SECRETKEY_PREFIX_BYTES, encodedBytes);
         } else if (k instanceof PublicKey) {
@@ -78,10 +79,11 @@ public class SerializationUtils {
 
     public static Key deserializeKey(final byte[] serializedBytes) {
 
-        // Figure out the type of the Key serialized in the byte[], reassemble + return the Key.
+        // Figure out the type of the Key serialized in the byte[], reassemble + return
+        // the Key.
 
         // SecretKey type.
-        if (Bytes.indexOf(serializedBytes, SERIALIZED_SECRETKEY_PREFIX_BYTES) != -1) {
+        if (indexOf(serializedBytes, SERIALIZED_SECRETKEY_PREFIX_BYTES) != -1) {
             // trim off the prefix.
             final byte[] keyBytes = Arrays.copyOfRange(serializedBytes,
                     SERIALIZED_SECRETKEY_PREFIX_BYTES.length,
@@ -93,8 +95,8 @@ public class SerializationUtils {
             // return the SecretKey.
             return new SecretKeySpec(encodedKey, 0, encodedKey.length, Crypto.SYMMETRIC_KEY_TYPE);
 
-        // PublicKey type.
-        } else if (Bytes.indexOf(serializedBytes, SERIALIZED_PUBLICKEY_PREFIX_BYTES) != -1) {
+            // PublicKey type.
+        } else if (indexOf(serializedBytes, SERIALIZED_PUBLICKEY_PREFIX_BYTES) != -1) {
             // trim off the prefix.
             final byte[] keyBytes = Arrays.copyOfRange(serializedBytes,
                     SERIALIZED_PUBLICKEY_PREFIX_BYTES.length,
@@ -111,12 +113,14 @@ public class SerializationUtils {
                 deserializedKey = keyFactory.generatePublic(publicKeySpec);
                 return deserializedKey;
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                // if there's an error obtaining the PublicKey spec or the RSA algorithm, an exception occurs.
+                // if there's an error obtaining the PublicKey spec or the RSA algorithm, an
+                // exception occurs.
                 throw new RuntimeException(e);
             }
         }
 
-        // if we've reached this point, we were unable to deserialize the provided byte[] as a Key.
+        // if we've reached this point, we were unable to deserialize the provided
+        // byte[] as a Key.
         throw new SerializationException("Tried to deserialize an unknown key type!");
     }
 
@@ -129,5 +133,22 @@ public class SerializationUtils {
             // deserialization failed here
             return null;
         }
+    }
+
+    private static int indexOf(byte[] array, byte[] target) {
+        // I was having trouble loading the package, so I just stole it instead.
+        if (target.length == 0) {
+            return 0;
+        }
+
+        outer: for (int i = 0; i < array.length - target.length + 1; i++) {
+            for (int j = 0; j < target.length; j++) {
+                if (array[i + j] != target[j]) {
+                    continue outer;
+                }
+            }
+            return i;
+        }
+        return -1;
     }
 }

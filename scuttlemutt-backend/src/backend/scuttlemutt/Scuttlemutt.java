@@ -122,9 +122,7 @@ public class Scuttlemutt {
      * @return UUID of sent message
      */
     public UUID sendMessage(String message, DawgIdentifier dstDawgId) {
-        // TODO : Implement seq ID in conversations
-        final Long seqId = 0L; // placeholder for now
-        return this.meshDaemon.sendMessage(message, dstDawgId, seqId);
+        return this.meshDaemon.sendMessage(message, dstDawgId, 0L);
     }
 
     /**
@@ -178,15 +176,12 @@ public class Scuttlemutt {
         }
 
         this.storageManager.deleteDawgIdentifier(dawgIdentifier.getUUID());
+        this.storageManager.deletePublicKeyForUUID(dawgIdentifier.getUUID());
+        this.storageManager.deleteKeysForUUID(dawgIdentifier.getUUID());
     }
 
     public Conversation getConversation(final DawgIdentifier dawgIdentifier) {
-        // attempt to lookup the conversation.
-        final Conversation c = this.storageManager.lookupConversation(dawgIdentifier.getUUID());
-        if (c == null) {
-            return null;
-        }
-        return c;
+        return this.storageManager.lookupConversation(dawgIdentifier.getUUID());
     }
 
     /**

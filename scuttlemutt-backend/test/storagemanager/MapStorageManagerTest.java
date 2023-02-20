@@ -58,12 +58,12 @@ public class MapStorageManagerTest {
         this.mapStorageManager.storeDawgIdentifier(d);
 
         // lookup the object in the storage manager.
-        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(m.getUniqueId());
-        assertEquals(m, obtainedDawgIdentifier);
+        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(d.getUUID());
+        assertEquals(d, obtainedDawgIdentifier);
         
         // successfully delete the object.
-        this.mapStorageManager.deleteDawgIdentifier(m.getUniqueId());
-        assertNull(this.mapStorageManager.lookupDawgIdentifier(m.getUniqueId()));
+        this.mapStorageManager.deleteDawgIdentifier(d.getUUID());
+        assertNull(this.mapStorageManager.lookupDawgIdentifier(d.getUUID()));
     }
 
     @Test

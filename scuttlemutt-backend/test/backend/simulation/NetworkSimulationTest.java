@@ -85,7 +85,7 @@ public class NetworkSimulationTest {
         final String destinationLabel = deviceLabels.get(1);
         final Scuttlemutt destinationDevice = simulation.getScuttlemutt(destinationLabel);
         final DawgIdentifier dstDawgId = destinationDevice.getDawgIdentifier();
-        final List<SecretKey> key = simulation.getStorageManager(destinationLabel)
+        final List<SecretKey> keys = simulation.getStorageManager(destinationLabel)
                 .lookupSecretKeysForUUID(sender.getDawgIdentifier().getUUID());
 
         // send the message.
@@ -97,7 +97,7 @@ public class NetworkSimulationTest {
             final QueueIOManager destinationIOManager = simulation.getQueueIOManager(destinationLabel);
             final Bark receivedMsg = destinationIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
             final PrivateKey privateKey = destinationDevice.getPrivateKey();
-            assertEquals(msg, receivedMsg.getContents(privateKey, key));
+            assertEquals(msg, receivedMsg.getContents(privateKey, keys));
         } catch (IOManagerException e) {
             // this should never happen, print stack trace if it does.
             e.printStackTrace();

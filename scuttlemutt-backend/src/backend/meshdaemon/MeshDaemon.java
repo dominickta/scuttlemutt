@@ -86,14 +86,13 @@ public class MeshDaemon {
         Conversation c = this.storageManager.lookupConversation(recipientId);
         if (c == null) {
             // if we've never initiated a conversation with the sender before, create +
-            // store a new Conversation.
             c = new Conversation(recipient, Collections.singletonList(message.getUniqueId()));
-            this.storageManager.storeConversation(c);
         } else {
             // update existing obj
             c.storeMessageUUID(message.getUniqueId());
-            this.storageManager.storeConversation(c);
         }
+        // store a new Conversation.
+        this.storageManager.storeConversation(c);
 
         // store the plaintext Message object in the database.
         this.storageManager.storeMessage(message);
@@ -101,7 +100,7 @@ public class MeshDaemon {
         // store the Bark in the database.
         this.storageManager.storeBark(barkMessage);
 
-        queue.add(barkMessage);
+        this.queue.add(barkMessage);
         return barkMessage.getUniqueId();
     }
 }
