@@ -72,7 +72,7 @@ public class MeshDaemon {
         final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, encryptionKey);
 
         // create a plaintext object to represent the Message.
-        final Message message = new Message(contents, seqId);
+        final Message message = new Message(contents, seqId, this.currentUser);
 
         // update the Conversation object stored in the StorageManager to include the Bark.
         Conversation c = this.storageManager.lookupConversation(Collections.singletonList(recipient.getUniqueId()));  // TODO:  If we implement group msgs, revise to support groups.

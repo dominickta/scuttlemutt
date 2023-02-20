@@ -85,7 +85,7 @@ public class MeshInput implements Runnable {
                 final Long messageOrderingNum = bark.getOrderNum();
 
                 // create + store the Message object.
-                final Message message = new Message(messageContents.get(), messageOrderingNum);
+                final Message message = new Message(messageContents.get(), messageOrderingNum, bark.getSender());
                 storage.storeMessage(message);
 
                 // update the Conversation object stored in the StorageManager to include the Message.
