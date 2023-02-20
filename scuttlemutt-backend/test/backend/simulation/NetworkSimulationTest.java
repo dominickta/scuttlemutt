@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
 
 import types.Bark;
+import types.Conversation;
+import types.Message;
 import types.packet.BarkPacket;
 import types.DawgIdentifier;
 import types.TestUtils;
@@ -22,6 +24,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import javax.crypto.SecretKey;
 
@@ -92,14 +95,11 @@ public class NetworkSimulationTest {
         sender.sendMessage(msg, dstDawgId);
 
         // verify that the intended destination device successfully received the message.
-        try {
-            final QueueIOManager destinationIOManager = simulation.getQueueIOManager(destinationLabel);
-            final Bark receivedMsg = destinationIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
-            assertEquals(msg, receivedMsg.getContents(keys).get());
-        } catch (IOManagerException e) {
-            // this should never happen, print stack trace if it does.
-            e.printStackTrace();
-        }
+        final List<Message> receivedMsgs
+                = this.getMessagesForConversation(sender.getDawgIdentifier().getUserContact(),
+                destinationDevice.getDawgIdentifier().getUserContact());
+        assertEquals(1, receivedMsgs.size());
+        assertEquals(msg, receivedMsgs.get(0).getPlaintextMessage());
     }
 
     @Test
@@ -156,5 +156,32 @@ public class NetworkSimulationTest {
         final String invalidDevice = "ThisIsAnInvalidDevice";
         assertThrows(IOManagerException.class,
                 () -> simulation.getQueueIOManager(invalidDevice));
+    }
+
+    private List<Message> getMessagesForConversation(final String deviceId1, final String deviceId2) {
+        // get a Scuttlemutt to access the Conversation from one end.
+        final Scuttlemutt scuttlemutt1 = this.simulation.getScuttlemutt(deviceId1);
+
+        // get the Conversation object.
+        Conversation conversation = null;
+        for (final Conversation c : scuttlemutt1.listAllConversations()) {
+            // check if the current Conversation object contains the DawgIdentifier associated with
+            // deviceId2.  if it does, store that object and exit the loop.
+            final boolean conversationIsWithDeviceId2
+                    = c.getUserList().stream().anyMatch(d -> d.getUserContact().equals(deviceId2));
+
+            if (conversationIsWithDeviceId2) {
+                conversation = c;
+                break;
+            }
+        }
+
+        // if we could not find the Conversation, throw an exception.
+        if (conversation == null) {
+            throw new RuntimeException("Could not find the specified Conversation.");
+        }
+
+        // obtain and return the Messages for the Conversation.
+        return scuttlemutt1.getMessagesForConversation(conversation);
     }
 }
