@@ -64,15 +64,15 @@ public class KeyEntry {
         if (keyList.size() > 0) {
             if (keyList.get(0) instanceof SecretKey) {
                 this.symmetricKeyListJson = SerializationUtils.serializeKeyList(keyList);
-                this.publicKeyJson = "";
-                this.privateKeyJson = "";
+                this.publicKeyJson = GSON.toJson(new ArrayList<SecretKey>());
+                this.privateKeyJson = GSON.toJson(new ArrayList<SecretKey>());
             } else if (keyList.get(0) instanceof PublicKey) {
-                this.symmetricKeyListJson = "";
+                this.symmetricKeyListJson = GSON.toJson(new ArrayList<SecretKey>());
                 this.publicKeyJson = SerializationUtils.serializeKeyList(keyList);
-                this.privateKeyJson = "";
+                this.privateKeyJson = GSON.toJson(new ArrayList<SecretKey>());
             } else if (keyList.get(0) instanceof PrivateKey) {
-                this.symmetricKeyListJson = "";
-                this.publicKeyJson = "";
+                this.symmetricKeyListJson = GSON.toJson(new ArrayList<SecretKey>());
+                this.publicKeyJson = GSON.toJson(new ArrayList<SecretKey>());
                 this.privateKeyJson = SerializationUtils.serializeKeyList(keyList);
             }
         } else {
