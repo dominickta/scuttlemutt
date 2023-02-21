@@ -56,8 +56,8 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier lookupDawgIdentifierForUsername(String userContact) {
-        final DawgIdentifierEntry de = this.appDb.dawgIdentifierDao().findByUserContact(userContact);
+    public DawgIdentifier lookupDawgIdentifierForUsername(String username) {
+        final DawgIdentifierEntry de = this.appDb.dawgIdentifierDao().findByUsername(username);
         return de != null ? de.toDawgIdentifier() : null;
     }
 
@@ -230,9 +230,9 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier deleteDawgIdentifierByUsername(String userContact) {
+    public DawgIdentifier deleteDawgIdentifierByUsername(String username) {
         // find the DawgIdentifierEntry that needs to be deleted.
-        final DawgIdentifierEntry d = this.appDb.dawgIdentifierDao().findByUserContact(userContact);
+        final DawgIdentifierEntry d = this.appDb.dawgIdentifierDao().findByUsername(username);
 
         // delete the DawgIdentifierEntry.
         this.appDb.dawgIdentifierDao().deleteDawgIdentifierEntry(d);
@@ -262,7 +262,7 @@ public class RoomStorageManager implements StorageManager {
         final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
 
         // delete the json field on the KeyEntry
-        final KeyEntry updatedKe = new KeyEntry(ke.uuid, ke.symmetricKeyListJson, "", ke.privateKeyJson);
+        final KeyEntry updatedKe = new KeyEntry(ke.uuid, ke.symmetricKeyListJson, GSON.toJson(new ArrayList<SecretKey>()), ke.privateKeyJson);
         this.appDb.keyDao().insertKeyEntry(updatedKe);
 
         // return the PublicKey object associated with the deleted KeyEntry.
@@ -275,8 +275,7 @@ public class RoomStorageManager implements StorageManager {
         final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
 
         // delete the json field on the KeyEntry
-        ke.symmetricKeyListJson = GSON.toJson(new ArrayList<SecretKey>());
-        final KeyEntry updatedKe = new KeyEntry(ke.uuid, ke.symmetricKeyListJson, ke.publicKeyJson, ke.privateKeyJson);
+        final KeyEntry updatedKe = new KeyEntry(ke.uuid, GSON.toJson(new ArrayList<SecretKey>()), ke.publicKeyJson, ke.privateKeyJson);
         this.appDb.keyDao().insertKeyEntry(updatedKe);
 
         // return the SecretKeys associated with the deleted KeyEntry.
@@ -289,8 +288,8 @@ public class RoomStorageManager implements StorageManager {
         final KeyEntry ke = this.appDb.keyDao().findByUuid(MY_DAWG_ID.getUUID().toString());
 
         // delete the json field on the KeyEntry
-        PrivateKey oldPrivateKey = ke.getPrivateKeys().get(0);
-        ke.privateKeyJson = "";
+        final KeyEntry updatedKe = new KeyEntry(ke.uuid, ke.symmetricKeyListJson, ke.publicKeyJson, GSON.toJson(new ArrayList<SecretKey>()));
+        this.appDb.keyDao().insertKeyEntry(updatedKe);
 
         // return the PrivateKey object associated with the deleted KeyEntry.
         return ke.getPrivateKeys().get(0);

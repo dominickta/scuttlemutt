@@ -116,7 +116,7 @@ public class RoomStorageManagerTest {
     }
 
     @Test
-    public void testDawgIdentifierStorageLifecycleUserContactMethods() {
+    public void testDawgIdentifierStorageLifecycleUsernameMethods() {
         final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
 
         // create the object in the storage manager.

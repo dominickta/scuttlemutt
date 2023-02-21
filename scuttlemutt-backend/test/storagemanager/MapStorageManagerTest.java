@@ -70,7 +70,7 @@ public class MapStorageManagerTest {
     }
 
     @Test
-    public void testDawgIdentifierStorageLifecycleUserContactMethods() {
+    public void testDawgIdentifierStorageLifecycleUsernameMethods() {
         // create the object in the storage manager.
         this.mapStorageManager.storeDawgIdentifier(d);
 

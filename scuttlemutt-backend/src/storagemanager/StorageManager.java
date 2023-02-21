@@ -44,12 +44,12 @@ public interface StorageManager {
     DawgIdentifier lookupDawgIdentifierForUuid(final UUID id);
 
     /**
-     * Returns the DawgIdentifier object associated with the given userContact.
+     * Returns the DawgIdentifier object associated with the given username.
      *
-     * @param userContact the userContact String identifying the DawgIdentifier to look for
+     * @param username the username String identifying the DawgIdentifier to look for
      * @return the DawgIdentifier object or null if not found
      */
-    DawgIdentifier lookupDawgIdentifierForUsername(final String userContact);
+    DawgIdentifier lookupDawgIdentifierForUsername(final String username);
 
     /**
      * Returns the Conversation object associated with the given id.
@@ -199,12 +199,12 @@ public interface StorageManager {
     DawgIdentifier deleteDawgIdentifierByUuid(final UUID id);
 
     /**
-     * Removes the DawgIdentifier with the associated userContact String.
+     * Removes the DawgIdentifier with the associated username String.
      *
-     * @param userContact the userContact String of the DawgIdentifier to delete
+     * @param username the username String of the DawgIdentifier to delete
      * @return the DawgIdentifier which was deleted, otherwise returns null
      */
-    DawgIdentifier deleteDawgIdentifierByUsername(final String userContact);
+    DawgIdentifier deleteDawgIdentifierByUsername(final String username);
 
     /**
      * Removes the Conversation with the associated unique id.
