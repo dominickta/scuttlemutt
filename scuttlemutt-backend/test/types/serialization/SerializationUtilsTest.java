@@ -1,10 +1,5 @@
 package types.serialization;
 
-import crypto.Crypto;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.SerializationException;
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -15,6 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.crypto.SecretKey;
+
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.SerializationException;
+import org.junit.jupiter.api.Test;
+
+import crypto.Crypto;
 
 public class SerializationUtilsTest {
     private static final int NUM_KEYS_IN_LIST = 10;  // the number of Keys in the List when
@@ -30,6 +31,21 @@ public class SerializationUtilsTest {
 
         // deserialize the SecretKey's byte[].
         final SecretKey deserializedKey = (SecretKey) SerializationUtils.deserializeKey(secretKeyBytes);
+
+        // assert that the deserialized key is identical to the original SecretKey.
+        assertArrayEquals(key.getEncoded(), deserializedKey.getEncoded());
+    }
+
+    @Test
+    public void testPublicKeyBytesSerializationLifecycle() {
+        // create a PublicKey.
+        final PublicKey key = Crypto.ALICE_KEYPAIR.getPublic();
+
+        // serialize the PublicKey.
+        final byte[] pubKeyBytes = SerializationUtils.serializeKey(key);
+
+        // deserialize the PublicKey's byte[].
+        final PublicKey deserializedKey = (PublicKey) SerializationUtils.deserializeKey(pubKeyBytes);
 
         // assert that the deserialized key is identical to the original PublicKey.
         assertArrayEquals(key.getEncoded(), deserializedKey.getEncoded());

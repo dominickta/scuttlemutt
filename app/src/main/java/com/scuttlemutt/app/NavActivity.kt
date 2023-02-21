@@ -81,7 +81,7 @@ class NavActivity() : ConnectionsActivity() {
 
     private lateinit var keyExchanger: KeyExchanger
     /**
-     * Name of the user - ScuttleMutt.DawgIdentifier.userContact
+     * Name of the user - ScuttleMutt.DawgIdentifier.username
      */
     override var name = "Placeholder"
 
@@ -108,9 +108,7 @@ class NavActivity() : ConnectionsActivity() {
         keyExchanger = SingletonScuttlemutt.getKeyExchanger()
         viewModel = ViewModelProvider(this, MainViewModelFactory(mutt)).get(MainViewModel::class.java)
         Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
-
-
-        endpointUUID = mutt.dawgIdentifier.uniqueId.toString()
+        endpointUUID = mutt.dawgIdentifier.uuid.toString()
         // Turn off the decor fitting system windows, which allows us to handle insets,
         // including IME animations
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -217,11 +215,10 @@ class NavActivity() : ConnectionsActivity() {
             val key = iom.isSecretKey(packet)
             if(key != null){
                 System.out.println("RECIEVED SECRET KEY")
-                if(!mutt.haveContact(key.dawgId.uniqueId)){
+                if(!mutt.haveContact(key.dawgId.uuid)){
                     logD("NEW CONTACT: " + endpoint?.name)
                     iom.addConnection(keyExchanger.receiveSecretKeyForNewContact(endpoint?.name, key))
                 }else {
-                    System.out.println(key.getKey().hashCode())
                     iom.addConnection(keyExchanger.receiveSecretKey(key.dawgId, key))
                 }
             }else {
@@ -269,7 +266,7 @@ class NavActivity() : ConnectionsActivity() {
         iom.addAvailableConnection(endpoint?.id, endpoint?.name)
         if(mutt.getContactDawgId(endpoint?.name) == null){
             Toast.makeText(this,"Exchanging keys...", Toast.LENGTH_LONG).show()
-            keyExchanger.sendSecretKey(endpoint?.name, mutt.dawgIdentifier);
+            keyExchanger.sendKeys(endpoint?.name, mutt.publicKey, mutt.dawgIdentifier);
 
         }
         Toast.makeText(this,"Ready to talk!", Toast.LENGTH_LONG).show()

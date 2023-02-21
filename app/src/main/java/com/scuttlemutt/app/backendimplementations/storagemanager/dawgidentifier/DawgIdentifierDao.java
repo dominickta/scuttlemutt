@@ -16,6 +16,9 @@ public interface DawgIdentifierDao {
     @Query("SELECT * FROM dawgidentifierentry WHERE uuid LIKE :dawgIdUuid LIMIT 1")
     DawgIdentifierEntry findByUuid(String dawgIdUuid);
 
+    @Query("SELECT * FROM dawgidentifierentry WHERE username LIKE :username LIMIT 1")
+    DawgIdentifierEntry findByUsername(String username);
+
     @Query("SELECT * FROM dawgidentifierentry")
     List<DawgIdentifierEntry> getAllDawgIdentifiers();
 

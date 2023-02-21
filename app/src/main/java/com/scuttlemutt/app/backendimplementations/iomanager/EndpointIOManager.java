@@ -155,7 +155,7 @@ public class EndpointIOManager implements IOManager {
     }
 
     public void addConnection(DawgIdentifier dawgIdentifier){
-        seenConnections.put(dawgIdentifier.getUserContact(), dawgIdentifier.getUniqueId());
+        seenConnections.put(dawgIdentifier.getUsername(), dawgIdentifier.getUUID());
     }
 
 

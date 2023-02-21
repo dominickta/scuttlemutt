@@ -7,10 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import javax.crypto.SecretKey;
+
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.Test;
 
 public class CryptoTest {
 
@@ -18,18 +18,36 @@ public class CryptoTest {
     private static final KeyPair alice = Crypto.ALICE_KEYPAIR;
     private static final KeyPair bob = Crypto.BOB_KEYPAIR;
     private static final SecretKey secretKey = Crypto.DUMMY_SECRETKEY;
+    private static final int MESSAGE_SIZE = 300;
 
     @Test
     public void testEncryptThenDecryptGivesSameMessage_asymmetric() {
         // create a dummy message
-        String message = "Foo";
+        String message = RandomStringUtils.randomAlphanumeric(MESSAGE_SIZE);
         byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
 
         // encrypt the message using alice's public key
-        byte[] encrypted = Crypto.encrypt(bytes, alice.getPublic(), Crypto.ASYMMETRIC_KEY_TYPE);
+        byte[] encrypted = Crypto.encrypt(bytes, alice.getPublic(), Crypto.ASYMMETRIC_CIPHER_SPEC);
 
         // decrypt the message using alice's private key
-        byte[] decrypted = Crypto.decrypt(encrypted, alice.getPrivate(), Crypto.ASYMMETRIC_KEY_TYPE);
+        byte[] decrypted = Crypto.decrypt(encrypted, alice.getPrivate(), Crypto.ASYMMETRIC_CIPHER_SPEC);
+
+        // verify the strings match
+        String new_message = new String(decrypted, StandardCharsets.UTF_8);
+        assertEquals(message, new_message);
+    }
+    
+    @Test
+    public void testEncryptThenDecryptGivesSameMessage_asymmetric_evenIfNotMultipleOf16() {
+        // create a dummy message
+        String message = RandomStringUtils.randomAlphanumeric(17);
+        byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
+
+        // encrypt the message using alice's public key
+        byte[] encrypted = Crypto.encrypt(bytes, alice.getPublic(), Crypto.ASYMMETRIC_CIPHER_SPEC);
+
+        // decrypt the message using alice's private key
+        byte[] decrypted = Crypto.decrypt(encrypted, alice.getPrivate(), Crypto.ASYMMETRIC_CIPHER_SPEC);
 
         // verify the strings match
         String new_message = new String(decrypted, StandardCharsets.UTF_8);
@@ -39,7 +57,7 @@ public class CryptoTest {
     @Test
     public void testEncryptThenDecryptGivesSameMessage_symmetric() {
         // create a dummy message
-        String message = "Foo";
+        String message = RandomStringUtils.randomAlphanumeric(MESSAGE_SIZE);
         byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
 
         // encrypt the message using the secret key
@@ -56,7 +74,7 @@ public class CryptoTest {
     @Test
     public void testVerifyValidSignaturePasses() {
         // create a dummy message
-        String message = "Foo";
+        String message = RandomStringUtils.randomAlphanumeric(MESSAGE_SIZE);
         byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
 
         // sign the message using alice's private key
@@ -70,7 +88,7 @@ public class CryptoTest {
     @Test
     public void testVerifyInvalidSignatureFails() {
         // create a dummy message
-        String message = "Foo";
+        String message = RandomStringUtils.randomAlphanumeric(MESSAGE_SIZE);
         byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
 
         // sign the message using alice's private key

@@ -58,7 +58,7 @@ class MainViewModel(private val mutt: Scuttlemutt) : ViewModel() {
             while (coroutineContext.isActive) {
                 val contactNames: MutableList<String> = mutableListOf()
                 for (id in mutt.allContacts) {
-                    contactNames.add(id.userContact)
+                    contactNames.add(id.username)
                 }
                 _allContactNames.postValue(contactNames)
             }

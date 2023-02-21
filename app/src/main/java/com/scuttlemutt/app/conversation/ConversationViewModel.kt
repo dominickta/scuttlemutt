@@ -62,14 +62,14 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
             Log.d(TAG, "looping contacts")
             val contactNames: MutableList<String> = mutableListOf()
             for (id in mutt.allContacts) {
-                contactNames.add(id.userContact)
-                if (id.userContact == newChatPartnerName) {
+                contactNames.add(id.username)
+                if (id.username == newChatPartnerName) {
                     contactID = id
                 }
             }
             Log.d(TAG, "starting job")
             while (coroutineContext.isActive) {
-                val conv = mutt.getConversation(Collections.singletonList(contactID))
+                val conv = mutt.getConversation(contactID)
                 if (conv == null) {
                     if (_currUiState.value!!.messages.isNotEmpty()) {
                         _currUiState.postValue(ConversationUiState(contactName, listOf()))
@@ -90,7 +90,7 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
 //                    Log.d(TAG, "Message is $m")
                     msgs.add(0,
                         FrontEndMessage(
-                            author = conv.userList.get(0).userContact,
+                            author = conv.otherPerson.username,
                             content = m.plaintextMessage,
                             timestamp = m.orderNum.toString()
                         )
@@ -104,24 +104,24 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
         }
     }
     private fun initContacts() {
-        if (!mutt.haveContact(mutt.dawgIdentifier.uniqueId)) {
+        if (!mutt.haveContact(mutt.dawgIdentifier.uuid)) {
             Log.d(TAG, "Adding myself because I'm not in the database yet")
-            mutt.addContact(mutt.dawgIdentifier, MyKey) // add myself
+            mutt.addContact(mutt.dawgIdentifier, MyKeyPair.public, MyKey) // add myself
             mutt.sendMessage("talking to myself", mutt.dawgIdentifier)
         }
-        if (!mutt.haveContact(ADawgTag.uniqueId)) {
+        if (!mutt.haveContact(ADawgTag.uuid)) {
             Log.d(TAG, "Adding ADawg because not in the database yet")
-            mutt.addContact(ADawgTag, AKey)
+            mutt.addContact(ADawgTag, AKeyPair.public, AKey)
             mutt.sendMessage("hey ADawg, this is me", ADawgTag)
         }
-        if (!mutt.haveContact(BDawgTag.uniqueId)) {
+        if (!mutt.haveContact(BDawgTag.uuid)) {
             Log.d(TAG, "Adding BDawg because not in the database yet")
-            mutt.addContact(BDawgTag, BKey)
+            mutt.addContact(BDawgTag, BKeyPair.public, BKey)
             mutt.sendMessage("hey BDawg, this is me", BDawgTag)
         }
-        if (!mutt.haveContact(CDawgTag.uniqueId)) {
+        if (!mutt.haveContact(CDawgTag.uuid)) {
             Log.d(TAG, "Adding CDawg because not in the database yet")
-            mutt.addContact(CDawgTag, CKey)
+            mutt.addContact(CDawgTag, CKeyPair.public, CKey)
         }
     }
 

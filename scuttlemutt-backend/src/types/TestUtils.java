@@ -3,7 +3,6 @@ package types;
 import static java.lang.Thread.sleep;
 import static types.Bark.MAX_MESSAGE_SIZE;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -25,7 +24,7 @@ public class TestUtils {
     }
 
     public static KeyExchangePacket generateRandomizedKeyExchangePacket() {
-        return new KeyExchangePacket(Crypto.DUMMY_SECRETKEY, generateRandomizedDawgIdentifier());
+        return new KeyExchangePacket(Crypto.ALICE_KEYPAIR.getPublic(), Crypto.DUMMY_SECRETKEY, generateRandomizedDawgIdentifier());
     }
 
     public static Bark generateRandomizedBark() {
@@ -33,24 +32,22 @@ public class TestUtils {
                 generateRandomizedDawgIdentifier(),
                 generateRandomizedDawgIdentifier(),
                 r.nextLong(),
-                Crypto.DUMMY_SECRETKEY
-        );
+                Crypto.ALICE_KEYPAIR.getPublic(),
+                Crypto.DUMMY_SECRETKEY);
     }
 
     public static DawgIdentifier generateRandomizedDawgIdentifier() {
-        return new DawgIdentifier(RandomStringUtils.random(15),
-                UUID.randomUUID());
+        return new DawgIdentifier(RandomStringUtils.randomAlphanumeric(15), UUID.randomUUID());
     }
 
     public static Conversation generateRandomizedConversation() {
-        return new Conversation(Collections.singletonList(generateRandomizedDawgIdentifier()));
+        return new Conversation(generateRandomizedDawgIdentifier());
     }
 
     public static Message generateRandomizedMessage() {
         return new Message(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE),
                 r.nextLong(),
-                TestUtils.generateRandomizedDawgIdentifier()
-        );
+                TestUtils.generateRandomizedDawgIdentifier());
     }
 
     public static void sleepOneSecond() {

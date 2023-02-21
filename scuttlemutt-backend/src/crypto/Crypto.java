@@ -30,11 +30,16 @@ import javax.crypto.SecretKey;
  */
 public class Crypto {
     public static final String ASYMMETRIC_KEY_TYPE = "RSA";
+    public static final String ASYMMETRIC_CIPHER_SPEC = "RSA/ECB/PKCS1Padding";
     public static final String SYMMETRIC_KEY_TYPE = "AES";
     public static final KeyPair ALICE_KEYPAIR = Crypto.generateKeyPair();
     public static final KeyPair BOB_KEYPAIR = Crypto.generateKeyPair();
     public static final SecretKey DUMMY_SECRETKEY = Crypto.generateSecretKey();
-    private static final int SYMMETRIC_KEY_SIZE = 128;  // the size of the symmetric key.
+    public static final SecretKey OTHER_SECRETKEY = Crypto.generateSecretKey();
+    private static final int ASYMMETRIC_KEY_SIZE = 4096;
+    private static final int SYMMETRIC_KEY_SIZE = 128; // the size of the symmetric key.
+    private static final int MAX_MESSAGE_SIZE = ASYMMETRIC_KEY_SIZE / 8 - 11;
+
     /**
      * Generates a new 4096-bit RSA KeyPair.
      * 
@@ -43,7 +48,7 @@ public class Crypto {
     public static KeyPair generateKeyPair() {
         try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance(Crypto.ASYMMETRIC_KEY_TYPE);
-            generator.initialize(4096);
+            generator.initialize(ASYMMETRIC_KEY_SIZE);
             return generator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             // Will throw if the platform's crypto provider doesn't support the
@@ -73,9 +78,10 @@ public class Crypto {
     /**
      * Encrypts the byte array payload with the given key.
      * 
-     * @param payload   the byte array to encrypt
-     * @param key the key to encrypt with
-     * @param keyType the type of the Key.  Use the String constants defined in this class for this param.
+     * @param payload the byte array to encrypt
+     * @param key     the key to encrypt with
+     * @param keyType the type of the Key. Use the String constants defined in this
+     *                class for this param.
      * @return the encrypted (ciphertext) byte array, or empty on error
      */
     public static byte[] encrypt(final byte[] payload, final Key key, final String keyType) {
@@ -116,10 +122,11 @@ public class Crypto {
     /**
      * Decrypts the byte array payload with the given key.
      * 
-     * @param payload    the byte array to decrypt
-     * @param key the key to decrypt with
-     * @param keyType the type of the Key.  Use the String constants defined in this class for this param.
-     * @return the decrypted (plaintext) byte array, or null on error
+     * @param payload the byte array to decrypt
+     * @param key     the key to decrypt with
+     * @param keyType the type of the Key. Use the String constants defined in this
+     *                class for this param.
+     * @return the decrypted (plaintext) byte array, or empty on error
      */
     public static byte[] decrypt(final byte[] payload, final Key key, final String keyType) {
         byte[] result = {};

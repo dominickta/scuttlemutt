@@ -5,12 +5,14 @@ import android.content.Context
 import android.provider.Settings
 import android.util.Log
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import backend.initialization.KeyExchanger
 import backend.scuttlemutt.Scuttlemutt
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.scuttlemutt.app.backendimplementations.iomanager.EndpointIOManager
 import com.scuttlemutt.app.backendimplementations.storagemanager.AppDatabase
 import com.scuttlemutt.app.backendimplementations.storagemanager.RoomStorageManager
+import com.scuttlemutt.app.backendimplementations.storagemanager.RoomStorageManager.MY_DAWG_ID
 import crypto.Crypto
 import storagemanager.StorageManager
 import types.DawgIdentifier
@@ -58,7 +60,7 @@ class SingletonScuttlemutt {
                             .allowMainThreadQueries()
                             .build()
                         val storagem: StorageManager = RoomStorageManager(appDb)
-                        val mutt: Scuttlemutt = Scuttlemutt(IOMANAGER, dawgid, storagem)
+                        val mutt = Scuttlemutt(IOMANAGER, dawgid, storagem)
                         Log.d("SingletonScuttlemutt", "instantiating instance..: ${mutt.dawgIdentifier}")
                         INSTANCE = mutt
                         val keyexchanger: KeyExchanger = KeyExchanger(IOMANAGER, storagem)
