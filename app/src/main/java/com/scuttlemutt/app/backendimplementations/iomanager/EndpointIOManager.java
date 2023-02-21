@@ -19,6 +19,7 @@ import javax.crypto.SecretKey;
 import backend.iomanager.IOManager;
 import backend.iomanager.IOManagerException;
 import backend.iomanager.IOManagerHelper;
+import types.DawgIdentifier;
 import types.packet.KeyExchangePacket;
 import types.packet.Packet;
 
@@ -32,51 +33,53 @@ public class EndpointIOManager implements IOManager {
     // Mapping of endpointId to received Packets
     private Map<String, BlockingQueue<Packet>> packetIngestionQueues;
 
-    // Set of currently current connections
-    public Set<String> currentConnections;
 
     // Set of trusted endpointIds we trust
     private Set<String> trustedConnections;
 
-    // Mapping of endpointId to public key
-    private Map<String, SecretKey> endpointKeys;
+    // Mapping of senderName to senderId
+    private Map<String, String> currentConnections;
+
+    // Mapping of senderName to UUID
+    private Map<String, UUID> seenConnections;
 
     public EndpointIOManager(ConnectionsClient connectionsClient) {
         this.connectionsClient = connectionsClient;
         this.idToName = new HashMap<>();
         this.packetIngestionQueues = new HashMap<>();
-        this.currentConnections = new HashSet<>();
+        this.currentConnections = new HashMap<>();
         this.trustedConnections = new HashSet<>();
-        this.endpointKeys = new HashMap<>();
+        this.seenConnections = new HashMap();
     }
 
 
     @Override
     public void send(String receiverId, Packet packet) throws IOManagerException {
-        if (!currentConnections.contains(receiverId)) {
+        if (!currentConnections.keySet().contains(receiverId)) {
             throw new IOManagerException("No available connection to '" + receiverId + "'");
         }
         System.out.println("SENDING MESSAGE TO: " + receiverId);
-        connectionsClient.sendPayload(receiverId, Payload.fromBytes(packet.toNetworkBytes()));
+        System.out.println("Sending payload: " + Payload.fromBytes(packet.toNetworkBytes()));
+        connectionsClient.sendPayload(currentConnections.get(receiverId), Payload.fromBytes(packet.toNetworkBytes()));
     }
 
     @Override
     public <T extends Packet> T meshReceive(Class<T> desiredPacketClass) {
-        List<BlockingQueue<Packet>> inputs = new ArrayList<>(this.packetIngestionQueues.values());
         while(true){
+            List<BlockingQueue<Packet>> inputs = new ArrayList<>(this.packetIngestionQueues.values());
             synchronized (inputs) {
-                if (packetIngestionQueues.values().size() > 0) {
-                    for (BlockingQueue input : inputs) {
+                for(BlockingQueue<Packet> input: inputs) {
+                    if(!input.isEmpty()){
+                        System.out.println("FOUND MESSAGE");
+                                final Optional foundPacketOptional
+                                        = IOManagerHelper.getPacketTypeFromBlockingQueue(input, desiredPacketClass);
 
-                        if (input.size() > 0) {
-                            final Optional foundPacketOptional
-                                    = IOManagerHelper.getPacketTypeFromBlockingQueue(input, desiredPacketClass);
+                                // if a Packet of the desired type was found, return it.
+                                if (foundPacketOptional.isPresent()) {
+                                    return (T) foundPacketOptional.get();
+                                }
 
-                            // if a Packet of the desired type was found, return it.
-                            if (foundPacketOptional.isPresent()) {
-                                return (T) foundPacketOptional.get();
-                            }
-                        }
+
                     }
                 }
             }
@@ -109,31 +112,51 @@ public class EndpointIOManager implements IOManager {
 
     @Override
     public Set<String> availableConnections() throws IOManagerException {
-        return currentConnections;
+        return currentConnections.keySet();
     }
 
     /**
      * Assumes that the endpoint is trusted
      */
-    public void updateAvailableConnection(Set<String> currentConnections){
-        this.currentConnections = currentConnections;
-
+    public void addAvailableConnection(String senderId, String senderName){
+        this.currentConnections.put(senderName, senderId);
         // if there is no packet-receiving queue on-hand for any of the connections we're storing,
         // create a new one for that connection.
-        for (final String conn : currentConnections) {
-            if (!this.packetIngestionQueues.containsKey(conn)) {
-                this.packetIngestionQueues.put(conn, new LinkedBlockingQueue<Packet>());
+            if (!this.packetIngestionQueues.containsKey(senderName)) {
+                this.packetIngestionQueues.put(senderName, new LinkedBlockingQueue<Packet>());
             }
+
+    }
+
+
+    public void removeAvailableConnection(String senderName){
+        this.currentConnections.remove(senderName);
+
+    }
+
+    public void removeAllAvaliableConnections(){
+        this.currentConnections = new HashMap<>();
+    }
+
+    public void addReceivedMessage(String senderName, Packet packet){
+        System.out.println("RECIEVED MESSAGE FROM: " + senderName);
+        synchronized(packetIngestionQueues) {
+            if (!packetIngestionQueues.keySet().contains(senderName)) {
+                packetIngestionQueues.put(senderName, new LinkedBlockingQueue<>());
+            }
+            BlockingQueue queue = packetIngestionQueues.get(senderName);
+            System.out.println("ADDED MESSAGE");
+            queue.add(packet);
         }
     }
 
-    public void addReceivedMessage(String senderId, Packet packet){
-        System.out.println("RECIEVED MESSAGE FROM: " + senderId);
-        if(!packetIngestionQueues.keySet().contains(senderId)){
-            packetIngestionQueues.put(senderId, new LinkedBlockingQueue<>());
-        }
-        BlockingQueue queue = packetIngestionQueues.get(senderId);
-        queue.add(packet);
+    public boolean seenConnection(String senderId){
+        return seenConnections.keySet().contains(senderId);
     }
+
+    public void addConnection(DawgIdentifier dawgIdentifier){
+        seenConnections.put(dawgIdentifier.getUserContact(), dawgIdentifier.getUniqueId());
+    }
+
 
 }

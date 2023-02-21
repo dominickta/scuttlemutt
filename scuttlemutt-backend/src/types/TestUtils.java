@@ -25,7 +25,7 @@ public class TestUtils {
     }
 
     public static KeyExchangePacket generateRandomizedKeyExchangePacket() {
-        return new KeyExchangePacket(Crypto.DUMMY_SECRETKEY);
+        return new KeyExchangePacket(Crypto.DUMMY_SECRETKEY, generateRandomizedDawgIdentifier());
     }
 
     public static Bark generateRandomizedBark() {

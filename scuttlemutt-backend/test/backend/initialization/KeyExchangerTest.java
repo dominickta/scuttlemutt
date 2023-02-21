@@ -50,7 +50,7 @@ public class KeyExchangerTest {
     @Test
     public void testSendSecretKey() {
         // create + send a SecretKey using the KeyExchanger.
-        this.keyExchanger.sendSecretKey(otherDeviceId);
+        this.keyExchanger.sendSecretKey("Test1", TestUtils.generateRandomizedDawgIdentifier());
 
         // verify that a KeyExchangePacket was successfully sent by the KeyExchanger.
         final Packet receivedKePacket = q1to2.remove();
@@ -58,7 +58,7 @@ public class KeyExchangerTest {
     }
 
     @Test
-    public void testReceiveSecretKey() {
+    public void testreceiveSecretKeyForNewContact() {
         // store a SecretKey for the otherDeviceId in the KeyExchanger.
         final Map<String, SecretKey> internalKeyExchangeMap = new HashMap<String, SecretKey>();
         final SecretKey localKey = Crypto.generateSecretKey();
@@ -74,7 +74,7 @@ public class KeyExchangerTest {
         final SecretKey expectedKey = localKey.hashCode() < sentKey.hashCode() ? sentKey : localKey;
 
         // receive the SecretKey using the KeyExchanger, verify that the expectedKey is stored.
-        final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(this.otherDeviceId, sentKePacket);
+        final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKeyForNewContact(this.otherDeviceId, sentKePacket);
         final SecretKey storedKey = (SecretKey) this.storageManager.lookupLatestKeyForDawgIdentifier(dawgId.getUniqueId());
         assertEquals(expectedKey, storedKey);
     }

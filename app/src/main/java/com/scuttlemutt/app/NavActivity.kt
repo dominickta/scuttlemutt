@@ -17,6 +17,7 @@
 package com.scuttlemutt.app
 
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -100,14 +101,15 @@ class NavActivity() : ConnectionsActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "GETTING SCUTTLEMUTT INSTANCE")
-        mutt = SingletonScuttlemutt.getInstance(this, this.mConnectionsClient!!)
+        // Set user name
+        name = "me" + Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+        mutt = SingletonScuttlemutt.getInstance(this, this.mConnectionsClient!!, name, UUID.randomUUID())
         iom = SingletonScuttlemutt.getIOManager()
         keyExchanger = SingletonScuttlemutt.getKeyExchanger()
         viewModel = ViewModelProvider(this, MainViewModelFactory(mutt)).get(MainViewModel::class.java)
         Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
 
-        // Set user name
-        name = mutt.dawgIdentifier.userContact
+
         endpointUUID = mutt.dawgIdentifier.uniqueId.toString()
         // Turn off the decor fitting system windows, which allows us to handle insets,
         // including IME animations
@@ -209,13 +211,21 @@ class NavActivity() : ConnectionsActivity() {
     override fun onReceive(endpoint: Endpoint?, payload: Payload?) {
         logD("" + payload?.type)
         if (payload?.type == Payload.Type.BYTES) {
+            System.out.println("Recieved payload: " + payload.toString())
             val buffer = payload?.asBytes()
             val packet = Packet.fromNetworkBytes(buffer)
             val key = iom.isSecretKey(packet)
             if(key != null){
-                keyExchanger.receiveSecretKey(endpoint?.id, key)
+                System.out.println("RECIEVED SECRET KEY")
+                if(!mutt.haveContact(key.dawgId.uniqueId)){
+                    logD("NEW CONTACT: " + endpoint?.name)
+                    iom.addConnection(keyExchanger.receiveSecretKeyForNewContact(endpoint?.name, key))
+                }else {
+                    System.out.println(key.getKey().hashCode())
+                    iom.addConnection(keyExchanger.receiveSecretKey(key.dawgId, key))
+                }
             }else {
-                iom.addReceivedMessage(endpoint?.id, packet)
+                iom.addReceivedMessage(endpoint?.name, packet)
             }
             var messageString = String(buffer!!)
             if (endpoint != null) {
@@ -254,13 +264,12 @@ class NavActivity() : ConnectionsActivity() {
     override fun onEndpointConnected(endpoint: Endpoint?) {
         //TODO: Maybe a message to say we've been connected?
         logD("CONNECTED")
-        Toast.makeText(this,"Connected!", Toast.LENGTH_LONG).show()
+        Toast.makeText(this,"Connecting to" + endpoint?.id, Toast.LENGTH_LONG).show()
         setState(com.scuttlemutt.app.NavActivity.State.CONNECTED)
-        iom.updateAvailableConnection(this.mEstablishedConnections.keys);
-        //logD(mutt.getKey(DawgIdentifier("dummy", UUID.fromString(endpoint?.name))).toString() );
-        if(mutt.getKey(DawgIdentifier("dummy", UUID.fromString(endpointUUID))) == null){
+        iom.addAvailableConnection(endpoint?.id, endpoint?.name)
+        if(mutt.getContactDawgId(endpoint?.name) == null){
             Toast.makeText(this,"Exchanging keys...", Toast.LENGTH_LONG).show()
-            keyExchanger.sendSecretKey(endpoint?.id);
+            keyExchanger.sendSecretKey(endpoint?.name, mutt.dawgIdentifier);
 
         }
         Toast.makeText(this,"Ready to talk!", Toast.LENGTH_LONG).show()
@@ -272,7 +281,7 @@ class NavActivity() : ConnectionsActivity() {
         Toast.makeText(this,"Endpoints Disconnected", Toast.LENGTH_LONG).show()
         logD("DISCONNECTED")
         setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
-        iom.updateAvailableConnection(this.mEstablishedConnections.keys);
+        iom.removeAvailableConnection(endpoint?.name);
     }
 
     override fun onConnectionFailed(endpoint: Endpoint?) {
@@ -319,7 +328,7 @@ class NavActivity() : ConnectionsActivity() {
             com.scuttlemutt.app.NavActivity.State.SEARCHING -> {
                 logD("Changed to Searching from " + oldState)
                 disconnectFromAllEndpoints()
-                iom.updateAvailableConnection(emptySet())
+                iom.removeAllAvaliableConnections()
                 startDiscovering()
                 logD("Start Discovering from state change")
                 startAdvertising()

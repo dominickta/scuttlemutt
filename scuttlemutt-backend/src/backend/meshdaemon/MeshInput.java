@@ -61,11 +61,14 @@ public class MeshInput implements Runnable {
         List<Bark> barkList = barkPacket.getPacketBarks();
 
         for (Bark bark : barkList) {
+            System.out.println("Iterating through messages");
             // if we have seen this bark before, ignore it.
             if (!this.seenBarks.add(bark)) {
+                System.out.println("Seen before");
                 continue;
             }
-
+            System.out.println("Intended reciever" + bark.getReceiver());
+            System.out.println("Me" + this.currentUser);
             if (this.currentUser.equals(bark.getReceiver())) {
                 // this is for us!  let's create a plaintext Message object from the Bark + store it
                 // for later usage.
@@ -77,6 +80,7 @@ public class MeshInput implements Runnable {
 
                 // if we were unable to successfully decrypt the Bark, toss it out.
                 if (!messageContents.isPresent()) {
+                    System.out.println("TOSSED OUT");
                     continue;
                 }
 
@@ -86,6 +90,8 @@ public class MeshInput implements Runnable {
 
                 // create + store the Message object.
                 final Message message = new Message(messageContents.get(), messageOrderingNum, bark.getSender());
+                System.out.println("MESSAGE");
+                System.out.println(message.getPlaintextMessage());
                 storage.storeMessage(message);
 
                 // update the Conversation object stored in the StorageManager to include the Message.

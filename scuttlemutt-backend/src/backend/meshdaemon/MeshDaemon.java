@@ -68,6 +68,7 @@ public class MeshDaemon {
      * @return UUID of sent bark
      */
     public UUID sendMessage(String contents, DawgIdentifier recipient, Long seqId) {
+        System.out.println(this.storageManager.lookupKeysForDawgIdentifier(recipient.getUniqueId()));
         final SecretKey encryptionKey = (SecretKey) this.storageManager.lookupLatestKeyForDawgIdentifier(recipient.getUniqueId());
         final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, encryptionKey);
 

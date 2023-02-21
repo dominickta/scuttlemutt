@@ -25,7 +25,8 @@ public interface StorageManager {
     Conversation lookupConversation(final List<UUID> userUuidList);
     List<Key> lookupKeysForDawgIdentifier(final UUID dawgIdentifierUuid);
     default Key lookupLatestKeyForDawgIdentifier(final UUID dawgIdentifierUuid) {  // convenience method for looking-up latest Key for user.
-        return this.lookupKeysForDawgIdentifier(dawgIdentifierUuid).get(0);
+        List<Key> keys = this.lookupKeysForDawgIdentifier(dawgIdentifierUuid);
+        return keys.get(keys.size()-1);
     }
     Message lookupMessage(final UUID messageUuid);
 

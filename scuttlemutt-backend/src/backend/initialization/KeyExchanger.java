@@ -7,7 +7,9 @@ import storagemanager.StorageManager;
 import types.DawgIdentifier;
 import types.packet.KeyExchangePacket;
 
+import java.security.Key;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -52,50 +54,56 @@ public class KeyExchanger {
      *
      * Both ends of the exchange process must send a SecretKey in order to complete the process.
      *
-     * @param recipientId  The ID of the recipient who is receiving the key.  This ID should match the ID value stored
-     *                     for the recipient in the IOManager.
+     * @param recipientName The name of the recipient who is recieving the key
+     * @param dawgIdentifier The dawgIdentifier of the sender
      */
-    public void sendSecretKey(final String recipientId) {
+    public void sendSecretKey(final String recipientName, DawgIdentifier dawgIdentifier) {
         final SecretKey secretKey = Crypto.generateSecretKey();
-        final KeyExchangePacket kePacket = new KeyExchangePacket(secretKey);
+        final KeyExchangePacket kePacket = new KeyExchangePacket(secretKey, dawgIdentifier);
         try {
-            this.ioManager.send(recipientId, kePacket);
+            this.ioManager.send(recipientName, kePacket);
         } catch (IOManagerException e) {
             // if we fail to send the KeyExchangePacket packet for some reason, an IOManagerException is thrown.
             throw new RuntimeException(e);
         }
 
         // store the SecretKey for later usage when receiving the key from the other party.
-        this.keysBeingExchanged.put(recipientId, secretKey);
+        System.out.println("Sending ID:" + recipientName);
+        this.keysBeingExchanged.put(recipientName, secretKey);
     }
+
+
+    public DawgIdentifier receiveSecretKeyForNewContact(final String senderName, KeyExchangePacket packet) {
+        final DawgIdentifier senderDawgId = packet.getDawgId();
+        this.storageManager.storeDawgIdentifier(senderDawgId);
+        return this.receiveSecretKey(senderDawgId, packet);
+    }
+
 
     /**
      * Receives a secret (symmetric) key from the specified sender, creates a DawgIdentifier for the sender using the key, stores and
      * returns the DawgIdentifier.
      *
      * NOTE:  This call will wait until a key is received from the specified sender.
-     * @param senderId  The ID of the sender who we wish to receive a key from.  This ID should match the ID value stored
+     * @param dawgId  The DawgIdentifier of the sender who we wish to receive a key from.  This ID should match the ID value stored
      *                  for the sender in the IOManager.
      * @return a DawgIdentifier for the specified sender which contains the sender's public key.
      */
-    public DawgIdentifier receiveSecretKey(final String senderId, KeyExchangePacket packet) {
+    public DawgIdentifier receiveSecretKey(final DawgIdentifier dawgId, KeyExchangePacket packet) {
         // receive the SecretKey.
         final SecretKey otherSecretKey = (SecretKey) packet.getKey();
 
-        // create a DawgIdentifier to represent the other party.
-        final DawgIdentifier dawgId = new DawgIdentifier(senderId, UUID.randomUUID());
-
         // at this point, we have keys from both parties.  let's determine which one should be used
         // for the connections by hashing them and choosing the one with the higher-value.
-        final SecretKey localSecretKey = this.keysBeingExchanged.get(senderId);
+        System.out.println("RECIEVING ID:" + dawgId.getUserContact());
+        final SecretKey localSecretKey = this.keysBeingExchanged.get(dawgId.getUserContact());
         final SecretKey chosenKey = localSecretKey.hashCode() < otherSecretKey.hashCode() ? otherSecretKey : localSecretKey;
 
         // store the chosenKey.
         this.storageManager.storeKeyForDawgIdentifier(dawgId.getUniqueId(), chosenKey);
 
-        // store + return the dawgId.
-        this.storageManager.storeDawgIdentifier(dawgId);
         System.out.println("CHOSEN KEY IS: " + chosenKey);
+
         return dawgId;
     }
 }

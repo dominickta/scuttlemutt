@@ -98,6 +98,7 @@ public class Bark {
         // since it is most likely that the most recent key is the one used for encryption, we iterate
         // backwards through the List.
         byte[] decryptedMessageBytes = new byte[0];
+        System.out.println("SIZE of keys" + encryptionKeyList.size());
         for (int i = encryptionKeyList.size() - 1; i >= 0; i--) {
             final Key currentKey = encryptionKeyList.get(i);
 
@@ -107,8 +108,11 @@ public class Bark {
             }
 
             // attempt decryption.
-            decryptedMessageBytes = Crypto.decrypt(this.encryptedContents, currentKey, Crypto.SYMMETRIC_KEY_TYPE);
-
+            try {
+                decryptedMessageBytes = Crypto.decrypt(this.encryptedContents, currentKey, Crypto.SYMMETRIC_KEY_TYPE);
+            }catch(Exception e){
+                continue;
+            }
             // if decryptedMessageBytes is not null, the decryption was successful and we should terminate the loop.
             if (decryptedMessageBytes != null) {
                 break;
