@@ -2,6 +2,7 @@ package types;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -10,53 +11,38 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 
 public class ConversationTest {
     // test variables
-    private List<DawgIdentifier> userList1;
-    private List<DawgIdentifier> userList2;
-
-    @BeforeEach
-    public void setup() {
-        // create a Supplier which generates randomized DawgIdentifiers.
-        final Supplier<DawgIdentifier> dawgIdentifierSupplier = TestUtils::generateRandomizedDawgIdentifier;
-
-        // create the userLists using the Supplier.
-        userList1 = Stream.generate(dawgIdentifierSupplier)
-                .limit(15)
-                .collect(Collectors.toList());
-        userList2 = Stream.generate(dawgIdentifierSupplier)
-                .limit(15)
-                .collect(Collectors.toList());
-    }
+    private DawgIdentifier user1 = new DawgIdentifier(RandomStringUtils.random(15), UUID.randomUUID());
+    private DawgIdentifier user2 = new DawgIdentifier(RandomStringUtils.random(15), UUID.randomUUID());
 
     @Test
     public void testConstructor_createsObjectSuccessfully() {
         // Successfully create a Conversation object.
-        final Conversation c = new Conversation(userList1);
+        final Conversation c = new Conversation(user1);
+        assertNotNull(c);
     }
 
     @Test
-    public void testGetUserUUIDList_returnsCorrectList() {
+    public void testGetOtherPerson_returnsCorrectPerson() {
         // Successfully create a Conversation object.
-        final Conversation c = new Conversation(userList1);
+        final Conversation c = new Conversation(user1);
 
         // Get the UUID List from the method.
-        final List<UUID> uuidList = c.getUserUUIDList();
+        final DawgIdentifier otherPerson = c.getOtherPerson();
 
-        // Verify that all UUIDs are present in the UUID List.
-        for (DawgIdentifier m : userList1) {
-            assertTrue(uuidList.contains(m.getUniqueId()));
-        }
+        // Verify that the person is who we thought they were
+        assertEquals(otherPerson, user1);
     }
 
     @Test
     public void testEquals_differentObjectsButSameList_returnsTrue() {
         // Create two Conversation objects with the same List.
-        final Conversation c1 = new Conversation(userList1);
-        final Conversation c2 = new Conversation(userList1);
+        final Conversation c1 = new Conversation(user1);
+        final Conversation c2 = new Conversation(user1);
 
         // Verify that the two Conversation objects are equal.
         assertEquals(c1, c2);
@@ -65,8 +51,8 @@ public class ConversationTest {
     @Test
     public void testEquals_differentLists_returnsFalse() {
         // Create two Conversation objects with the same List.
-        final Conversation c1 = new Conversation(userList1);
-        final Conversation c2 = new Conversation(userList2);
+        final Conversation c1 = new Conversation(user1);
+        final Conversation c2 = new Conversation(user2);
 
         // Verify that the two Conversation objects are not equal.
         assertNotEquals(c1, c2);
@@ -81,7 +67,7 @@ public class ConversationTest {
                 .collect(Collectors.toList());
 
         // construct the Conversation object.
-        final Conversation conversationWithBarks = new Conversation(userList1, messageUuids);
+        final Conversation conversationWithBarks = new Conversation(user1, messageUuids);
 
         // verify that the Bark UUIDs were successfully stored in the Conversation.
         assertEquals(messageUuids, conversationWithBarks.getMessageUUIDList());
@@ -90,7 +76,7 @@ public class ConversationTest {
     @Test
     public void testStoreBark_successfullyStoresBark() {
         // create Conversation object with empty Bark UUID List.
-        final Conversation c = new Conversation((userList1));
+        final Conversation c = new Conversation(user1);
 
         // create a new Bark.
         final Message m = TestUtils.generateRandomizedMessage();

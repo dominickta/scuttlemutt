@@ -71,7 +71,7 @@ class NavActivity() : ConnectionsActivity() {
 
     private lateinit var iom: EndpointIOManager
     /**
-     * Name of the user - ScuttleMutt.DawgIdentifier.userContact
+     * Name of the user - ScuttleMutt.DawgIdentifier.username
      */
     override var name = "Placeholder"
 
@@ -95,7 +95,7 @@ class NavActivity() : ConnectionsActivity() {
         Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
 
         // Set user name
-        name = mutt.dawgIdentifier.userContact
+        name = mutt.dawgIdentifier.username
         // Turn off the decor fitting system windows, which allows us to handle insets,
         // including IME animations
         WindowCompat.setDecorFitsSystemWindows(window, false)

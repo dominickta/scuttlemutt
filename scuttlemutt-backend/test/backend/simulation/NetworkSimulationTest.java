@@ -1,33 +1,38 @@
 package backend.simulation;
 
-import backend.scuttlemutt.Scuttlemutt;
-import backend.iomanager.IOManagerException;
-import backend.iomanager.QueueIOManager;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.powermock.reflect.Whitebox;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import types.Bark;
-import types.packet.BarkPacket;
-import types.DawgIdentifier;
-import types.TestUtils;
-
-import java.security.Key;
+import java.security.PublicKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import javax.crypto.SecretKey;
+
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.powermock.reflect.Whitebox;
+
+import backend.iomanager.IOManagerException;
+import backend.iomanager.QueueIOManager;
+import backend.scuttlemutt.Scuttlemutt;
+import storagemanager.StorageManager;
+import types.Bark;
+import types.Conversation;
+import types.DawgIdentifier;
+import types.Message;
+import types.TestUtils;
+import types.packet.BarkPacket;
 
 public class NetworkSimulationTest {
     // test constants
-    public static final int NUM_DEVICES = 3;  // NOTE:  Value must be >= 2 for tests to run successfully.
+    public static final int NUM_DEVICES = 3; // NOTE: Value must be >= 2 for tests to run successfully.
 
     // test variables
     private List<String> deviceLabels;
@@ -75,31 +80,46 @@ public class NetworkSimulationTest {
     }
 
     @Test
+    @Timeout(value = 10)
     public void testScuttlemutt_sendMessage_verifyDestinationScuttlemuttObjectRecievedMessage() {
-        // get the sender Scuttlemutt object.
-        final Scuttlemutt sender = simulation.getScuttlemutt(deviceLabels.get(0));
+        // get the Scuttlemutt for the devices.
+        final String aliceLabel = deviceLabels.get(0);
+        final String bobLabel = deviceLabels.get(1);
+        final Scuttlemutt alice = simulation.getScuttlemutt(aliceLabel);
+        final Scuttlemutt bob = simulation.getScuttlemutt(bobLabel);
+        final DawgIdentifier aliceId = alice.getDawgIdentifier();
+        final DawgIdentifier bobId = bob.getDawgIdentifier();
+        final StorageManager aliceStorage = simulation.getStorageManager(aliceLabel);
+        final StorageManager bobStorage = simulation.getStorageManager(bobLabel);
 
         // create a message to send to a specific party.
-        // NOTE:  The message should be small enough to fit in a single Bark object.
+        // NOTE: The message should be small enough to fit in a single Bark object.
         final String msg = RandomStringUtils.randomAlphanumeric(15);
-        final String destinationLabel = deviceLabels.get(1);
-        final Scuttlemutt destinationDevice = simulation.getScuttlemutt(destinationLabel);
-        final DawgIdentifier dstDawgId = destinationDevice.getDawgIdentifier();
-        final List<Key> keys = simulation.getStorageManager(destinationLabel)
-                .lookupKeysForDawgIdentifier(sender.getDawgIdentifier().getUniqueId());
+        final List<SecretKey> keys = bobStorage.lookupSecretKeysForUUID(aliceId.getUUID());
+        assertTrue(keys.size() == 1);
 
-        // send the message.
-        sender.sendMessage(msg, dstDawgId);
+        // verify that the keys are correct
+        final PublicKey bobPubKey = aliceStorage.lookupPublicKeyForUUID(bobId.getUUID());
+        final PublicKey alicePubKey = bobStorage.lookupPublicKeyForUUID(aliceId.getUUID());
+        assertEquals(bobPubKey, bob.getPublicKey());
+        assertEquals(alicePubKey, alice.getPublicKey());
 
-        // verify that the intended destination device successfully received the message.
+        // send the message using `sendMessage`
+        alice.sendMessage(msg, bobId);
+
+        // give the message a couple seconds to propagate thru the network.
         try {
-            final QueueIOManager destinationIOManager = simulation.getQueueIOManager(destinationLabel);
-            final Bark receivedMsg = destinationIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
-            assertEquals(msg, receivedMsg.getContents(keys).get());
-        } catch (IOManagerException e) {
-            // this should never happen, print stack trace if it does.
-            e.printStackTrace();
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
+
+        // verify that the intended destination device successfully received the
+        // message.
+        Conversation c = bob.getConversation(aliceId);
+        final List<Message> receivedMsgs = bob.getMessagesForConversation(c);
+        assertEquals(1, receivedMsgs.size());
+        assertEquals(msg, receivedMsgs.get(0).getPlaintextMessage());
     }
 
     @Test
@@ -118,7 +138,8 @@ public class NetworkSimulationTest {
             // (the number of input streams is < the number of devices on the network).
             Set<String> connections1 = Whitebox.getInternalState(device1, "connections");
             Set<String> connections2 = Whitebox.getInternalState(device2, "connections");
-            assertEquals(NUM_DEVICES - 2, connections1.size());  // there should be <NUM_DEVICES - self - disconnected devices> connections.
+            assertEquals(NUM_DEVICES - 2, connections1.size()); // there should be <NUM_DEVICES - self - disconnected
+                                                                // devices> connections.
             assertEquals(NUM_DEVICES - 2, connections2.size());
 
             // reconnect device1 and device2.
@@ -128,7 +149,7 @@ public class NetworkSimulationTest {
             // (the number of input streams is < the number of devices on the network).
             connections1 = Whitebox.getInternalState(device1, "connections");
             connections2 = Whitebox.getInternalState(device2, "connections");
-            assertEquals(NUM_DEVICES - 1, connections1.size());  // there should be <NUM_DEVICES - self> connections.
+            assertEquals(NUM_DEVICES - 1, connections1.size()); // there should be <NUM_DEVICES - self> connections.
             assertEquals(NUM_DEVICES - 1, connections2.size());
 
             // assert that we can send messages between device1 and device2
