@@ -102,8 +102,8 @@ class NavActivity() : ConnectionsActivity() {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "GETTING SCUTTLEMUTT INSTANCE")
         // Set user name
-        name = "me" + Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
-        mutt = SingletonScuttlemutt.getInstance(this, this.mConnectionsClient!!, name, UUID.randomUUID())
+        name = "me" + Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID)
+        mutt = SingletonScuttlemutt.getInstance(this, this.mConnectionsClient!!, name)
         iom = SingletonScuttlemutt.getIOManager()
         keyExchanger = SingletonScuttlemutt.getKeyExchanger()
         viewModel = ViewModelProvider(this, MainViewModelFactory(mutt)).get(MainViewModel::class.java)

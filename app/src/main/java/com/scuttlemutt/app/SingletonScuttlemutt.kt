@@ -1,6 +1,8 @@
 package com.scuttlemutt.app
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.provider.Settings
 import android.util.Log
 import androidx.room.Room
 import backend.initialization.KeyExchanger
@@ -44,13 +46,13 @@ class SingletonScuttlemutt {
         private var KEYEXCHANGER: KeyExchanger? = null
 
         // Should only be called by NavActivity
-        fun getInstance(context: Context, connectionsClient: ConnectionsClient): Scuttlemutt {
+        fun getInstance(context: Context, connectionsClient: ConnectionsClient, name: String): Scuttlemutt {
             if (INSTANCE == null) {
                 synchronized(this) {
                     if (INSTANCE == null) {
                         IOMANAGER = EndpointIOManager(connectionsClient)
-                        val dawgid: DawgIdentifier = DawgIdentifier("me", UUID.fromString("22df6593-676e-4c8c-a9d9-48d43c03cc8e"))
-
+                        val uuid = UUID.nameUUIDFromBytes(name.toByteArray());
+                        val dawgid: DawgIdentifier = DawgIdentifier(name, uuid)
                         val appDb : AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, "scuttlemutt-app-database")
                             .fallbackToDestructiveMigration()
                             .allowMainThreadQueries()
