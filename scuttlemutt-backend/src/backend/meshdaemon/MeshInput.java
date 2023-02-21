@@ -97,7 +97,7 @@ public class MeshInput implements Runnable {
                     this.storage.storeConversation(c);
                 } else {
                     // update existing obj
-                    c.storeMessageUUID(bark.getUniqueId());
+                    c.storeMessageUUID(message.getUniqueId());
                     this.storage.storeConversation(c);
                 }
 

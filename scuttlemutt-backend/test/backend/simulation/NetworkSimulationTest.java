@@ -24,9 +24,6 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import javax.crypto.SecretKey;
 
 public class NetworkSimulationTest {
     // test constants
@@ -94,9 +91,16 @@ public class NetworkSimulationTest {
         // send the message.
         sender.sendMessage(msg, dstDawgId);
 
+        // give the message a couple seconds to propagate thru the network.
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         // verify that the intended destination device successfully received the message.
         final List<Message> receivedMsgs
-                = this.getMessagesForConversation(sender.getDawgIdentifier().getUserContact(),
+                = this.getMessagesForConversationFromReceiver(sender.getDawgIdentifier().getUserContact(),
                 destinationDevice.getDawgIdentifier().getUserContact());
         assertEquals(1, receivedMsgs.size());
         assertEquals(msg, receivedMsgs.get(0).getPlaintextMessage());
@@ -158,19 +162,27 @@ public class NetworkSimulationTest {
                 () -> simulation.getQueueIOManager(invalidDevice));
     }
 
-    private List<Message> getMessagesForConversation(final String deviceId1, final String deviceId2) {
+    /**
+     * Verifies
+     * @param sender
+     * @param receiver
+     * @return
+     */
+    private List<Message> getMessagesForConversationFromReceiver(final String sender, final String receiver) {
         // get a Scuttlemutt to access the Conversation from one end.
-        final Scuttlemutt scuttlemutt1 = this.simulation.getScuttlemutt(deviceId1);
+        final Scuttlemutt scuttlemutt2 = this.simulation.getScuttlemutt(receiver);
 
         // get the Conversation object.
         Conversation conversation = null;
-        for (final Conversation c : scuttlemutt1.listAllConversations()) {
+        for (final Conversation c : scuttlemutt2.listAllConversations()) {
+            System.err.println(c.getUserList().get(0));
+
             // check if the current Conversation object contains the DawgIdentifier associated with
             // deviceId2.  if it does, store that object and exit the loop.
-            final boolean conversationIsWithDeviceId2
-                    = c.getUserList().stream().anyMatch(d -> d.getUserContact().equals(deviceId2));
+            final boolean conversationIsWithDeviceId1
+                    = c.getUserList().stream().anyMatch(d -> d.getUserContact().equals(sender));
 
-            if (conversationIsWithDeviceId2) {
+            if (conversationIsWithDeviceId1) {
                 conversation = c;
                 break;
             }
@@ -182,6 +194,6 @@ public class NetworkSimulationTest {
         }
 
         // obtain and return the Messages for the Conversation.
-        return scuttlemutt1.getMessagesForConversation(conversation);
+        return scuttlemutt2.getMessagesForConversation(conversation);
     }
 }
