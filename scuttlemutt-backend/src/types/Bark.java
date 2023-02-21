@@ -20,7 +20,7 @@ import crypto.Crypto;
  * Represents a "bark" (message) sent by the user.
  * 
  * All of the bark fields are encrypted. The header is the senders UUID
- * encrypted with the public keyof the receiver. Only the receiver can decrypt
+ * encrypted with the public key of the receiver. Only the receiver can decrypt
  * it to figure out which symmetric keys to use for
  */
 public class Bark {
