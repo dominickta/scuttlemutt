@@ -38,13 +38,15 @@ public class MapStorageManager implements StorageManager {
     private final Map<UUID, PublicKey> publicKeyMap;
     private final Map<UUID, String> conversationMap;
     private final Map<UUID, List<SecretKey>> secretKeysMap;
-    private final Map<UUID, DawgIdentifier> dawgIdentifierMap;
+    private final Map<UUID, String> uuidToDawgIdentifierMap;
+    private final Map<String, String> usernameToDawgIdentifierMap;
 
     public MapStorageManager() {
         this.barkMap = new HashMap<>();
+        this.uuidToDawgIdentifierMap = new HashMap<UUID, String>();
+        this.usernameToDawgIdentifierMap = new HashMap<String, String>();
         this.messageMap = new HashMap<>();
         this.deviceMap = new HashMap<>();
-        this.dawgIdentifierMap = new HashMap<>();
         this.conversationMap = new HashMap<>();
         this.secretKeysMap = new HashMap<>();
         this.publicKeyMap = new HashMap<>();
@@ -61,8 +63,21 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier lookupDawgIdentifier(final UUID id) {
-        return this.dawgIdentifierMap.getOrDefault(id, null);
+    public DawgIdentifier lookupDawgIdentifierForUuid(final UUID dawgIdentifierUuid) {
+        final String serializedObject = this.uuidToDawgIdentifierMap.getOrDefault(dawgIdentifierUuid, null);
+        if (serializedObject == null) {
+            return null;
+        }
+        return GSON.fromJson(serializedObject, DawgIdentifier.class);
+    }
+
+    @Override
+    public DawgIdentifier lookupDawgIdentifierForUsername(String deviceLabel) {
+        final String serializedObject = this.usernameToDawgIdentifierMap.getOrDefault(deviceLabel, null);
+        if (serializedObject == null) {
+            return null;
+        }
+        return GSON.fromJson(serializedObject, DawgIdentifier.class);
     }
 
     @Override
@@ -101,7 +116,9 @@ public class MapStorageManager implements StorageManager {
 
     @Override
     public void storeDawgIdentifier(final DawgIdentifier dawgIdentifier) {
-        this.dawgIdentifierMap.put(dawgIdentifier.getUUID(), dawgIdentifier);
+        final String dawgIdJson = GSON.toJson(dawgIdentifier);
+        this.uuidToDawgIdentifierMap.put(dawgIdentifier.getUUID(), dawgIdJson);
+        this.usernameToDawgIdentifierMap.put(dawgIdentifier.getUsername(), dawgIdJson);
     }
 
     @Override
@@ -146,8 +163,25 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier deleteDawgIdentifier(final UUID id) {
-        return this.dawgIdentifierMap.remove(id);
+    public DawgIdentifier deleteDawgIdentifierByUuid(final UUID dawgIdentifierUuid) {
+        final String serializedObject = this.uuidToDawgIdentifierMap.remove(dawgIdentifierUuid);
+        if (serializedObject == null) {
+            return null;
+        }
+        final DawgIdentifier deserializedObject = GSON.fromJson(serializedObject, DawgIdentifier.class);
+        this.usernameToDawgIdentifierMap.remove(deserializedObject.getUsername());
+        return deserializedObject;
+    }
+
+    @Override
+    public DawgIdentifier deleteDawgIdentifierByUsername(String deviceLabel) {
+        final String serializedObject = this.usernameToDawgIdentifierMap.remove(deviceLabel);
+        if (serializedObject == null) {
+            return null;
+        }
+        final DawgIdentifier deserializedObject = GSON.fromJson(serializedObject, DawgIdentifier.class);
+        this.uuidToDawgIdentifierMap.remove(deserializedObject.getUUID());
+        return deserializedObject;
     }
 
     @Override
@@ -160,7 +194,7 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public List<SecretKey> deleteKeysForUUID(final UUID id) {
+    public List<SecretKey> deleteSecretKeysForUUID(final UUID id) {
         return this.secretKeysMap.remove(id);
     }
 
@@ -183,8 +217,9 @@ public class MapStorageManager implements StorageManager {
 
     @Override
     public List<DawgIdentifier> getAllDawgIdentifiers() {
-        return this.dawgIdentifierMap.values()
+        return this.uuidToDawgIdentifierMap.values()
                 .stream()
+                .map(json -> DawgIdentifier.fromNetworkBytes(json.getBytes()))
                 .collect(Collectors.toList());
     }
 

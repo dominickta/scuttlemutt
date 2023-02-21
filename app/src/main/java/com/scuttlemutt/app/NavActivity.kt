@@ -71,7 +71,7 @@ class NavActivity() : ConnectionsActivity() {
 
     private lateinit var iom: EndpointIOManager
     /**
-     * Name of the user - ScuttleMutt.DawgIdentifier.userContact
+     * Name of the user - ScuttleMutt.DawgIdentifier.username
      */
     override var name = "Placeholder"
 

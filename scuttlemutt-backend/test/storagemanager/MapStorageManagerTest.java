@@ -54,18 +54,37 @@ public class MapStorageManagerTest {
     }
 
     @Test
-    public void testDawgIdentifierStorageLifecycle() {
+    public void testDawgIdentifierStorageLifecycleUuidMethods() {
         // create the object in the storage manager.
         this.mapStorageManager.storeDawgIdentifier(d);
 
         // lookup the object in the storage manager.
-        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(d.getUUID());
+        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifierForUuid(d.getUUID());
         assertEquals(d, obtainedDawgIdentifier);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteDawgIdentifier(d.getUUID());
-        assertNull(this.mapStorageManager.lookupDawgIdentifier(d.getUUID()));
+        this.mapStorageManager.deleteDawgIdentifierByUuid(d.getUUID());
+
+        // verify that the object was deleted.
+        assertNull(this.mapStorageManager.lookupDawgIdentifierForUuid(d.getUUID()));
     }
+
+    @Test
+    public void testDawgIdentifierStorageLifecycleUsernameMethods() {
+        // create the object in the storage manager.
+        this.mapStorageManager.storeDawgIdentifier(d);
+
+        // lookup the object in the storage manager.
+        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifierForUsername(d.getUsername());
+        assertEquals(d, obtainedDawgIdentifier);
+
+        // successfully delete the object.
+        this.mapStorageManager.deleteDawgIdentifierByUsername(d.getUsername());
+
+        // verify that the object was deleted.
+        assertNull(this.mapStorageManager.lookupDawgIdentifierForUsername(d.getUsername()));
+    }
+
 
     @Test
     public void testConversationStorageLifecycle() {
@@ -126,7 +145,7 @@ public class MapStorageManagerTest {
         assertEquals(expectedKeyList, obtainedKeys);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteKeysForUUID(d.getUUID());
+        this.mapStorageManager.deleteSecretKeysForUUID(d.getUUID());
 
         // verify that the object was deleted.
         assertNull(this.mapStorageManager.lookupSecretKeysForUUID(d.getUUID()));
@@ -144,7 +163,7 @@ public class MapStorageManagerTest {
         assertEquals(publicKey, obtainedKey);
 
         // delete the key.
-        this.mapStorageManager.deleteKeysForUUID(d.getUUID());
+        this.mapStorageManager.deleteSecretKeysForUUID(d.getUUID());
 
         // verify that the object was deleted.
         assertNull(this.mapStorageManager.lookupSecretKeysForUUID(d.getUUID()));

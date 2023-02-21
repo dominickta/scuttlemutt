@@ -1,8 +1,8 @@
 package androidTest.backendimplementations.storagemanager;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
 
@@ -92,7 +92,7 @@ public class RoomStorageManagerTest {
     }
 
     @Test
-    public void testDawgIdentifierStorageLifecycle() {
+    public void testDawgIdentifierStorageLifecycleUuidMethods() {
         final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
 
         // create the object in the storage manager.
@@ -102,18 +102,43 @@ public class RoomStorageManagerTest {
         TestUtils.sleepOneSecond();
 
         // lookup the object in the storage manager.
-        final DawgIdentifier obtainedDawgIdentifier = this.storageManager.lookupDawgIdentifier(d.getUUID());
+        final DawgIdentifier obtainedDawgIdentifier = this.storageManager.lookupDawgIdentifierForUuid(d.getUUID());
         assertEquals(d, obtainedDawgIdentifier);
 
         // successfully delete the object.
-        this.storageManager.deleteDawgIdentifier(d.getUUID());
+        this.storageManager.deleteDawgIdentifierByUuid(d.getUUID());
 
         // allow request to complete.
         TestUtils.sleepOneSecond();
 
         // verify that the object was deleted.
-        assertNull(this.storageManager.lookupDawgIdentifier(d.getUUID()));
+        assertNull(this.storageManager.lookupDawgIdentifierForUuid(d.getUUID()));
     }
+
+    @Test
+    public void testDawgIdentifierStorageLifecycleUsernameMethods() {
+        final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
+
+        // create the object in the storage manager.
+        this.storageManager.storeDawgIdentifier(d);
+
+        // allow request to complete.
+        TestUtils.sleepOneSecond();
+
+        // lookup the object in the storage manager.
+        final DawgIdentifier obtainedDawgIdentifier = this.storageManager.lookupDawgIdentifierForUsername(d.getUsername());
+        assertEquals(d, obtainedDawgIdentifier);
+
+        // successfully delete the object.
+        this.storageManager.deleteDawgIdentifierByUsername(d.getUsername());
+
+        // allow request to complete.
+        TestUtils.sleepOneSecond();
+
+        // verify that the object was deleted.
+        assertNull(this.storageManager.lookupDawgIdentifierForUsername(d.getUsername()));
+    }
+
 
     @Test
     public void testConversationStorageLifecycle() {
@@ -183,11 +208,11 @@ public class RoomStorageManagerTest {
         assertEquals(expectedKeyList, obtainedKeys);
 
 
-        // successfully delete the object.
-        this.storageManager.deleteKeysForUUID(d.getUUID());
+        // successfully delete all SecretKeys for the object.
+        this.storageManager.deleteSecretKeysForUUID(d.getUUID());
 
-        // verify that the object was deleted.
-        assertNull(this.storageManager.lookupSecretKeysForUUID(d.getUUID()));
+        // verify that all SecretKeys for object were deleted.
+        assertEquals(0, this.storageManager.lookupSecretKeysForUUID(d.getUUID()).size());
     }
 
     @Test
