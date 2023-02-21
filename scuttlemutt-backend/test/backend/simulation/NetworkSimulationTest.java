@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
 
 import types.Bark;
+import types.Conversation;
+import types.Message;
 import types.packet.BarkPacket;
 import types.DawgIdentifier;
 import types.TestUtils;
@@ -22,8 +24,6 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import javax.crypto.SecretKey;
 
 public class NetworkSimulationTest {
     // test constants
@@ -91,15 +91,19 @@ public class NetworkSimulationTest {
         // send the message.
         sender.sendMessage(msg, dstDawgId);
 
-        // verify that the intended destination device successfully received the message.
+        // give the message a couple seconds to propagate thru the network.
         try {
-            final QueueIOManager destinationIOManager = simulation.getQueueIOManager(destinationLabel);
-            final Bark receivedMsg = destinationIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
-            assertEquals(msg, receivedMsg.getContents(keys).get());
-        } catch (IOManagerException e) {
-            // this should never happen, print stack trace if it does.
-            e.printStackTrace();
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
+
+        // verify that the intended destination device successfully received the message.
+        final List<Message> receivedMsgs
+                = this.getMessagesForConversationFromReceiver(sender.getDawgIdentifier().getUserContact(),
+                destinationDevice.getDawgIdentifier().getUserContact());
+        assertEquals(1, receivedMsgs.size());
+        assertEquals(msg, receivedMsgs.get(0).getPlaintextMessage());
     }
 
     @Test
@@ -156,5 +160,40 @@ public class NetworkSimulationTest {
         final String invalidDevice = "ThisIsAnInvalidDevice";
         assertThrows(IOManagerException.class,
                 () -> simulation.getQueueIOManager(invalidDevice));
+    }
+
+    /**
+     * Verifies
+     * @param sender
+     * @param receiver
+     * @return
+     */
+    private List<Message> getMessagesForConversationFromReceiver(final String sender, final String receiver) {
+        // get a Scuttlemutt to access the Conversation from one end.
+        final Scuttlemutt scuttlemutt2 = this.simulation.getScuttlemutt(receiver);
+
+        // get the Conversation object.
+        Conversation conversation = null;
+        for (final Conversation c : scuttlemutt2.listAllConversations()) {
+            System.err.println(c.getUserList().get(0));
+
+            // check if the current Conversation object contains the DawgIdentifier associated with
+            // deviceId2.  if it does, store that object and exit the loop.
+            final boolean conversationIsWithDeviceId1
+                    = c.getUserList().stream().anyMatch(d -> d.getUserContact().equals(sender));
+
+            if (conversationIsWithDeviceId1) {
+                conversation = c;
+                break;
+            }
+        }
+
+        // if we could not find the Conversation, throw an exception.
+        if (conversation == null) {
+            throw new RuntimeException("Could not find the specified Conversation.");
+        }
+
+        // obtain and return the Messages for the Conversation.
+        return scuttlemutt2.getMessagesForConversation(conversation);
     }
 }
