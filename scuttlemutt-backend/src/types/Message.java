@@ -20,16 +20,19 @@ public class Message {
     private final UUID uniqueId;
     private final String message;
     private final Long orderNum;
+    private final DawgIdentifier author;
 
     /**
      * Constructs the Message object.
      * @param plaintextMessage  The plaintext message being stored in the Message object.
      * @param orderNum  The number of the Message used for ordering the messages in the UI.
+     * @param author  The author of the message.
      */
-    public Message(final String plaintextMessage, final Long orderNum) {
+    public Message(final String plaintextMessage, final Long orderNum, final DawgIdentifier author) {
         this.uniqueId = UUID.randomUUID();
         this.message = plaintextMessage;
         this.orderNum = orderNum;
+        this.author = author;
     }
 
     public UUID getUniqueId() {
@@ -42,6 +45,10 @@ public class Message {
 
     public Long getOrderNum() {
         return this.orderNum;
+    }
+
+    public DawgIdentifier getAuthor() {
+        return this.author;
     }
 
     /**
@@ -69,7 +76,8 @@ public class Message {
             return false;
         }
         return this.getPlaintextMessage().equals(((Message) o).getPlaintextMessage())
-                && this.getOrderNum().equals(((Message) o).getOrderNum());
+                && this.getOrderNum().equals(((Message) o).getOrderNum())
+                && this.getAuthor().equals(((Message) o).getAuthor());
     }
 
     @Override
@@ -79,6 +87,8 @@ public class Message {
 
     @Override
     public String toString() {
-        return "plaintextMessage:  " + this.getPlaintextMessage() + "\tuniqueId:  " + this.uniqueId.toString();
+        return "plaintextMessage:  " + this.getPlaintextMessage()
+                + "\tuniqueId:  " + this.uniqueId.toString()
+                + "\tauthor:  {" + this.author.toString() + "}";
     }
 }

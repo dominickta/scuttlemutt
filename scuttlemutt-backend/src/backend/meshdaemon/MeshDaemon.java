@@ -81,8 +81,11 @@ public class MeshDaemon {
         final PublicKey recipientPublicKey = this.storageManager.lookupPublicKeyForUUID(recipientId);
         final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, recipientPublicKey,
                 recipientSecretKey);
+
         // create a plaintext object to represent the Message.
-        final Message message = new Message(contents, seqId);
+        final Message message = new Message(contents, seqId, this.currentUser);
+
+        // update the Conversation object stored in the StorageManager to include Bark.
         Conversation c = this.storageManager.lookupConversation(recipientId);
         if (c == null) {
             // if we've never initiated a conversation with the sender before, create +

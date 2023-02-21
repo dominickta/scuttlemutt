@@ -46,7 +46,8 @@ public class TestUtils {
 
     public static Message generateRandomizedMessage() {
         return new Message(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE),
-                r.nextLong());
+                r.nextLong(),
+                TestUtils.generateRandomizedDawgIdentifier());
     }
 
     public static void sleepOneSecond() {
