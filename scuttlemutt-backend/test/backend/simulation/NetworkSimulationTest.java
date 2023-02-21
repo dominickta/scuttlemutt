@@ -163,10 +163,10 @@ public class NetworkSimulationTest {
     }
 
     /**
-     * Verifies
-     * @param sender
-     * @param receiver
-     * @return
+     * Returns the messages associated with the specified conversation from the receiver's end.
+     * @param sender  The sender in the conversation.
+     * @param receiver  The receiver in the conversation.
+     * @return  the messages associated with the specified conversation from the receiver's end.
      */
     private List<Message> getMessagesForConversationFromReceiver(final String sender, final String receiver) {
         // get a Scuttlemutt to access the Conversation from one end.
