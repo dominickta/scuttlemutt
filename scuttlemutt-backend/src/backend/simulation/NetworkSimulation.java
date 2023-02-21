@@ -9,6 +9,8 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.crypto.SecretKey;
+
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
 import backend.scuttlemutt.Scuttlemutt;
@@ -17,12 +19,6 @@ import storagemanager.MapStorageManager;
 import storagemanager.StorageManager;
 import types.DawgIdentifier;
 import types.packet.Packet;
-
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import javax.crypto.SecretKey;
 
 /**
  * Sets up and stores QueueIOManager objects to simulate a network.
@@ -122,8 +118,9 @@ public class NetworkSimulation {
 
     /**
      * Obtains the StorageManager associated with the passed deviceLabel.
-     * @param deviceLabel  The label associated with the desired StorageManager.
-     * @return  The StorageManager associated with the passed label.
+     * 
+     * @param deviceLabel The label associated with the desired StorageManager.
+     * @return The StorageManager associated with the passed label.
      */
     public StorageManager getStorageManager(final String deviceLabel) {
         if (!this.queueIOManagerMap.containsKey(deviceLabel)) {
@@ -144,13 +141,13 @@ public class NetworkSimulation {
             throw new UnsupportedOperationException("Cannot connect a device to itself!");
         }
 
-        // save a symmetric key for the connection in both devices.
+        // save (a)symmetric keys for the connection in both devices.
         final SecretKey secretKey = Crypto.generateSecretKey();
         final Scuttlemutt device1 = scuttlemuttMap.get(device1Label);
         final Scuttlemutt device2 = scuttlemuttMap.get(device2Label);
-        device1.addContact(device2.getDawgIdentifier(), secretKey);
-        device2.addContact(device1.getDawgIdentifier(), secretKey);
-
+        device1.addContact(device2.getDawgIdentifier(), device2.getPublicKey(), secretKey);
+        device2.addContact(device1.getDawgIdentifier(), device1.getPublicKey(), secretKey);
+        
         // Build queues to connect devices
         final BlockingQueue<Packet> q1to2 = new LinkedBlockingQueue<Packet>();
         final BlockingQueue<Packet> q2to1 = new LinkedBlockingQueue<Packet>();

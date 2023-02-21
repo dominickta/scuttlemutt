@@ -51,7 +51,7 @@ public class EntryTypesTest {
 
         // verify that the contents of the entry are as expected.
         assertEquals(new String(c.toNetworkBytes()), ce.conversationJson);
-        assertEquals(GSON.toJson(c.getUserUUIDList()), ce.userUuidListJson);
+        assertEquals(GSON.toJson(c.getOtherPerson().getUUID()), ce.userIdJson);
     }
 
     @Test
@@ -64,8 +64,8 @@ public class EntryTypesTest {
 
         // verify that the contents of the entry are as expected.
         assertEquals(new String(d.toNetworkBytes()), de.dawgIdentifierJson);
-        assertEquals(d.getUniqueId().toString(), de.uuid);
-        assertEquals(d.getUserContact(), de.userContact);
+        assertEquals(d.getUUID().toString(), de.uuid);
+        assertEquals(d.getUsername(), de.userContact);
     }
 
     @Test
@@ -75,12 +75,12 @@ public class EntryTypesTest {
         final Key k = Crypto.DUMMY_SECRETKEY;
 
         // create the entry.
-        final KeyEntry ke = new KeyEntry(d.getUniqueId().toString(),
-                new String(SerializationUtils.serializeKey(k)));
+        final KeyEntry ke = new KeyEntry(d.getUUID().toString(),
+                new String(SerializationUtils.serializeKey(k)), "", "");
 
         // verify that the contents of the entry are as expected.
-        assertEquals(new String(SerializationUtils.serializeKey(k)), ke.keyListJson);
-        assertEquals(d.getUniqueId().toString(), ke.uuid);
+        assertEquals(new String(SerializationUtils.serializeKey(k)), ke.symmetricKeyListJson);
+        assertEquals(d.getUUID().toString(), ke.uuid);
     }
 
     @Test

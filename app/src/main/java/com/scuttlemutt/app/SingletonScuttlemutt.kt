@@ -8,6 +8,7 @@ import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.scuttlemutt.app.backendimplementations.iomanager.EndpointIOManager
 import com.scuttlemutt.app.backendimplementations.storagemanager.AppDatabase
 import com.scuttlemutt.app.backendimplementations.storagemanager.RoomStorageManager
+import com.scuttlemutt.app.backendimplementations.storagemanager.RoomStorageManager.MY_DAWG_ID
 import crypto.Crypto
 import storagemanager.StorageManager
 import types.DawgIdentifier
@@ -45,8 +46,7 @@ class SingletonScuttlemutt {
                 synchronized(this) {
                     if (INSTANCE == null) {
                         IOMANAGER = EndpointIOManager(connectionsClient)
-                        val dawgid: DawgIdentifier = DawgIdentifier("me", UUID.fromString("22df6593-676e-4c8c-a9d9-48d43c03cc8e"))
-
+                        val dawgid: DawgIdentifier = MY_DAWG_ID;
                         val appDb : AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, "scuttlemutt-app-database")
                             .fallbackToDestructiveMigration()
                             .build()

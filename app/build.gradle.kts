@@ -90,6 +90,8 @@ dependencies {
     implementation("androidx.test:runner:1.5.2")
     implementation("com.google.android.gms:play-services-nearby:18.0.2")
     implementation("org.apache.commons:commons-lang3:3.0")
+    androidTestImplementation(project(mapOf("path" to ":scuttlemutt-backend")))
+    androidTestImplementation(project(mapOf("path" to ":scuttlemutt-backend")))
     ksp(libs.androidx.room.compiler)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
