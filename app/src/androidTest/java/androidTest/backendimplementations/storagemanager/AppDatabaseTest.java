@@ -155,9 +155,15 @@ public class AppDatabaseTest {
         // allow request to complete.
         TestUtils.sleepOneSecond();
 
-        // lookup the entry + verify the returned value matches what we entered.
-        final DawgIdentifierEntry obtainedEntry = this.dawgIdentifierDao.findByUuid(de.uuid);
-        assertEquals(de, obtainedEntry);
+        // lookup the entry by uuid + verify the returned value matches what we entered.
+        final DawgIdentifierEntry obtainedEntryUuid
+                = this.dawgIdentifierDao.findByUuid(de.uuid);
+        assertEquals(de, obtainedEntryUuid);
+
+        // lookup the entry by userContact + verify the returned value matches what we entered.
+        final DawgIdentifierEntry obtainedEntryUserContact
+                = this.dawgIdentifierDao.findByUserContact(de.userContact);
+        assertEquals(de, obtainedEntryUserContact);
 
         // delete the entry from the database.
         this.dawgIdentifierDao.deleteDawgIdentifierEntry(de);

@@ -21,6 +21,9 @@ public class DawgIdentifierEntry {
     @NonNull
     public String uuid;
 
+    @NonNull
+    public String userContact;
+
     @ColumnInfo(name = "dawgIdentifierJson")
     @NonNull
     public String dawgIdentifierJson;
@@ -31,8 +34,10 @@ public class DawgIdentifierEntry {
      * (Otherwise, DawgIdentifierEntry class is not a valid Entity.)
      */
     public DawgIdentifierEntry(@NonNull final String uuid,
+                               @NonNull final String userContact,
                                @NonNull final String dawgIdentifierJson) {
         this.uuid = uuid;
+        this.userContact = userContact;
         this.dawgIdentifierJson = dawgIdentifierJson;
     }
 
@@ -42,6 +47,7 @@ public class DawgIdentifierEntry {
      */
     public DawgIdentifierEntry(final DawgIdentifier dawgId) {
         this.uuid = dawgId.getUniqueId().toString();
+        this.userContact = dawgId.getUserContact();
         this.dawgIdentifierJson = new String(dawgId.toNetworkBytes());
     }
 

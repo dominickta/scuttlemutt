@@ -21,7 +21,8 @@ public interface StorageManager {
     //
     // returns "null" if not found.
     Bark lookupBark(final UUID barkUuid);
-    DawgIdentifier lookupDawgIdentifier(final UUID dawgIdentifierUuid);
+    DawgIdentifier lookupDawgIdentifierForUuid(final UUID dawgIdentifierUuid);
+    DawgIdentifier lookupDawgIdentifierForUserContact(final String userContact);
     Conversation lookupConversation(final List<UUID> userUuidList);
     List<Key> lookupKeysForDawgIdentifier(final UUID dawgIdentifierUuid);
     default Key lookupLatestKeyForDawgIdentifier(final UUID dawgIdentifierUuid) {  // convenience method for looking-up latest Key for user.
@@ -43,7 +44,8 @@ public interface StorageManager {
     //
     // returns the object which was deleted.  if no object was found, returns null.
     Bark deleteBark(final UUID barkUuid);
-    DawgIdentifier deleteDawgIdentifier(final UUID dawgIdentifierUuid);
+    DawgIdentifier deleteDawgIdentifierByUuid(final UUID dawgIdentifierUuid);
+    DawgIdentifier deleteDawgIdentifierByUserContact(final String userContact);
     Conversation deleteConversation(final List<UUID> userUuidList);
     List<Key> deleteKeysForDawgIdentifier(final UUID dawgIdentifierUuid);
     Message deleteMessage(final UUID messageUuid);

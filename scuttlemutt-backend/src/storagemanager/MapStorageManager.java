@@ -28,14 +28,16 @@ public class MapStorageManager implements StorageManager {
 
     // maps
     private final Map<UUID, String> barkMap;
-    private final Map<UUID, String> dawgIdentifierMap;
+    private final Map<UUID, String> uuidToDawgIdentifierMap;
+    private final Map<String, String> labelToDawgIdentifierMap;
     private final Map<List<UUID>, String> conversationMap;
     private final Map<UUID, String> keyMap;
     private final Map<UUID, String> messageMap;
 
     public MapStorageManager() {
         this.barkMap = new HashMap<UUID, String>();
-        this.dawgIdentifierMap = new HashMap<UUID, String>();
+        this.uuidToDawgIdentifierMap = new HashMap<UUID, String>();
+        this.labelToDawgIdentifierMap = new HashMap<String, String>();
         this.conversationMap = new HashMap<List<UUID>, String>();
         this.keyMap = new HashMap<UUID, String>();
         this.messageMap = new HashMap<UUID, String>();
@@ -51,8 +53,17 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier lookupDawgIdentifier(final UUID dawgIdentifierUuid) {
-        final String serializedObject = this.dawgIdentifierMap.getOrDefault(dawgIdentifierUuid, null);
+    public DawgIdentifier lookupDawgIdentifierForUuid(final UUID dawgIdentifierUuid) {
+        final String serializedObject = this.uuidToDawgIdentifierMap.getOrDefault(dawgIdentifierUuid, null);
+        if (serializedObject == null) {
+            return null;
+        }
+        return GSON.fromJson(serializedObject, DawgIdentifier.class);
+    }
+
+    @Override
+    public DawgIdentifier lookupDawgIdentifierForUserContact(String deviceLabel) {
+        final String serializedObject = this.labelToDawgIdentifierMap.getOrDefault(deviceLabel, null);
         if (serializedObject == null) {
             return null;
         }
@@ -93,7 +104,9 @@ public class MapStorageManager implements StorageManager {
 
     @Override
     public void storeDawgIdentifier(final DawgIdentifier dawgIdentifier) {
-        this.dawgIdentifierMap.put(dawgIdentifier.getUniqueId(), GSON.toJson(dawgIdentifier));
+        final String dawgIdJson = GSON.toJson(dawgIdentifier);
+        this.uuidToDawgIdentifierMap.put(dawgIdentifier.getUniqueId(), dawgIdJson);
+        this.labelToDawgIdentifierMap.put(dawgIdentifier.getUserContact(), dawgIdJson);
     }
 
     @Override
@@ -140,12 +153,25 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier deleteDawgIdentifier(final UUID dawgIdentifierUuid) {
-        final String serializedObject = this.dawgIdentifierMap.remove(dawgIdentifierUuid);
+    public DawgIdentifier deleteDawgIdentifierByUuid(final UUID dawgIdentifierUuid) {
+        final String serializedObject = this.uuidToDawgIdentifierMap.remove(dawgIdentifierUuid);
         if (serializedObject == null) {
             return null;
         }
-        return GSON.fromJson(serializedObject, DawgIdentifier.class);
+        final DawgIdentifier deserializedObject = GSON.fromJson(serializedObject, DawgIdentifier.class);
+        this.labelToDawgIdentifierMap.remove(deserializedObject.getUserContact());
+        return deserializedObject;
+    }
+
+    @Override
+    public DawgIdentifier deleteDawgIdentifierByUserContact(String deviceLabel) {
+        final String serializedObject = this.labelToDawgIdentifierMap.remove(deviceLabel);
+        if (serializedObject == null) {
+            return null;
+        }
+        final DawgIdentifier deserializedObject = GSON.fromJson(serializedObject, DawgIdentifier.class);
+        this.uuidToDawgIdentifierMap.remove(deserializedObject.getUniqueId());
+        return deserializedObject;
     }
 
     @Override
@@ -177,7 +203,7 @@ public class MapStorageManager implements StorageManager {
 
     @Override
     public List<DawgIdentifier> getAllDawgIdentifiers() {
-        return this.dawgIdentifierMap.values()
+        return this.uuidToDawgIdentifierMap.values()
                 .stream()
                 .map(s -> GSON.fromJson(s, DawgIdentifier.class))
                 .collect(Collectors.toList());

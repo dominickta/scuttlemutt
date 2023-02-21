@@ -52,20 +52,37 @@ public class MapStorageManagerTest {
     }
 
     @Test
-    public void testDawgIdentifierStorageLifecycle() {
+    public void testDawgIdentifierStorageLifecycleUuidMethods() {
         // create the object in the storage manager.
         this.mapStorageManager.storeDawgIdentifier(d);
 
         // lookup the object in the storage manager.
-        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(d.getUniqueId());
+        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifierForUuid(d.getUniqueId());
         assertEquals(d, obtainedDawgIdentifier);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteDawgIdentifier(d.getUniqueId());
+        this.mapStorageManager.deleteDawgIdentifierByUuid(d.getUniqueId());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupDawgIdentifier(d.getUniqueId()));
+        assertNull(this.mapStorageManager.lookupDawgIdentifierForUuid(d.getUniqueId()));
     }
+
+    @Test
+    public void testDawgIdentifierStorageLifecycleUserContactMethods() {
+        // create the object in the storage manager.
+        this.mapStorageManager.storeDawgIdentifier(d);
+
+        // lookup the object in the storage manager.
+        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifierForUserContact(d.getUserContact());
+        assertEquals(d, obtainedDawgIdentifier);
+
+        // successfully delete the object.
+        this.mapStorageManager.deleteDawgIdentifierByUserContact(d.getUserContact());
+
+        // verify that the object was deleted.
+        assertNull(this.mapStorageManager.lookupDawgIdentifierForUserContact(d.getUserContact()));
+    }
+
 
     @Test
     public void testConversationStorageLifecycle() {

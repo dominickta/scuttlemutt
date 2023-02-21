@@ -122,7 +122,7 @@ public class Scuttlemutt {
     }
 
     public boolean haveContact(final UUID muttNetworkUUID) {
-        return this.storageManager.lookupDawgIdentifier(muttNetworkUUID) != null;
+        return this.storageManager.lookupDawgIdentifierForUuid(muttNetworkUUID) != null;
     }
 
     public void addContact(final DawgIdentifier dawgIdentifier, final SecretKey secretKey) {
@@ -132,13 +132,13 @@ public class Scuttlemutt {
 
     public void removeContact(final DawgIdentifier dawgIdentifier) {
         // verify that the DawgIdentifier is currently stored.
-        if (this.storageManager.lookupDawgIdentifier(dawgIdentifier.getUniqueId()) == null) {
+        if (this.storageManager.lookupDawgIdentifierForUuid(dawgIdentifier.getUniqueId()) == null) {
             throw new RuntimeException("Attempted to delete a nonexistent DawgIdentifier!  Scuttlemutt instance:  "
                     + this.dawgIdentifier.getUniqueId().toString()
                     + "\tDawgIdentifier ID:  " + dawgIdentifier.getUniqueId().toString());
         }
 
-        this.storageManager.deleteDawgIdentifier(dawgIdentifier.getUniqueId());
+        this.storageManager.deleteDawgIdentifierByUuid(dawgIdentifier.getUniqueId());
     }
 
     public Conversation getConversation(final List<DawgIdentifier> dawgIdentifiers) {

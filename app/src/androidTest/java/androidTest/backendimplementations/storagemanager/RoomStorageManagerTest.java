@@ -25,8 +25,6 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.crypto.SecretKey;
-
 import crypto.Crypto;
 import storagemanager.StorageManager;
 import types.Bark;
@@ -93,7 +91,7 @@ public class RoomStorageManagerTest {
     }
 
     @Test
-    public void testDawgIdentifierStorageLifecycle() {
+    public void testDawgIdentifierStorageLifecycleUuidMethods() {
         final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
 
         // create the object in the storage manager.
@@ -103,18 +101,43 @@ public class RoomStorageManagerTest {
         TestUtils.sleepOneSecond();
 
         // lookup the object in the storage manager.
-        final DawgIdentifier obtainedDawgIdentifier = this.storageManager.lookupDawgIdentifier(d.getUniqueId());
+        final DawgIdentifier obtainedDawgIdentifier = this.storageManager.lookupDawgIdentifierForUuid(d.getUniqueId());
         assertEquals(d, obtainedDawgIdentifier);
 
         // successfully delete the object.
-        this.storageManager.deleteDawgIdentifier(d.getUniqueId());
+        this.storageManager.deleteDawgIdentifierByUuid(d.getUniqueId());
 
         // allow request to complete.
         TestUtils.sleepOneSecond();
 
         // verify that the object was deleted.
-        assertNull(this.storageManager.lookupDawgIdentifier(d.getUniqueId()));
+        assertNull(this.storageManager.lookupDawgIdentifierForUuid(d.getUniqueId()));
     }
+
+    @Test
+    public void testDawgIdentifierStorageLifecycleUserContactMethods() {
+        final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
+
+        // create the object in the storage manager.
+        this.storageManager.storeDawgIdentifier(d);
+
+        // allow request to complete.
+        TestUtils.sleepOneSecond();
+
+        // lookup the object in the storage manager.
+        final DawgIdentifier obtainedDawgIdentifier = this.storageManager.lookupDawgIdentifierForUserContact(d.getUserContact());
+        assertEquals(d, obtainedDawgIdentifier);
+
+        // successfully delete the object.
+        this.storageManager.deleteDawgIdentifierByUserContact(d.getUserContact());
+
+        // allow request to complete.
+        TestUtils.sleepOneSecond();
+
+        // verify that the object was deleted.
+        assertNull(this.storageManager.lookupDawgIdentifierForUserContact(d.getUserContact()));
+    }
+
 
     @Test
     public void testConversationStorageLifecycle() {

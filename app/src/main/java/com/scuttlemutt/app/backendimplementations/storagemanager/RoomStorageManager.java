@@ -44,8 +44,14 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier lookupDawgIdentifier(UUID dawgIdentifierUuid) {
+    public DawgIdentifier lookupDawgIdentifierForUuid(UUID dawgIdentifierUuid) {
         final DawgIdentifierEntry de = this.appDb.dawgIdentifierDao().findByUuid(dawgIdentifierUuid.toString());
+        return de != null ? de.toDawgIdentifier() : null;
+    }
+
+    @Override
+    public DawgIdentifier lookupDawgIdentifierForUserContact(String userContact) {
+        final DawgIdentifierEntry de = this.appDb.dawgIdentifierDao().findByUserContact(userContact);
         return de != null ? de.toDawgIdentifier() : null;
     }
 
@@ -136,9 +142,21 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
-    public DawgIdentifier deleteDawgIdentifier(UUID dawgIdentifierUuid) {
+    public DawgIdentifier deleteDawgIdentifierByUuid(UUID dawgIdentifierUuid) {
         // find the DawgIdentifierEntry that needs to be deleted.
         final DawgIdentifierEntry d = this.appDb.dawgIdentifierDao().findByUuid(dawgIdentifierUuid.toString());
+
+        // delete the DawgIdentifierEntry.
+        this.appDb.dawgIdentifierDao().deleteDawgIdentifierEntry(d);
+
+        // return the DawgIdentifier object associated with the deleted DawgIdentifierEntry.
+        return d.toDawgIdentifier();
+    }
+
+    @Override
+    public DawgIdentifier deleteDawgIdentifierByUserContact(String userContact) {
+        // find the DawgIdentifierEntry that needs to be deleted.
+        final DawgIdentifierEntry d = this.appDb.dawgIdentifierDao().findByUserContact(userContact);
 
         // delete the DawgIdentifierEntry.
         this.appDb.dawgIdentifierDao().deleteDawgIdentifierEntry(d);

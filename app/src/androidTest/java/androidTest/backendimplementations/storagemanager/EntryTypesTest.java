@@ -65,6 +65,7 @@ public class EntryTypesTest {
         // verify that the contents of the entry are as expected.
         assertEquals(new String(d.toNetworkBytes()), de.dawgIdentifierJson);
         assertEquals(d.getUniqueId().toString(), de.uuid);
+        assertEquals(d.getUserContact(), de.userContact);
     }
 
     @Test
