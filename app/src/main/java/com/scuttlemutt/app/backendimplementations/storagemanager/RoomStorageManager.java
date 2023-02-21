@@ -9,10 +9,14 @@ import com.scuttlemutt.app.backendimplementations.storagemanager.key.KeyEntry;
 import com.scuttlemutt.app.backendimplementations.storagemanager.message.MessageEntry;
 
 import java.security.Key;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.crypto.SecretKey;
 
 import storagemanager.StorageManager;
 import types.Bark;
@@ -24,6 +28,8 @@ import types.Message;
  * StorageManager class which interfaces with Android's Room DB for a backend.
  */
 public class RoomStorageManager implements StorageManager {
+    public static final DawgIdentifier MY_DAWG_ID = new DawgIdentifier("me", UUID.fromString("22df6593-676e-4c8c-a9d9-48d43c03cc8e"));
+
     private static final Gson GSON = new GsonBuilder().setLenient().create();
 
     private final AppDatabase appDb;
@@ -38,34 +44,43 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
-    public Bark lookupBark(UUID barkUuid) {
-        final BarkEntry be = this.appDb.barkDao().findByUuid(barkUuid.toString());
+    public Bark lookupBark(UUID id) {
+        final BarkEntry be = this.appDb.barkDao().findByUuid(id.toString());
         return be != null ? be.toBark() : null;
     }
 
     @Override
-    public DawgIdentifier lookupDawgIdentifier(UUID dawgIdentifierUuid) {
-        final DawgIdentifierEntry de = this.appDb.dawgIdentifierDao().findByUuid(dawgIdentifierUuid.toString());
+    public DawgIdentifier lookupDawgIdentifier(UUID id) {
+        final DawgIdentifierEntry de = this.appDb.dawgIdentifierDao().findByUuid(id.toString());
         return de != null ? de.toDawgIdentifier() : null;
     }
 
     @Override
-    public Conversation lookupConversation(List<UUID> userUuidList) {
-        // convert the userUuidList into a String so it can be feed to the Room DB.
-        final String userUuidListString = GSON.toJson(userUuidList);
+    public Conversation lookupConversation(UUID id) {
+        // convert the userId into a String so it can be feed to the Room DB.
+        final String userIdString = GSON.toJson(id);
 
         // do the lookup.
-        final ConversationEntry ce = this.appDb.conversationDao().findByUuidList(userUuidListString);
+        final ConversationEntry ce = this.appDb.conversationDao().findByUuid(userIdString);
         return ce != null ? ce.toConversation() : null;
     }
 
     @Override
-    public List<Key> lookupKeysForDawgIdentifier(UUID dawgIdentifierUuid) {
+    public PublicKey lookupPublicKeyForUUID(UUID id) {
+        // lookup the KeyEntry.
+        final KeyEntry ke = this.appDb.keyDao().findByUuid(id.toString());
+
+        // return the key if it was found.  otherwise, return null.
+        return ke != null ? ke.getPublicKeys().get(0) : null;
+    }
+
+    @Override
+    public List<SecretKey> lookupSecretKeysForUUID(UUID dawgIdentifierUuid) {
         // lookup the KeyEntry.
         final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
 
         // return the key if it was found.  otherwise, return null.
-        return ke != null ? ke.getKeys() : null;
+        return ke != null ? ke.getSymmetricKeys() : null;
     }
 
     @Override
@@ -75,6 +90,15 @@ public class RoomStorageManager implements StorageManager {
 
         // return the Message if a MessageEntry was found.  otherwise, return null.
         return me != null ? me.toMessage() : null;
+    }
+
+    @Override
+    public PrivateKey lookupPrivateKey() {
+        // lookup the KeyEntry.
+        final KeyEntry ke = this.appDb.keyDao().findByUuid(MY_DAWG_ID.getUUID().toString());
+
+        // return the key if it was found.  otherwise, return null.
+        return ke != null ? ke.getPrivateKeys().get(0) : null;
     }
 
     @Override
@@ -89,19 +113,19 @@ public class RoomStorageManager implements StorageManager {
 
     @Override
     public void storeConversation(Conversation conversation) {
-        this.appDb.conversationDao().insertConverationEntry(new ConversationEntry(conversation));
+        this.appDb.conversationDao().insertConversationEntry(new ConversationEntry(conversation));
     }
 
     @Override
-    public void storeKeyForDawgIdentifier(UUID dawgIdentifierUuid, Key key) {
+    public void storeSecretKeyForUUID(UUID dawgIdentifierUuid, SecretKey key) {
         // lookup to see if we're already storing a List of Keys for this UUID.  if we are storing
         // a List of Keys, we'll want to store an updated List of the Keys.
         final List<Key> keyList;
         final KeyEntry existingKeyEntry = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
         if (existingKeyEntry != null) {
-            keyList = existingKeyEntry.getKeys();
+            keyList = (List<Key>)(List<?>) existingKeyEntry.getSymmetricKeys();
         } else {
-            keyList = new ArrayList<Key>();
+            keyList = new ArrayList<>();
         }
 
         // see if the obtained keyList is at the maximum size.  if it is, remove the oldest entry
@@ -115,6 +139,58 @@ public class RoomStorageManager implements StorageManager {
 
         // construct a KeyEntry containing the new Key + store it.
         final KeyEntry newKeyEntry = new KeyEntry(dawgIdentifierUuid, keyList);
+        this.appDb.keyDao().insertKeyEntry(newKeyEntry);
+    }
+
+    @Override
+    public void storePublicKeyForUUID(UUID id, PublicKey key) {
+        // lookup to see if we're already storing a List of Keys for this UUID.  if we are storing
+        // a List of Keys, we'll want to store an updated List of the Keys.
+        final List<Key> keyList;
+        final KeyEntry existingKeyEntry = this.appDb.keyDao().findByUuid(id.toString());
+        if (existingKeyEntry != null) {
+            keyList = (List<Key>)(List<?>) existingKeyEntry.getPublicKeys();
+        } else {
+            keyList = new ArrayList<>();
+        }
+
+        // see if the obtained keyList is at the maximum size.  if it is, remove the oldest entry
+        // at index == 0.
+        if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
+            keyList.remove(0);
+        }
+
+        // append the new Key to the end of the List.
+        keyList.add(key);
+
+        // construct a KeyEntry containing the new Key + store it.
+        final KeyEntry newKeyEntry = new KeyEntry(id, keyList);
+        this.appDb.keyDao().insertKeyEntry(newKeyEntry);
+    }
+
+    @Override
+    public void storePrivateKey(PrivateKey key) {
+        // lookup to see if we're already storing a List of Keys for this UUID.  if we are storing
+        // a List of Keys, we'll want to store an updated List of the Keys.
+        final List<Key> keyList;
+        final KeyEntry existingKeyEntry = this.appDb.keyDao().findByUuid(MY_DAWG_ID.getUUID().toString());
+        if (existingKeyEntry != null) {
+            keyList = (List<Key>)(List<?>) existingKeyEntry.getPublicKeys();
+        } else {
+            keyList = new ArrayList<>();
+        }
+
+        // see if the obtained keyList is at the maximum size.  if it is, remove the oldest entry
+        // at index == 0.
+        if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
+            keyList.remove(0);
+        }
+
+        // append the new Key to the end of the List.
+        keyList.add(key);
+
+        // construct a KeyEntry containing the new Key + store it.
+        final KeyEntry newKeyEntry = new KeyEntry(MY_DAWG_ID.getUUID(), keyList);
         this.appDb.keyDao().insertKeyEntry(newKeyEntry);
     }
 
@@ -148,30 +224,57 @@ public class RoomStorageManager implements StorageManager {
     }
 
     @Override
-    public Conversation deleteConversation(List<UUID> userUuidList) {
+    public Conversation deleteConversation(UUID userUuid) {
         // convert the userUuidList into a String so it can be feed to the Room DB.
-        final String userUuidListString = GSON.toJson(userUuidList);
+        final String userUuidString = GSON.toJson(userUuid);
 
         // find the ConversationEntry that needs to be deleted.
-        final ConversationEntry c = this.appDb.conversationDao().findByUuidList(userUuidListString);
+        final ConversationEntry c = this.appDb.conversationDao().findByUuid(userUuidString);
 
         // delete the ConversationEntry.
-        this.appDb.conversationDao().deleteConverationEntry(c);
+        this.appDb.conversationDao().deleteConversationEntry(c);
 
         // return the Conversation object associated with the deleted ConversationEntry.
         return c.toConversation();
     }
 
     @Override
-    public List<Key> deleteKeysForDawgIdentifier(UUID dawgIdentifierUuid) {
+    public PublicKey deletePublicKeyForUUID(UUID dawgIdentifierUuid) {
         // lookup the KeyEntry.
         final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
 
-        // delete the KeyEntry.
-        this.appDb.keyDao().deleteKeyEntry(ke);
+        // delete the json field on the KeyEntry
+        PublicKey oldPublicKey = ke.getPublicKeys().get(0);
+        ke.publicKeyJson = "";
 
         // return the Key object associated with the deleted KeyEntry.
-        return ke.getKeys();
+        return oldPublicKey;
+    }
+
+    @Override
+    public List<SecretKey> deleteKeysForUUID(UUID dawgIdentifierUuid) {
+        // lookup the KeyEntry.
+        final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
+
+        // delete the json field on the KeyEntry
+        List<SecretKey> oldSecretKeys = ke.getSymmetricKeys();
+        ke.symmetricKeyListJson = "";
+
+        // return the Key object associated with the deleted KeyEntry.
+        return oldSecretKeys;
+    }
+
+    @Override
+    public PrivateKey deletePrivateKey() {
+        // lookup the KeyEntry.
+        final KeyEntry ke = this.appDb.keyDao().findByUuid(MY_DAWG_ID.getUUID().toString());
+
+        // delete the json field on the KeyEntry
+        PrivateKey oldPrivateKey = ke.getPrivateKeys().get(0);
+        ke.privateKeyJson = "";
+
+        // return the Key object associated with the deleted KeyEntry.
+        return oldPrivateKey;
     }
 
     @Override

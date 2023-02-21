@@ -1,13 +1,13 @@
 package backend.simulation;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
 import backend.scuttlemutt.Scuttlemutt;
-import org.apache.commons.lang3.StringUtils;
 import types.Conversation;
 import types.DawgIdentifier;
 import types.Message;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Class used to interact with a simulation of the Scuttlemutt over CLI.
@@ -15,31 +15,34 @@ import java.util.stream.Collectors;
 public class NetworkSimulationCLI {
     private static final String NO_DEVICE_ERROR_MSG = "No device is currently selected.  Please select a device on the network!";
     private static final String LABEL_PREFIX = "device_";
-    private static final String HELP_PRINTOUT = "Valid commands:\n" +
-            "--help/-h:  prints this help doc\n" +
-            "send-message/sm:  sends a message.  args:  -m: message\t-d: device id of destination\n" +
-            "print-conversations/pc:  prints metadata about the conversations for the currently selected device.\n" +
-            "select-device/sd:  selects the network device to interact with.  args: -d: the deviceID of the device we wish to interact with.\n" +
-            "print-current-device/pd:  prints the currently-selected device we're interacting with.\n" +
-            "print-messages/pm:  prints the messages in the specified conversation.  args: -d: the other party in the conversation\n" +  // TODO:  If we implement group msgs, revise to support groups.
-            "connect-devices/cd:  creates a connection between the specified devices.  args:  -d1:  the deviceID of one of the devices.  -d2:  the deviceID of the other device.\n" +
-            "disconnect-devices/dd:  removes a connection between the specified devices.  args:  -d1:  the deviceID of one of the devices.  -d2:  the deviceID of the other device.\n" +
-            "exit:  exits the CLI.";
+    private static final String HELP_PRINTOUT = "Valid commands:\n"
+            + "--help/-h:  prints this help doc\n"
+            + "send-message/sm:  sends a message.  args:  -m: message\t-d: device id of destination\n"
+            + "print-conversations/pc:  prints metadata about the conversations for the currently selected device.\n"
+            + "select-device/sd:  selects the network device to interact with.  args: -d: the deviceID of the device we wish to interact with.\n"
+            + "print-current-device/pd:  prints the currently-selected device we're interacting with.\n"
+            + "print-messages/pm:  prints the messages in the specified conversation.  args: -d: the other party in the conversation\n"
+            + "connect-devices/cd:  creates a connection between the specified devices.  args:  -d1:  the deviceID of one of the devices.  -d2:  the deviceID of the other device.\n"
+            + "disconnect-devices/dd:  removes a connection between the specified devices.  args:  -d1:  the deviceID of one of the devices.  -d2:  the deviceID of the other device.\n"
+            + "exit:  exits the CLI.";
 
-    private static NetworkSimulation simulation = null;  // the simulation of the network.
+    private static NetworkSimulation simulation = null; // the simulation of the network.
     private static int numDevices;
-    private static Scuttlemutt currentDevice = null;  // the device currently selected by the CLI. This device is used to interact with the network.
-    private static Integer currentDeviceId = null;  // the ID corresponding with current device.
+    private static Scuttlemutt currentDevice = null; // the device currently selected by the CLI. This device is used to
+                                                     // interact with the network.
+    private static Integer currentDeviceId = null; // the ID corresponding with current device.
 
     /**
      * Main method for CLI.
-     * @param args  args[0] = number of devices on network.
+     * 
+     * @param args args[0] = number of devices on network.
      */
     public static void main(String[] args) {
         final Scanner s = new Scanner(System.in);
 
         // get the desired number of devices on the network.
-        System.out.println("Welcome to the Scuttlemutt CLI!  Please provide the number of devices you wish to initialize on the network.");
+        System.out.println(
+                "Welcome to the Scuttlemutt CLI!  Please provide the number of devices you wish to initialize on the network.");
 
         // initialize with devices labeled device0..device<N>.
         numDevices = s.nextInt();
@@ -50,10 +53,11 @@ public class NetworkSimulationCLI {
         simulation = new NetworkSimulation(deviceLabels);
         simulation.connectAll();
 
-        System.out.println("Please enter your desired commands.  (NOTE:  We recommend setting a device to interact with first.)");
+        System.out.println(
+                "Please enter your desired commands.  (NOTE:  We recommend setting a device to interact with first.)");
 
         /*
-        REPL loop used to interact w/ network simulation.
+         * REPL loop used to interact w/ network simulation.
          */
         while (true) {
             // get the input from the scanner.
@@ -75,7 +79,8 @@ public class NetworkSimulationCLI {
                     msg = tokens[4];
                     dstDeviceId = tokens[2];
                 } else {
-                    System.out.println("Please specify the message being sent using the `-m` flag and specify the destination device id using the `-d` flag when calling send-message!");
+                    System.out.println(
+                            "Please specify the message being sent using the `-m` flag and specify the destination device id using the `-d` flag when calling send-message!");
                     continue;
                 }
 
@@ -87,7 +92,6 @@ public class NetworkSimulationCLI {
 
                 System.out.println("Successfully sent the message to " + dstDeviceId + "!");
 
-
             } else if (tokens[0].equals("connect-devices") || tokens[0].equals("cd")) {
                 final String deviceId1, deviceId2;
                 if (tokens[1].equals("-d1") && tokens[3].equals("-d2")) {
@@ -97,7 +101,8 @@ public class NetworkSimulationCLI {
                     deviceId1 = LABEL_PREFIX + tokens[4];
                     deviceId2 = LABEL_PREFIX + tokens[2];
                 } else {
-                    System.out.println("Please specify the two devices in the connection being created using the `-d1` and `-d2` flags when calling connect-devices!  Order does not matter.");
+                    System.out.println(
+                            "Please specify the two devices in the connection being created using the `-d1` and `-d2` flags when calling connect-devices!  Order does not matter.");
                     continue;
                 }
 
@@ -115,7 +120,8 @@ public class NetworkSimulationCLI {
                     deviceId1 = LABEL_PREFIX + tokens[4];
                     deviceId2 = LABEL_PREFIX + tokens[2];
                 } else {
-                    System.out.println("Please specify the two devices in the connection being removed using the `-d1` and `-d2` flags when calling disconnect-devices!  Order does not matter.");
+                    System.out.println(
+                            "Please specify the two devices in the connection being removed using the `-d1` and `-d2` flags when calling disconnect-devices!  Order does not matter.");
                     continue;
                 }
 
@@ -124,14 +130,14 @@ public class NetworkSimulationCLI {
 
                 System.out.println("Successfully disconnected  " + deviceId1 + " to " + deviceId2 + "!");
 
-            } else if (tokens[0].equals("print-conversations")|| tokens[0].equals("pc")) {
+            } else if (tokens[0].equals("print-conversations") || tokens[0].equals("pc")) {
                 printConversations();
-
 
             } else if (tokens[0].equals("select-device") || tokens[0].equals("sd")) {
                 // validate input.
                 if (tokens.length < 3 || !tokens[1].equals("-d")) {
-                    System.out.println("Please specify the device id number using the `-d` flag when calling select-device!");
+                    System.out.println(
+                            "Please specify the device id number using the `-d` flag when calling select-device!");
                     continue;
                 }
 
@@ -140,35 +146,33 @@ public class NetworkSimulationCLI {
 
                 System.out.println("Successfully selected device " + tokens[2] + "!");
 
-
             } else if (tokens[0].equals("print-current-device") || tokens[0].equals("pd")) {
                 printCurrentDeviceNumber();
-
 
             } else if (tokens[0].equals("print-messages") || tokens[0].equals("pm")) {
                 // validate input.
                 if (tokens.length < 3 || !tokens[1].equals("-d")) {
-                    System.out.println("Please specify the device id of the other party in the conversation using the `-d` flag when calling print-messages!");
+                    System.out.println(
+                            "Please specify the device id of the other party in the conversation using the `-d` flag when calling print-messages!");
                     continue;
                 }
 
-                // get the other device's ID.  // TODO:  If we implement group msgs, revise to support groups.
+                // get the other device's ID.
                 final DawgIdentifier dstDawgId = lookupDawgIdentifier(tokens[2]);
-                final List<DawgIdentifier> devicesInConversation = Collections.singletonList(dstDawgId);
 
                 // get the associated Conversation.
                 if (currentDevice == null) {
                     System.out.println(NO_DEVICE_ERROR_MSG);
                     continue;
                 }
-                final Conversation c = currentDevice.getConversation(devicesInConversation);
+                final Conversation c = currentDevice.getConversation(dstDawgId);
 
                 // call printMessages using the obtained Conversation.
                 printMessages(c);
 
-
             } else if (tokens[0].equals("exit")) {
                 simulation.shutdown();
+                s.close();
                 System.exit(0);
             } else {
                 System.out.println(HELP_PRINTOUT);
@@ -181,7 +185,7 @@ public class NetworkSimulationCLI {
     }
 
     private static void sendMessage(final String msg, final DawgIdentifier dstDawgId) {
-        if (currentDevice == null) {  // check if any device is selected.
+        if (currentDevice == null) { // check if any device is selected.
             System.out.println(NO_DEVICE_ERROR_MSG);
         } else {
             // prepend the message with the current device to ID who sent what.
@@ -199,7 +203,7 @@ public class NetworkSimulationCLI {
     }
 
     private static void printCurrentDeviceNumber() {
-        if (currentDevice == null) {  // check if any device is selected.
+        if (currentDevice == null) { // check if any device is selected.
             System.out.println(NO_DEVICE_ERROR_MSG);
         } else {
             System.out.println("The currently selected device is:  " + currentDeviceId);
@@ -212,19 +216,14 @@ public class NetworkSimulationCLI {
 
         // print out the conversations + stats about each.
         for (final Conversation c : conversations) {
-            // create a String containing the deviceIDs involved in the Conversation.
-            final List<String> deviceIdList = c.getUserList().stream()
-                    .map(DawgIdentifier::getUserContact)
-                    .collect(Collectors.toList());
-            final String deviceIdListString = StringUtils.join(deviceIdList, ", ");
-
-            // lookup the number of msgs in the Conversation.
             // TODO:  Replace this with code which actually looks up full msgs instead of Barks.
             //   (if we don't do this though, the demo should still work given a short enough msg)
+            
+            // lookup the number of msgs in the Conversation.
             final int numMsgs = c.getMessageUUIDList().size();
 
             // print out info about the Conversation.
-            System.out.println("deviceIds:  " + deviceIdListString + "\tmsg count:  " + numMsgs);
+            System.out.println("device:  " + c.getOtherPerson().getUsername() + "\tmsg count:  " + numMsgs);
         }
 
         System.out.println("done");
@@ -251,10 +250,11 @@ public class NetworkSimulationCLI {
     /**
      * Returns the UUID for the specified device.
      *
-     * NOTE:  If the UUID is nonexistent, NetworkSimulation.getScuttlemutt() will throw an exception.
+     * NOTE: If the UUID is nonexistent, NetworkSimulation.getScuttlemutt() will
+     * throw an exception.
      *
-     * @param deviceId  The ID of the device whose UUID is being looked-up.
-     * @return  The UUID of the specified device.
+     * @param deviceId The ID of the device whose UUID is being looked-up.
+     * @return The UUID of the specified device.
      */
     private static DawgIdentifier lookupDawgIdentifier(final String deviceId) {
         return simulation.getScuttlemutt(LABEL_PREFIX + deviceId)

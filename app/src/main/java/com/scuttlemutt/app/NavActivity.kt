@@ -95,7 +95,7 @@ class NavActivity() : ConnectionsActivity() {
         Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
 
         // Set user name
-        name = mutt.dawgIdentifier.userContact
+        name = mutt.dawgIdentifier.username
         // Turn off the decor fitting system windows, which allows us to handle insets,
         // including IME animations
         WindowCompat.setDecorFitsSystemWindows(window, false)

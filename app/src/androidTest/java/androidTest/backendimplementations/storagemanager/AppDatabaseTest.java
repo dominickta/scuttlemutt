@@ -124,23 +124,23 @@ public class AppDatabaseTest {
         final ConversationEntry ce = new ConversationEntry(c);
 
         // insert the entry into the database.
-        this.conversationDao.insertConverationEntry(ce);
+        this.conversationDao.insertConversationEntry(ce);
 
         // allow request to complete.
         TestUtils.sleepOneSecond();
 
         // lookup the entry + verify the returned value matches what we entered.
-        final ConversationEntry obtainedEntry = this.conversationDao.findByUuidList(ce.userUuidListJson);
+        final ConversationEntry obtainedEntry = this.conversationDao.findByUuid(ce.userIdJson);
         assertEquals(ce, obtainedEntry);
 
         // delete the entry from the database.
-        this.conversationDao.deleteConverationEntry(ce);
+        this.conversationDao.deleteConversationEntry(ce);
 
         // allow request to complete.
         TestUtils.sleepOneSecond();
 
         // assert that the entry was deleted.
-        assertNull(this.conversationDao.findByUuidList(ce.userUuidListJson));
+        assertNull(this.conversationDao.findByUuid(ce.userIdJson));
     }
 
     @Test
@@ -174,7 +174,7 @@ public class AppDatabaseTest {
         // create the KeyEntry + DawgIdentifier + Key objects used for testing.
         final DawgIdentifier d = TestUtils.generateRandomizedDawgIdentifier();
         final Key k = Crypto.DUMMY_SECRETKEY;
-        final KeyEntry ke = new KeyEntry(d.getUniqueId(), Collections.singletonList(k));
+        final KeyEntry ke = new KeyEntry(d.getUUID(), Collections.singletonList(k));
 
         // insert the entry into the database.
         this.keyDao.insertKeyEntry(ke);
@@ -219,7 +219,7 @@ public class AppDatabaseTest {
         TestUtils.sleepOneSecond();
 
         // assert that the entry was deleted.
-        assertNull(this.conversationDao.findByUuidList(me.uuid));
+        assertNull(this.conversationDao.findByUuid(me.uuid));
     }
 
     @Test
@@ -231,8 +231,8 @@ public class AppDatabaseTest {
         final ConversationEntry ce2 = new ConversationEntry(c2);
 
         // insert the entries into the database.
-        this.conversationDao.insertConverationEntry(ce1);
-        this.conversationDao.insertConverationEntry(ce2);
+        this.conversationDao.insertConversationEntry(ce1);
+        this.conversationDao.insertConversationEntry(ce2);
 
         // allow request to complete.
         TestUtils.sleepOneSecond();

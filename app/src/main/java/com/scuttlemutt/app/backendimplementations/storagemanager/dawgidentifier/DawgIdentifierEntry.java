@@ -41,7 +41,7 @@ public class DawgIdentifierEntry {
      * @param dawgId The DawgIdentifier object from which this entry is being constructed.
      */
     public DawgIdentifierEntry(final DawgIdentifier dawgId) {
-        this.uuid = dawgId.getUniqueId().toString();
+        this.uuid = dawgId.getUUID().toString();
         this.dawgIdentifierJson = new String(dawgId.toNetworkBytes());
     }
 

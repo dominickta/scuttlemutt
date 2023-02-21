@@ -3,12 +3,14 @@ package storagemanager;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.security.Key;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.crypto.SecretKey;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import crypto.Crypto;
 import types.Bark;
@@ -57,14 +59,12 @@ public class MapStorageManagerTest {
         this.mapStorageManager.storeDawgIdentifier(d);
 
         // lookup the object in the storage manager.
-        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(d.getUniqueId());
+        final DawgIdentifier obtainedDawgIdentifier = this.mapStorageManager.lookupDawgIdentifier(d.getUUID());
         assertEquals(d, obtainedDawgIdentifier);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteDawgIdentifier(d.getUniqueId());
-
-        // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupDawgIdentifier(d.getUniqueId()));
+        this.mapStorageManager.deleteDawgIdentifier(d.getUUID());
+        assertNull(this.mapStorageManager.lookupDawgIdentifier(d.getUUID()));
     }
 
     @Test
@@ -73,63 +73,81 @@ public class MapStorageManagerTest {
         this.mapStorageManager.storeConversation(c);
 
         // lookup the object in the storage manager.
-        final Conversation obtainedConversation = this.mapStorageManager.lookupConversation(c.getUserUUIDList());
+        final Conversation obtainedConversation = this.mapStorageManager
+                .lookupConversation(c.getOtherPerson().getUUID());
         assertEquals(c, obtainedConversation);
 
         // successfully delete the object.
-        this.mapStorageManager.deleteConversation(c.getUserUUIDList());
+        this.mapStorageManager.deleteConversation(c.getOtherPerson().getUUID());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupConversation(c.getUserUUIDList()));
+        assertNull(this.mapStorageManager.lookupConversation(c.getOtherPerson().getUUID()));
     }
 
     @Test
-    public void testKeyStorageLifecycle() {
+    public void testSecretKeyStorageLifecycle() {
         // create a List of Key objects to store in the storage manager.
         // we want to store the maximum allowed number of Keys.
-        final List<Key> keyList = new ArrayList<Key>();
+        final List<SecretKey> keyList = new ArrayList<>();
         for (int i = 0; i < StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE; i++) {
             keyList.add(Crypto.generateSecretKey());
         }
 
-        // store the Key objects one-by-one in the storage manager and verify that the stored
-        // List<Key> is updated along the way.
+        // store the Key objects one-by-one in the storage manager and verify that the
+        // stored List<Key> is updated along the way.
         for (int i = 0; i < StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE; i++) {
-            final Key currentKey = keyList.get(i);
+            final SecretKey currentKey = keyList.get(i);
 
             // store the currentKey.
-            this.mapStorageManager.storeKeyForDawgIdentifier(d.getUniqueId(), currentKey);
+            this.mapStorageManager.storeSecretKeyForUUID(d.getUUID(), currentKey);
 
             // verify that the Key was successfully stored in the List.
-            final List<Key> obtainedKeys = this.mapStorageManager.lookupKeysForDawgIdentifier(d.getUniqueId());
+            final List<SecretKey> obtainedKeys = this.mapStorageManager.lookupSecretKeysForUUID(d.getUUID());
             assertEquals(currentKey, obtainedKeys.get(obtainedKeys.size() - 1));
-            assertEquals(i + 1, obtainedKeys.size());  // assert the List contains all Keys added so far.
+            assertEquals(i + 1, obtainedKeys.size()); // assert the List contains all Keys added so far.
         }
 
-        // verify that the oldest key is removed from the stored List when we add Keys after hitting
-        // the size limit.
-        final Key extraKey = Crypto.generateSecretKey();
-        this.mapStorageManager.storeKeyForDawgIdentifier(d.getUniqueId(), extraKey);
-        final List<Key> obtainedKeys = this.mapStorageManager.lookupKeysForDawgIdentifier(d.getUniqueId());
+        // verify that the oldest key is removed from the stored List when we add Keys
+        // after hitting the size limit.
+        final SecretKey extraKey = Crypto.generateSecretKey();
+        this.mapStorageManager.storeSecretKeyForUUID(d.getUUID(), extraKey);
+        final List<SecretKey> obtainedKeys = this.mapStorageManager.lookupSecretKeysForUUID(d.getUUID());
 
         // assert that obtainedKeys == the maximum number of Keys we allow to be stored.
         assertEquals(StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE, obtainedKeys.size());
 
         // assert that the returned List is as follows:
-        // - contains all contents of the original List except the first element, with each element
-        //   shifted down one index.
-        // - the extraKey is appended to the end of the List.
-        final List<Key> expectedKeyList = new ArrayList<Key>(keyList);
+        // - contains all contents of the original List except the first element
+        // - each element should be shifted down one index
+        // - the extraKey is appended to the end of the List
+        final List<SecretKey> expectedKeyList = new ArrayList<>(keyList);
         expectedKeyList.remove(0);
         expectedKeyList.add(extraKey);
         assertEquals(expectedKeyList, obtainedKeys);
 
-
         // successfully delete the object.
-        this.mapStorageManager.deleteKeysForDawgIdentifier(d.getUniqueId());
+        this.mapStorageManager.deleteKeysForUUID(d.getUUID());
 
         // verify that the object was deleted.
-        assertNull(this.mapStorageManager.lookupKeysForDawgIdentifier(d.getUniqueId()));
+        assertNull(this.mapStorageManager.lookupSecretKeysForUUID(d.getUUID()));
+    }
+
+    @Test
+    public void testPublicKeyStorageLifecycle() {
+        final PublicKey publicKey = Crypto.ALICE_KEYPAIR.getPublic();
+
+        // store the key
+        this.mapStorageManager.storePublicKeyForUUID(d.getUUID(), publicKey);
+
+        // verify that the Key was successfully stored in the List.
+        final PublicKey obtainedKey = this.mapStorageManager.lookupPublicKeyForUUID(d.getUUID());
+        assertEquals(publicKey, obtainedKey);
+
+        // delete the key.
+        this.mapStorageManager.deleteKeysForUUID(d.getUUID());
+
+        // verify that the object was deleted.
+        assertNull(this.mapStorageManager.lookupSecretKeysForUUID(d.getUUID()));
     }
 
     @Test
