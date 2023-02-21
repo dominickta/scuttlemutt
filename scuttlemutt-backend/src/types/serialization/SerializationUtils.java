@@ -46,19 +46,28 @@ public class SerializationUtils {
         return GSON.toJson(keyJsonList);
     }
 
+    /**
+     * Deserializes the given string into a list of key objects.
+     * @param serializedKeyList a json string of a list of keys
+     * @return the list of key objects, or null on error.
+     */
     public static List<Key> deserializeKeyList(final String serializedKeyList) {
-        // deserialize the serializedKeyList to a List<String>.
-        final Type arrayListStringType = new TypeToken<ArrayList<String>>() {}.getType();
-        final List<String> keyJsonList = GSON.fromJson(serializedKeyList, arrayListStringType);
+        try {
+            // deserialize the serializedKeyList to a List<String>.
+            final Type arrayListStringType = new TypeToken<ArrayList<String>>() {}.getType();
+            final List<String> keyJsonList = GSON.fromJson(serializedKeyList, arrayListStringType);
 
-        // convert the JSONs to Key objects + store them.
-        final List<Key> keyList = new ArrayList<Key>();
-        for (final String json : keyJsonList) {
-            keyList.add(deserializeKey(json.getBytes(StandardCharsets.UTF_8)));
+            // convert the JSONs to Key objects + store them.
+            final List<Key> keyList = new ArrayList<Key>();
+            for (final String json : keyJsonList) {
+                keyList.add(deserializeKey(json.getBytes(StandardCharsets.UTF_8)));
+            }
+
+            // return the Key objects.
+            return keyList;
+        } catch (Exception e) {
+            return null;
         }
-
-        // return the Key objects.
-        return keyList;
     }
 
     public static byte[] serializeKey(final Key k) {

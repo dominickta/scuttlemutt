@@ -243,11 +243,12 @@ public class RoomStorageManager implements StorageManager {
         // lookup the KeyEntry.
         final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
 
-        // delete the KeyEntry.
-        this.appDb.keyDao().deleteKeyEntry(ke);
+        // delete the json field on the KeyEntry
+        PublicKey oldPublicKey = ke.getPublicKeys().get(0);
+        ke.publicKeyJson = "";
 
         // return the Key object associated with the deleted KeyEntry.
-        return ke.getPublicKeys().get(0);
+        return oldPublicKey;
     }
 
     @Override
@@ -255,11 +256,12 @@ public class RoomStorageManager implements StorageManager {
         // lookup the KeyEntry.
         final KeyEntry ke = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
 
-        // delete the KeyEntry.
-        this.appDb.keyDao().deleteKeyEntry(ke);
+        // delete the json field on the KeyEntry
+        List<SecretKey> oldSecretKeys = ke.getSymmetricKeys();
+        ke.symmetricKeyListJson = "";
 
         // return the Key object associated with the deleted KeyEntry.
-        return ke.getSymmetricKeys();
+        return oldSecretKeys;
     }
 
     @Override
@@ -267,11 +269,12 @@ public class RoomStorageManager implements StorageManager {
         // lookup the KeyEntry.
         final KeyEntry ke = this.appDb.keyDao().findByUuid(MY_DAWG_ID.getUUID().toString());
 
-        // delete the KeyEntry.
-        this.appDb.keyDao().deleteKeyEntry(ke);
+        // delete the json field on the KeyEntry
+        PrivateKey oldPrivateKey = ke.getPrivateKeys().get(0);
+        ke.privateKeyJson = "";
 
         // return the Key object associated with the deleted KeyEntry.
-        return ke.getPrivateKeys().get(0);
+        return oldPrivateKey;
     }
 
     @Override
