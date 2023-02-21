@@ -35,6 +35,7 @@ public class Crypto {
     public static final KeyPair ALICE_KEYPAIR = Crypto.generateKeyPair();
     public static final KeyPair BOB_KEYPAIR = Crypto.generateKeyPair();
     public static final SecretKey DUMMY_SECRETKEY = Crypto.generateSecretKey();
+    public static final SecretKey OTHER_SECRETKEY = Crypto.generateSecretKey();
     private static final int ASYMMETRIC_KEY_SIZE = 4096;
     private static final int SYMMETRIC_KEY_SIZE = 128; // the size of the symmetric key.
     private static final int MAX_MESSAGE_SIZE = ASYMMETRIC_KEY_SIZE / 8 - 11;

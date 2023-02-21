@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Collections;
 import java.util.List;
@@ -110,8 +109,7 @@ public class NetworkSimulationTest {
         try {
             final QueueIOManager bobIOManager = simulation.getQueueIOManager(bobLabel);
             final Bark receivedBark = bobIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
-            final PrivateKey privateKey = bob.getPrivateKey();
-            assertEquals(msg, receivedBark.getContents(privateKey, keys));
+            assertEquals(msg, receivedBark.getContents(keys));
         } catch (IOManagerException e) {
             // this should never happen, print stack trace if it does.
             e.printStackTrace();

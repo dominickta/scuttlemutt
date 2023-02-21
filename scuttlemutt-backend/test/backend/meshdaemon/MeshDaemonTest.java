@@ -3,7 +3,6 @@ package backend.meshdaemon;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.security.PrivateKey;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
@@ -77,8 +76,7 @@ public class MeshDaemonTest {
 
                 // check that the Bark queue was fed a Bark object containing the message.
                 final Bark sentBark = this.meshDaemonInternalBarkQueue.remove();
-                final PrivateKey myPrivateKey = storageManager.lookupPrivateKey();
-                final String decryptedMessage = sentBark.getContents(myPrivateKey, List.of(this.conversationKey));
+                final String decryptedMessage = sentBark.getContents(List.of(this.conversationKey));
                 assertEquals(messageContents, decryptedMessage);
 
                 // verify that the StorageManager stored the data for a Bark.

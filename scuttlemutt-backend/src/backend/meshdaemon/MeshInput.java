@@ -75,8 +75,8 @@ public class MeshInput implements Runnable {
                 // ordering number from
                 final UUID senderId = bark.getSenderUUID(myPrivateKey);
                 final List<SecretKey> secretKeys = this.storage.lookupSecretKeysForUUID(senderId);
-                final DawgIdentifier sender = bark.getSender(this.myPrivateKey, secretKeys);
-                final String messageContents = bark.getContents(this.myPrivateKey, secretKeys);
+                final DawgIdentifier sender = bark.getSender(secretKeys);
+                final String messageContents = bark.getContents(secretKeys);
 
                 // if we were unable to successfully decrypt the Bark, toss it out.
                 if (messageContents != null) {
@@ -84,7 +84,7 @@ public class MeshInput implements Runnable {
                 }
 
                 // obtain the message ordering num from the Bark.
-                final Long messageOrderingNum = bark.getOrderNum(this.myPrivateKey, secretKeys);
+                final Long messageOrderingNum = bark.getOrderNum(secretKeys);
 
                 // create + store the Message object.
                 final Message message = new Message(messageContents, messageOrderingNum);
