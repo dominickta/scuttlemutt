@@ -24,7 +24,9 @@ import backend.iomanager.QueueIOManager;
 import backend.scuttlemutt.Scuttlemutt;
 import storagemanager.StorageManager;
 import types.Bark;
+import types.Conversation;
 import types.DawgIdentifier;
+import types.Message;
 import types.TestUtils;
 import types.packet.BarkPacket;
 
@@ -89,7 +91,7 @@ public class NetworkSimulationTest {
         final DawgIdentifier bobId = bob.getDawgIdentifier();
         final StorageManager aliceStorage = simulation.getStorageManager(aliceLabel);
         final StorageManager bobStorage = simulation.getStorageManager(bobLabel);
-        
+
         // create a message to send to a specific party.
         // NOTE: The message should be small enough to fit in a single Bark object.
         final String msg = RandomStringUtils.randomAlphanumeric(15);
@@ -105,15 +107,19 @@ public class NetworkSimulationTest {
         // send the message using `sendMessage`
         alice.sendMessage(msg, bobId);
 
-        // verify that bob successfully received the message from alice.
+        // give the message a couple seconds to propagate thru the network.
         try {
-            final QueueIOManager bobIOManager = simulation.getQueueIOManager(bobLabel);
-            final Bark receivedBark = bobIOManager.meshReceive(BarkPacket.class).getPacketBarks().get(0);
-            assertEquals(msg, receivedBark.getContents(keys));
-        } catch (IOManagerException e) {
-            // this should never happen, print stack trace if it does.
-            e.printStackTrace();
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
+
+        // verify that the intended destination device successfully received the
+        // message.
+        Conversation c = bob.getConversation(aliceId);
+        final List<Message> receivedMsgs = bob.getMessagesForConversation(c);
+        assertEquals(1, receivedMsgs.size());
+        assertEquals(msg, receivedMsgs.get(0).getPlaintextMessage());
     }
 
     @Test
