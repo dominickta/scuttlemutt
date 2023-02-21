@@ -3,6 +3,7 @@ package backend.initialization;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -48,9 +49,9 @@ public class KeyExchangerTest {
     }
 
     @Test
-    public void testSendSecretKey() {
+    public void testSendKeys() {
         // create + send a SecretKey using the KeyExchanger.
-        this.keyExchanger.sendSecretKey(otherDeviceId);
+        this.keyExchanger.sendKeys(otherDeviceId, Crypto.ALICE_KEYPAIR.getPublic());
 
         // verify that a KeyExchangePacket was successfully sent by the KeyExchanger.
         final Packet receivedKePacket = q1to2.remove();
@@ -58,7 +59,7 @@ public class KeyExchangerTest {
     }
 
     @Test
-    public void testReceiveSecretKey() {
+    public void testReceiveKeys() {
         // store a SecretKey for the otherDeviceId in the KeyExchanger.
         final Map<String, SecretKey> internalKeyExchangeMap = new HashMap<String, SecretKey>();
         final SecretKey localKey = Crypto.generateSecretKey();
@@ -69,17 +70,20 @@ public class KeyExchangerTest {
         // send a KeyExchange packet to m1.
         final KeyExchangePacket sentKePacket = TestUtils.generateRandomizedKeyExchangePacket();
         this.q2to1.add(sentKePacket);
-        final SecretKey sentKey = (SecretKey) sentKePacket.getKey();
+        final SecretKey sentSecretKey = sentKePacket.getSecretKey();
+        final PublicKey sentPublicKey = sentKePacket.getPublicKey();
 
         // figure out which SecretKey we should expect to have stored (the one with the
         // lower hashCode).
-        final SecretKey expectedKey = localKey.hashCode() < sentKey.hashCode() ? sentKey : localKey;
+        final SecretKey expectedKey = localKey.hashCode() < sentSecretKey.hashCode() ? sentSecretKey : localKey;
 
         // receive the SecretKey using the KeyExchanger, verify that the expectedKey is
         // stored.
-        final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(this.otherDeviceId,
-                Crypto.ALICE_KEYPAIR.getPublic());
-        final SecretKey storedKey = this.storageManager.lookupLatestKeyForDawgIdentifier(dawgId.getUUID());
+        final DawgIdentifier dawgId = this.keyExchanger.receiveKeys(this.otherDeviceId);
+        final SecretKey storedKey = this.storageManager.lookupLatestSecretKeyForDawgIdentifier(dawgId.getUUID());
+        final PublicKey receivedPublicKey = this.storageManager.lookupPublicKeyForUUID(dawgId.getUUID());
         assertEquals(expectedKey, storedKey);
+        assertEquals(Crypto.ALICE_KEYPAIR.getPublic(), sentPublicKey);
+        assertEquals(sentPublicKey, receivedPublicKey);
     }
 }

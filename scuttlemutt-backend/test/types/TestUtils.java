@@ -24,7 +24,7 @@ public class TestUtils {
     }
 
     public static KeyExchangePacket generateRandomizedKeyExchangePacket() {
-        return new KeyExchangePacket(Crypto.DUMMY_SECRETKEY);
+        return new KeyExchangePacket(Crypto.ALICE_KEYPAIR.getPublic(), Crypto.DUMMY_SECRETKEY);
     }
 
     public static Bark generateRandomizedBark() {
@@ -46,8 +46,7 @@ public class TestUtils {
 
     public static Message generateRandomizedMessage() {
         return new Message(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE),
-                r.nextLong()
-        );
+                r.nextLong());
     }
 
     public static void sleepOneSecond() {

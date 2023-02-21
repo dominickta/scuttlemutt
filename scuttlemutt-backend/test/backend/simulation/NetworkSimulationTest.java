@@ -17,6 +17,7 @@ import javax.crypto.SecretKey;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.powermock.reflect.Whitebox;
 
 import backend.iomanager.IOManagerException;
@@ -78,6 +79,7 @@ public class NetworkSimulationTest {
     }
 
     @Test
+    @Timeout(value = 10)
     public void testScuttlemutt_sendMessage_verifyDestinationScuttlemuttObjectRecievedMessage() {
         // get the Scuttlemutt for the devices.
         final String aliceLabel = deviceLabels.get(0);

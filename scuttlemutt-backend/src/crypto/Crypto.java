@@ -86,7 +86,6 @@ public class Crypto {
     public static byte[] encrypt(final byte[] payload, final Key key, final String keyType) {
         byte[] result = {};
         try {
-            // TODO: encrypt fails if payload is not a multiple of 16
             Cipher encryptCipher = Cipher.getInstance(keyType);
             encryptCipher.init(Cipher.ENCRYPT_MODE, key);
             result = encryptCipher.doFinal(payload, 0, payload.length);
@@ -119,18 +118,11 @@ public class Crypto {
     /**
      * Decrypts the byte array payload with the given key.
      * 
-<<<<<<< HEAD
      * @param payload the byte array to decrypt
      * @param key     the key to decrypt with
      * @param keyType the type of the Key. Use the String constants defined in this
      *                class for this param.
      * @return the decrypted (plaintext) byte array, or empty on error
-=======
-     * @param payload    the byte array to decrypt
-     * @param key the key to decrypt with
-     * @param keyType the type of the Key.  Use the String constants defined in this class for this param.
-     * @return the decrypted (plaintext) byte array, or null on error
->>>>>>> main
      */
     public static byte[] decrypt(final byte[] payload, final Key key, final String keyType) {
         byte[] result = {};

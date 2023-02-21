@@ -48,8 +48,7 @@ public class SerializationUtils {
 
     public static List<Key> deserializeKeyList(final String serializedKeyList) {
         // deserialize the serializedKeyList to a List<String>.
-        final Type arrayListStringType = new TypeToken<ArrayList<String>>() {
-        }.getType();
+        final Type arrayListStringType = new TypeToken<ArrayList<String>>() {}.getType();
         final List<String> keyJsonList = GSON.fromJson(serializedKeyList, arrayListStringType);
 
         // convert the JSONs to Key objects + store them.
@@ -78,11 +77,8 @@ public class SerializationUtils {
     }
 
     public static Key deserializeKey(final byte[] serializedBytes) {
-
         // Figure out the type of the Key serialized in the byte[], reassemble + return
         // the Key.
-
-        // SecretKey type.
         if (indexOf(serializedBytes, SERIALIZED_SECRETKEY_PREFIX_BYTES) != -1) {
             // trim off the prefix.
             final byte[] keyBytes = Arrays.copyOfRange(serializedBytes,
@@ -91,11 +87,7 @@ public class SerializationUtils {
 
             // get the base64 encoded key.
             final byte[] encodedKey = Base64.getDecoder().decode(keyBytes);
-
-            // return the SecretKey.
             return new SecretKeySpec(encodedKey, 0, encodedKey.length, Crypto.SYMMETRIC_KEY_TYPE);
-
-            // PublicKey type.
         } else if (indexOf(serializedBytes, SERIALIZED_PUBLICKEY_PREFIX_BYTES) != -1) {
             // trim off the prefix.
             final byte[] keyBytes = Arrays.copyOfRange(serializedBytes,
