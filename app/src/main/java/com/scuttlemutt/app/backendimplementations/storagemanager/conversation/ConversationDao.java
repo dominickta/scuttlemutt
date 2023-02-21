@@ -13,14 +13,14 @@ import java.util.List;
  */
 @Dao
 public interface ConversationDao {
-    @Query("SELECT * FROM conversationentry WHERE userUuidListJson LIKE :userUuidListString LIMIT 1")
-    ConversationEntry findByUuidList(String userUuidListString);
+    @Query("SELECT * FROM conversationentry WHERE userIdJson LIKE :userIdString LIMIT 1")
+    ConversationEntry findByUuid(String userIdString);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    long insertConverationEntry(ConversationEntry conversationEntry);
+    long insertConversationEntry(ConversationEntry conversationEntry);
 
     @Delete
-    int deleteConverationEntry(ConversationEntry conversationEntry);
+    int deleteConversationEntry(ConversationEntry conversationEntry);
 
     @Query("SELECT * FROM conversationentry")
     List<ConversationEntry> listAllConversations();

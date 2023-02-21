@@ -21,21 +21,25 @@ import types.DawgIdentifier
 import java.util.*
 
 val MyKey = Crypto.DUMMY_SECRETKEY;
+val MyKeyPair = Crypto.ALICE_KEYPAIR;
 
 val AKey = Crypto.DUMMY_SECRETKEY
 val ADawgTag = DawgIdentifier(
     "ADawg",
     UUID.fromString("26f4dfb5-ac74-4832-90ef-05daf947aa87")
 )
+val AKeyPair = Crypto.BOB_KEYPAIR;
 
 val BKey = Crypto.DUMMY_SECRETKEY
 val BDawgTag = DawgIdentifier(
     "BDawg",
     UUID.fromString("fa47fef0-a646-4959-8f36-efdf94a4f295")
 )
+val BKeyPair = Crypto.BOB_KEYPAIR;
 
 val CKey = Crypto.DUMMY_SECRETKEY
 val CDawgTag = DawgIdentifier(
     "CDawg",
     UUID.fromString("9d2166e8-da9b-48f8-b3fe-34e0162bf79a")
 )
+val CKeyPair = Crypto.BOB_KEYPAIR;

@@ -75,11 +75,6 @@ public class MapStorageManager implements StorageManager {
     }
 
     @Override
-    public PublicKey lookupPublicKeyForDeviceId(final String deviceId) {
-        return this.deviceMap.getOrDefault(deviceId, null);
-    }
-
-    @Override
     public List<SecretKey> lookupSecretKeysForUUID(final UUID id) {
         return this.secretKeysMap.getOrDefault(id, null);
     }
@@ -112,11 +107,6 @@ public class MapStorageManager implements StorageManager {
     @Override
     public void storeConversation(final Conversation conversation) {
         this.conversationMap.put(conversation.getOtherPerson().getUUID(), GSON.toJson(conversation));
-    }
-
-    @Override
-    public void storePublicKeyForDeviceId(final String deviceId, final PublicKey publicKey) {
-        this.deviceMap.put(deviceId, publicKey);
     }
 
     @Override
@@ -167,12 +157,6 @@ public class MapStorageManager implements StorageManager {
             return null;
         }
         return GSON.fromJson(serializedObject, Conversation.class);
-    }
-
-    @Override
-    public PublicKey deletePublicKeyForDeviceId(final String deviceId) {
-        final PublicKey publicKey = this.deviceMap.remove(deviceId);
-        return publicKey;
     }
 
     @Override

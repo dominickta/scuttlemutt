@@ -7,7 +7,6 @@ import androidx.room.PrimaryKey;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.scuttlemutt.app.backendimplementations.storagemanager.bark.BarkEntry;
 
 import types.Conversation;
 
@@ -18,7 +17,7 @@ import types.Conversation;
 public class ConversationEntry {
     @PrimaryKey
     @NonNull
-    public String userUuidListJson;
+    public String userIdJson;
 
     @ColumnInfo(name = "conversationJson")
     @NonNull
@@ -29,9 +28,9 @@ public class ConversationEntry {
      *
      * (Otherwise, ConversationEntry class is not a valid Entity.)
      */
-    public ConversationEntry(@NonNull final String userUuidListJson,
+    public ConversationEntry(@NonNull final String userIdJson,
                              @NonNull final String conversationJson) {
-        this.userUuidListJson = userUuidListJson;
+        this.userIdJson = userIdJson;
         this.conversationJson = conversationJson;
     }
 
@@ -42,7 +41,7 @@ public class ConversationEntry {
     public ConversationEntry(final Conversation c) {
         // JSON-ify the User UUID List we're using as an entry key.
         final Gson GSON = new GsonBuilder().setLenient().create();
-        this.userUuidListJson = GSON.toJson(c.getUserUUIDList());
+        this.userIdJson = GSON.toJson(c.getOtherPerson().getUUID());
 
         // store the JSON for the entire Conversation.
         this.conversationJson = new String(c.toNetworkBytes());
@@ -57,6 +56,6 @@ public class ConversationEntry {
         if (!(o instanceof ConversationEntry)) {
             return false;
         }
-        return this.userUuidListJson.equals(((ConversationEntry) o).userUuidListJson);
+        return this.userIdJson.equals(((ConversationEntry) o).userIdJson);
     }
 }

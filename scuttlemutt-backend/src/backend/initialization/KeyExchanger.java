@@ -117,7 +117,6 @@ public class KeyExchanger {
         this.secretKeysBeingExchanged.remove(senderId);
 
         // store the keys
-        this.storageManager.storePublicKeyForDeviceId(senderId, senderPublicKey);
         this.storageManager.storePublicKeyForUUID(senderDawgId.getUUID(), senderPublicKey);
         this.storageManager.storeSecretKeyForUUID(senderDawgId.getUUID(), chosenKey);
         this.storageManager.storeDawgIdentifier(senderDawgId);

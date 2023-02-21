@@ -52,14 +52,6 @@ public interface StorageManager {
     Conversation lookupConversation(final UUID id);
 
     /**
-     * Returns the PublicKey associated with the given device id.
-     * 
-     * @param deviceId the device id to look for
-     * @return the PublicKey or null if not found
-     */
-    PublicKey lookupPublicKeyForDeviceId(final String deviceId);
-
-    /**
      * Returns the PublicKey associated with the given dawgIdentifier's id.
      * 
      * @param id the UUID of the DawgIdentifier to look for
@@ -131,20 +123,9 @@ public interface StorageManager {
      * 
      * Note: If there are any preexisting objects, they are overwritten.
      * 
-     * @param dawgIdentifier the identifier to store
+     * @param conversation the identifier to store
      */
     void storeConversation(final Conversation conversation);
-
-    /**
-     * Associates the given device id with the supplied PublicKey.
-     * 
-     * NOTE: This operation will overwrite any existing PublicKey stored with
-     * the given device id.
-     * 
-     * @param deviceId  The id of the device to store the public key for
-     * @param publicKey The public key to store
-     */
-    void storePublicKeyForDeviceId(final String deviceId, final PublicKey publicKey);
 
     /**
      * Associates the user with a DawgIdentifier that has a unique id that
@@ -216,14 +197,6 @@ public interface StorageManager {
      * @return the Conversation which was deleted, otherwise returns null
      */
     Conversation deleteConversation(final UUID id);
-
-    /**
-     * Removes the PublicKey with the associated device id.
-     * 
-     * @param deviceId the deviceId to delete the PublicKey from
-     * @return the PublicKey which was deleted, otherwise returns null
-     */
-    PublicKey deletePublicKeyForDeviceId(final String deviceId);
 
     /**
      * Removes the PublicKey associated with the given dawgIdentifier uuid.
