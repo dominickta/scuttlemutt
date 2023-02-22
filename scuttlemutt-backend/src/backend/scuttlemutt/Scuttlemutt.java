@@ -44,6 +44,8 @@ public class Scuttlemutt {
             KeyPair keys = Crypto.generateKeyPair();
             this.storageManager.storePrivateKey(keys.getPrivate());
             this.storageManager.storePublicKeyForUUID(dawgIdentifier.getUUID(), keys.getPublic());
+            this.storageManager.storePrivateKey(keys.getPrivate());
+            System.out.println("ADDED");
         }
 
         // keys must be initialized befor the mesh daemon is constructed.

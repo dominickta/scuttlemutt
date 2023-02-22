@@ -205,7 +205,7 @@ class NavActivity() : ConnectionsActivity() {
         return navHostFragment.navController
     }
 
-
+    // On recieve should have 2 values
     override fun onReceive(endpoint: Endpoint?, payload: Payload?) {
         logD("" + payload?.type)
         if (payload?.type == Payload.Type.BYTES) {
