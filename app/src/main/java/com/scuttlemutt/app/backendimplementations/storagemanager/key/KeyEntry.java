@@ -70,16 +70,20 @@ public class KeyEntry {
         if (keyList.size() > 0) {
             if (keyList.get(0) instanceof SecretKey) {
                 this.symmetricKeyListJson = SerializationUtils.serializeKeyList(keyList);
-                this.publicKeyJson = GSON.toJson(new ArrayList<SecretKey>());
-                this.privateKeyJson = GSON.toJson(new ArrayList<SecretKey>());
+
             } else if (keyList.get(0) instanceof PublicKey) {
-                this.symmetricKeyListJson = GSON.toJson(new ArrayList<SecretKey>());
                 this.publicKeyJson = SerializationUtils.serializeKeyList(keyList);
-                this.privateKeyJson = GSON.toJson(new ArrayList<SecretKey>());
             } else if (keyList.get(0) instanceof PrivateKey) {
-                this.symmetricKeyListJson = GSON.toJson(new ArrayList<SecretKey>());
-                this.publicKeyJson = GSON.toJson(new ArrayList<SecretKey>());
                 this.privateKeyJson = SerializationUtils.serializeKeyList(keyList);
+            }
+            if(this.symmetricKeyListJson == null){
+                this.symmetricKeyListJson = GSON.toJson(new ArrayList<SecretKey>());
+            }
+            if(this.publicKeyJson == null) {
+                this.publicKeyJson = GSON.toJson(new ArrayList<SecretKey>());
+            }
+            if(this.privateKeyJson == null) {
+                this.privateKeyJson = GSON.toJson(new ArrayList<SecretKey>());
             }
         } else {
             throw new RuntimeException("key list was empty");
@@ -99,6 +103,42 @@ public class KeyEntry {
     public List<PrivateKey> getPrivateKeys() {
         // since we're casting downwards, we have to cast through a wildcard
         return (List<PrivateKey>)(List<?>) SerializationUtils.deserializeKeyList(this.privateKeyJson);
+    }
+
+    public void addKey(final Key key){
+        if (key instanceof SecretKey) {
+            List<Key> existingKeyList = SerializationUtils.deserializeKeyList(this.symmetricKeyListJson);
+            existingKeyList.add((SecretKey)key);
+            this.symmetricKeyListJson = SerializationUtils.serializeKeyList(existingKeyList);
+        }else if(key instanceof PublicKey){
+            List<Key> existingKeyList = SerializationUtils.deserializeKeyList(this.publicKeyJson);
+            existingKeyList.add(key);
+            this.publicKeyJson = SerializationUtils.serializeKeyList(existingKeyList);
+        }else if(key instanceof PrivateKey){
+            List<Key> existingKeyList = SerializationUtils.deserializeKeyList(this.privateKeyJson);
+            existingKeyList.add(key);
+            this.privateKeyJson = SerializationUtils.serializeKeyList(existingKeyList);
+        }
+        else{
+            throw new RuntimeException("Wrong key type");
+        }
+    }
+
+    /**
+     * Used to replace entire list of keys (when more than MAX_NUM_HISTORICAL_KEYS_TO_STORE are present)
+     */
+    public void replaceKeys(final List<Key> keys){
+        Key key = keys.get(0);
+        if (key instanceof SecretKey) {
+            this.symmetricKeyListJson = SerializationUtils.serializeKeyList(keys);
+        }else if(key instanceof PublicKey){
+            this.publicKeyJson = SerializationUtils.serializeKeyList(keys);
+        }else if(key instanceof PrivateKey){
+            this.privateKeyJson = SerializationUtils.serializeKeyList(keys);
+        }
+        else{
+            throw new RuntimeException("Wrong key type");
+        }
     }
 
     @Override

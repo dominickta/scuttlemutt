@@ -58,8 +58,6 @@ public class EndpointIOManager implements IOManager {
         if (!currentConnections.keySet().contains(receiverId)) {
             throw new IOManagerException("No available connection to '" + receiverId + "'");
         }
-        System.out.println("SENDING MESSAGE TO: " + receiverId);
-        System.out.println("Sending payload: " + Payload.fromBytes(packet.toNetworkBytes()));
         connectionsClient.sendPayload(currentConnections.get(receiverId), Payload.fromBytes(packet.toNetworkBytes()));
     }
 
@@ -70,7 +68,6 @@ public class EndpointIOManager implements IOManager {
             synchronized (inputs) {
                 for(BlockingQueue<Packet> input: inputs) {
                     if(!input.isEmpty()){
-                        System.out.println("FOUND MESSAGE");
                                 final Optional foundPacketOptional
                                         = IOManagerHelper.getPacketTypeFromBlockingQueue(input, desiredPacketClass);
 
@@ -139,13 +136,11 @@ public class EndpointIOManager implements IOManager {
     }
 
     public void addReceivedMessage(String senderName, Packet packet){
-        System.out.println("RECIEVED MESSAGE FROM: " + senderName);
         synchronized(packetIngestionQueues) {
             if (!packetIngestionQueues.keySet().contains(senderName)) {
                 packetIngestionQueues.put(senderName, new LinkedBlockingQueue<>());
             }
             BlockingQueue queue = packetIngestionQueues.get(senderName);
-            System.out.println("ADDED MESSAGE");
             queue.add(packet);
         }
     }

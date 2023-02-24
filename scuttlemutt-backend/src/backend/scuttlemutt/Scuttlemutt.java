@@ -44,8 +44,6 @@ public class Scuttlemutt {
             KeyPair keys = Crypto.generateKeyPair();
             this.storageManager.storePrivateKey(keys.getPrivate());
             this.storageManager.storePublicKeyForUUID(dawgIdentifier.getUUID(), keys.getPublic());
-            this.storageManager.storePrivateKey(keys.getPrivate());
-            System.out.println("ADDED");
         }
 
         // keys must be initialized befor the mesh daemon is constructed.
@@ -165,7 +163,7 @@ public class Scuttlemutt {
     }
 
     public DawgIdentifier getContactDawgId(final String senderId) {
-        return this.storageManager.deleteDawgIdentifierByUsername(senderId);
+        return this.storageManager.lookupDawgIdentifierForUsername(senderId);
     }
 
 

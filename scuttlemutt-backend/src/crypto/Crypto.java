@@ -113,9 +113,6 @@ public class Crypto {
             // I don't know if will happen, I think it's automatic.
             e.printStackTrace();
         }
-        System.out.println("MESSAGE ENCRYP");
-        System.out.println(result);
-        System.out.println(key.toString());
         return result;
     }
 

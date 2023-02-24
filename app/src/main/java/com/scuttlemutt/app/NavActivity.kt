@@ -209,12 +209,10 @@ class NavActivity() : ConnectionsActivity() {
     override fun onReceive(endpoint: Endpoint?, payload: Payload?) {
         logD("" + payload?.type)
         if (payload?.type == Payload.Type.BYTES) {
-            System.out.println("Recieved payload: " + payload.toString())
             val buffer = payload?.asBytes()
             val packet = Packet.fromNetworkBytes(buffer)
             val key = iom.isSecretKey(packet)
             if(key != null){
-                System.out.println("RECIEVED SECRET KEY")
                 if(!mutt.haveContact(key.dawgId.uuid)){
                     logD("NEW CONTACT: " + endpoint?.name)
                     iom.addConnection(keyExchanger.receiveSecretKeyForNewContact(endpoint?.name, key))

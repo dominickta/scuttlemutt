@@ -9,6 +9,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +39,7 @@ public class SerializationUtils {
     public static String serializeKeyList(final List<Key> keyList) {
         // create a List to store the JSONs for each serialized Key.
         final List<String> keyJsonList = new ArrayList<String>();
-
+        System.out.println("SERIALIZING KEY LIST" + keyList);
         // stash the JSONs for the Keys in the List.
         for (final Key k : keyList) {
             keyJsonList.add(new String(SerializationUtils.serializeKey(k)));
@@ -57,17 +58,23 @@ public class SerializationUtils {
         try {
             // deserialize the serializedKeyList to a List<String>.
             final Type arrayListStringType = new TypeToken<ArrayList<String>>() {}.getType();
-            final List<String> keyJsonList = GSON.fromJson(serializedKeyList, arrayListStringType);
+            System.out.println("1");
 
+            final List<String> keyJsonList = GSON.fromJson(serializedKeyList, arrayListStringType);
+            System.out.println("2");
             // convert the JSONs to Key objects + store them.
             final List<Key> keyList = new ArrayList<Key>();
+            System.out.println("3");
             for (final String json : keyJsonList) {
+                System.out.println("4");
                 keyList.add(deserializeKey(json.getBytes(StandardCharsets.UTF_8)));
             }
 
             // return the Key objects.
             return keyList;
         } catch (Exception e) {
+            System.out.println("ER");
+            System.out.println(e);
             return null;
         }
     }
@@ -120,6 +127,7 @@ public class SerializationUtils {
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                 // if there's an error obtaining the PublicKey spec or the RSA algorithm, an
                 // exception occurs.
+                System.out.println("ER!");
                 throw new RuntimeException(e);
             }
         } else if (indexOf(serializedBytes, SERIALIZED_PRIVATEKEY_PREFIX_BYTES) != -1) {
@@ -134,13 +142,19 @@ public class SerializationUtils {
             // obtain and return the PrivateKey.
             try {
                 final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                final EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedKey);
+                System.out.println("a");
+                final EncodedKeySpec publicKeySpec = new PKCS8EncodedKeySpec(encodedKey);
+                System.out.println("b");
                 final PrivateKey deserializedKey;
+                System.out.println("c");
+                System.out.println(publicKeySpec);
                 deserializedKey = keyFactory.generatePrivate(publicKeySpec);
+                System.out.println("d");
                 return deserializedKey;
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                 // if there's an error obtaining the PublicKey spec or the RSA algorithm, an
                 // exception occurs.
+                System.out.println("ER2");
                 throw new RuntimeException(e);
             }
         }
