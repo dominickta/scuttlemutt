@@ -5,10 +5,14 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +26,8 @@ import types.serialization.SerializationUtils;
  */
 @Entity
 public class KeyEntry {
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
+
     @PrimaryKey
     @NonNull
     public String uuid;  // this should be the UUID of the associated DawgIdentifier.
