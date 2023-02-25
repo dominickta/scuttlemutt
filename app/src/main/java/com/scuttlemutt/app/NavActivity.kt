@@ -83,9 +83,9 @@ class NavActivity() : ConnectionsActivity() {
     /**
      * Name of the user - ScuttleMutt.DawgIdentifier.username
      */
-    override var name = "Placeholder"
+    override lateinit var name: String
 
-    private var endpointUUID = "Placeholder";
+    private lateinit var endpointUUID: String
 
     /**
      * This service id lets us find other nearby devices that are interested in the same thing. Our

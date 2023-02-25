@@ -119,7 +119,6 @@ public class SerializationUtils {
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                 // if there's an error obtaining the PublicKey spec or the RSA algorithm, an
                 // exception occurs.
-                System.out.println("ER!");
                 throw new RuntimeException(e);
             }
         } else if (indexOf(serializedBytes, SERIALIZED_PRIVATEKEY_PREFIX_BYTES) != -1) {

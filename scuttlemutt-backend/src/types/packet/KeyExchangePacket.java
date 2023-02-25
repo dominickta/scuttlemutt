@@ -52,7 +52,8 @@ public class KeyExchangePacket extends Packet {
         KeyExchangePacket other = (KeyExchangePacket) o;
         boolean samePubKeys = this.getPublicKey().equals(other.getPublicKey());
         boolean sameSecKeys = this.getSecretKey().equals(other.getSecretKey());
-        return samePubKeys && sameSecKeys;
+        boolean sameDawgId = this.getDawgId().equals(other.getDawgId());
+        return samePubKeys && sameSecKeys && sameDawgId;
     }
 
     @Override

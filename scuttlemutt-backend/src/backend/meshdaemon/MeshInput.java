@@ -61,10 +61,8 @@ public class MeshInput implements Runnable {
         List<Bark> barkList = barkPacket.getPacketBarks();
 
         for (Bark bark : barkList) {
-            System.out.println("Iterating through messages");
             // if we have seen this bark before, ignore it.
             if (!this.seenBarks.add(bark)) {
-                System.out.println("Seen before");
                 continue;
             }
 
