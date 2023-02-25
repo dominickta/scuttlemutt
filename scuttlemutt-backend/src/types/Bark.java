@@ -250,6 +250,9 @@ public class Bark {
         return decryptAndDeserialize(keys, this.encryptedFillerCount, Integer.class);
     }
 
+    /**
+     * @return the UUID of this Bark
+     */
     public UUID getUniqueId() {
         return this.uniqueId;
     }
@@ -260,8 +263,6 @@ public class Bark {
      * @return a byte[] containing the bytes which represent the Bark.
      */
     public byte[] toNetworkBytes() {
-        // TODO:  Add encryption here.
-
         return GSON.toJson(this).getBytes();
     }
 
@@ -271,7 +272,6 @@ public class Bark {
      * @return a Bark derived from the passed byte[].
      */
     public static Bark fromNetworkBytes(final byte[] barkBytes) {
-        // TODO:  Add decryption here.
         return GSON.fromJson(new String(barkBytes), Bark.class);
     }
 

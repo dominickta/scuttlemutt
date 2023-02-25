@@ -211,13 +211,13 @@ class NavActivity() : ConnectionsActivity() {
         if (payload?.type == Payload.Type.BYTES) {
             val buffer = payload?.asBytes()
             val packet = Packet.fromNetworkBytes(buffer)
-            val key = iom.isSecretKey(packet)
-            if(key != null){
-                if(!mutt.haveContact(key.dawgId.uuid)){
+            val keyPacket = iom.isSecretKey(packet)
+            if(keyPacket != null){
+                if(!mutt.haveContact(keyPacket.dawgId.uuid)){
                     logD("NEW CONTACT: " + endpoint?.name)
-                    iom.addConnection(keyExchanger.receiveSecretKeyForNewContact(endpoint?.name, key))
+                    iom.addConnection(keyExchanger.receiveSecretKeyForNewContact(endpoint?.name, keyPacket))
                 }else {
-                    iom.addConnection(keyExchanger.receiveSecretKey(key.dawgId, key))
+                    iom.addConnection(keyExchanger.receiveSecretKey(keyPacket.dawgId, keyPacket))
                 }
             }else {
                 iom.addReceivedMessage(endpoint?.name, packet)
@@ -323,7 +323,7 @@ class NavActivity() : ConnectionsActivity() {
             com.scuttlemutt.app.NavActivity.State.SEARCHING -> {
                 logD("Changed to Searching from " + oldState)
                 disconnectFromAllEndpoints()
-                iom.removeAllAvaliableConnections()
+                iom.removeAllAvailableConnections()
                 startDiscovering()
                 logD("Start Discovering from state change")
                 startAdvertising()

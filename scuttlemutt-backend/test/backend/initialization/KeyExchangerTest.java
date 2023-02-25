@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -80,7 +81,9 @@ public class KeyExchangerTest {
         // receive the SecretKey using the KeyExchanger, verify that the expectedKey is
         // stored.
         // TODO: I think this test might fail because it'll expect the DawgIdentifier to have the uuid it expects
-        final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(TestUtils.generateRandomizedDawgIdentifier(), sentKePacket);
+        this.keyExchanger.testAddSecretKey(this.otherDeviceId, TestUtils.generateRandomizedKeyExchangePacket().getSecretKey());
+        DawgIdentifier testDawgId = new DawgIdentifier(this.otherDeviceId, UUID.randomUUID());
+        final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(testDawgId, sentKePacket);
         final SecretKey storedKey = this.storageManager.lookupLatestSecretKeyForDawgIdentifier(dawgId.getUUID());
         final PublicKey receivedPublicKey = this.storageManager.lookupPublicKeyForUUID(dawgId.getUUID());
         assertEquals(expectedKey, storedKey);

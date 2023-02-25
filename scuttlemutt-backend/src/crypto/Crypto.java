@@ -128,9 +128,6 @@ public class Crypto {
     public static byte[] decrypt(final byte[] payload, final Key key, final String keyType) {
         byte[] result = {};
         try {
-            System.out.println("MESSAGE DECRYPT");
-            System.out.println(payload);
-            System.out.println(key.toString());
             Cipher decryptCipher = Cipher.getInstance(keyType);
             decryptCipher.init(Cipher.DECRYPT_MODE, key);
             result = decryptCipher.doFinal(payload);

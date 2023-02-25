@@ -133,6 +133,16 @@ public class RoomStorageManager implements StorageManager {
         final KeyEntry existingKeyEntry = this.appDb.keyDao().findByUuid(dawgIdentifierUuid.toString());
         if (existingKeyEntry != null) {
             keyList = (List<Key>)(List<?>) existingKeyEntry.getSymmetricKeys();
+            if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
+                keyList.remove(0);
+                keyList.add(key);
+                existingKeyEntry.replaceKeys(keyList);
+                this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
+            }else {
+                existingKeyEntry.addKey(key);
+                this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
+
+            }
         } else {
             keyList = new ArrayList<>();
             keyList.add(key);
@@ -140,21 +150,9 @@ public class RoomStorageManager implements StorageManager {
             // construct a KeyEntry containing the new Key + store it.
             final KeyEntry newKeyEntry = new KeyEntry(dawgIdentifierUuid, keyList);
             this.appDb.keyDao().insertKeyEntry(newKeyEntry);
-            return;
         }
 
-        // see if the obtained keyList is at the maximum size.  if it is, remove the oldest entry
-        // at index == 0.
-        if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
-            keyList.remove(0);
-            keyList.add(key);
-            existingKeyEntry.replaceKeys(keyList);
-            this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
-        }else{
-            existingKeyEntry.addKey(key);
-            this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
 
-        }
 
 
     }
@@ -167,26 +165,22 @@ public class RoomStorageManager implements StorageManager {
         final KeyEntry existingKeyEntry = this.appDb.keyDao().findByUuid(id.toString());
         if (existingKeyEntry != null) {
             keyList = (List<Key>)(List<?>) existingKeyEntry.getPublicKeys();
+            if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
+                keyList.remove(0);
+                keyList.add(key);
+                existingKeyEntry.replaceKeys(keyList);
+                this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
+            }else {
+                existingKeyEntry.addKey(key);
+                this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
+
+            }
         } else {
             keyList = new ArrayList<>();
             keyList.add(key);
             // construct a KeyEntry containing the new Key + store it.
             final KeyEntry newKeyEntry = new KeyEntry(id, keyList);
             this.appDb.keyDao().insertKeyEntry(newKeyEntry);
-            return;
-        }
-
-        // see if the obtained keyList is at the maximum size.  if it is, remove the oldest entry
-        // at index == 0.
-        if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
-            keyList.remove(0);
-            keyList.add(key);
-            existingKeyEntry.replaceKeys(keyList);
-            this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
-        }else{
-            existingKeyEntry.addKey(key);
-            this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
-
         }
     }
 
@@ -198,6 +192,15 @@ public class RoomStorageManager implements StorageManager {
         final KeyEntry existingKeyEntry = this.appDb.keyDao().findByUuid(MY_DAWG_ID.getUUID().toString());
         if (existingKeyEntry != null) {
             keyList = (List<Key>)(List<?>) existingKeyEntry.getPublicKeys();
+            if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
+                keyList.remove(0);
+                keyList.add(key);
+                existingKeyEntry.replaceKeys(keyList);
+                this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
+            }else {
+                existingKeyEntry.addKey(key);
+                this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
+            }
         } else {
             keyList = new ArrayList<>();
             keyList.add(key);
@@ -205,20 +208,6 @@ public class RoomStorageManager implements StorageManager {
             // construct a KeyEntry containing the new Key + store it.
             final KeyEntry newKeyEntry = new KeyEntry(MY_DAWG_ID.getUUID(), keyList);
             this.appDb.keyDao().insertKeyEntry(newKeyEntry);
-            return;
-        }
-
-        // see if the obtained keyList is at the maximum size.  if it is, remove the oldest entry
-        // at index == 0.
-        if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
-            keyList.remove(0);
-            keyList.add(key);
-            existingKeyEntry.replaceKeys(keyList);
-            this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
-        }else{
-            existingKeyEntry.addKey(key);
-            this.appDb.keyDao().insertKeyEntry(existingKeyEntry);
-
         }
 
 

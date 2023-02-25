@@ -65,8 +65,8 @@ public class EndpointIOManager implements IOManager {
     public <T extends Packet> T meshReceive(Class<T> desiredPacketClass) {
         while(true){
             List<BlockingQueue<Packet>> inputs = new ArrayList<>(this.packetIngestionQueues.values());
-            synchronized (inputs) {
-                for(BlockingQueue<Packet> input: inputs) {
+            synchronized (this.packetIngestionQueues) {
+                for(BlockingQueue<Packet> input: this.packetIngestionQueues.values()) {
                     if(!input.isEmpty()){
                                 final Optional foundPacketOptional
                                         = IOManagerHelper.getPacketTypeFromBlockingQueue(input, desiredPacketClass);
@@ -101,7 +101,7 @@ public class EndpointIOManager implements IOManager {
     }
 
     public KeyExchangePacket isSecretKey(Packet packet){
-        if(packet.getClass() == KeyExchangePacket.class){
+        if (packet.getClass() == KeyExchangePacket.class){
             return (KeyExchangePacket) packet;
         }
         return null;
@@ -113,42 +113,59 @@ public class EndpointIOManager implements IOManager {
     }
 
     /**
-     * Assumes that the endpoint is trusted
+     * Assumes that the endpoint is trusted and adds mapping of sender name to sender id for sending
+     * messages
+     * @param connectionId String representing sender id (endpoint id) of sender
+     * @param connectionName String representing sender name (endpoint name) of sender
      */
-    public void addAvailableConnection(String senderId, String senderName){
-        this.currentConnections.put(senderName, senderId);
+    public void addAvailableConnection(String connectionId, String connectionName){
+        this.currentConnections.put(connectionName, connectionId);
         // if there is no packet-receiving queue on-hand for any of the connections we're storing,
         // create a new one for that connection.
-            if (!this.packetIngestionQueues.containsKey(senderName)) {
-                this.packetIngestionQueues.put(senderName, new LinkedBlockingQueue<Packet>());
+            if (!this.packetIngestionQueues.containsKey(connectionName)) {
+                this.packetIngestionQueues.put(connectionName, new LinkedBlockingQueue<Packet>());
             }
 
     }
 
 
-    public void removeAvailableConnection(String senderName){
-        this.currentConnections.remove(senderName);
+    /**
+     * Removes specificed connection from list of available connections
+     * @param connectionName Name of connection endpoint
+     * @throws IOManagerException if connection not currently connected
+     */
+    public void removeAvailableConnection(String connectionName) throws IOManagerException {
+        if(currentConnections.containsKey(connectionName)) {
+            this.currentConnections.remove(connectionName);
+        }else {
+            throw new IOManagerException("Connection to be removed not found in current connections");
+        }
 
     }
 
-    public void removeAllAvaliableConnections(){
+    public void removeAllAvailableConnections(){
         this.currentConnections = new HashMap<>();
     }
 
-    public void addReceivedMessage(String senderName, Packet packet){
+    /**
+     * Add received message to queues
+     * @param connectionName contact name of message sender
+     * @param packet Packet from sender
+     */
+    public void addReceivedMessage(String connectionName, Packet packet){
         synchronized(packetIngestionQueues) {
-            if (!packetIngestionQueues.keySet().contains(senderName)) {
-                packetIngestionQueues.put(senderName, new LinkedBlockingQueue<>());
+            if (!packetIngestionQueues.keySet().contains(connectionName)) {
+                packetIngestionQueues.put(connectionName, new LinkedBlockingQueue<>());
             }
-            BlockingQueue queue = packetIngestionQueues.get(senderName);
+            BlockingQueue queue = packetIngestionQueues.get(connectionName);
             queue.add(packet);
         }
     }
 
-    public boolean seenConnection(String senderId){
-        return seenConnections.keySet().contains(senderId);
-    }
-
+    /**
+     * Add a connection to list of seen connections
+     * @param dawgIdentifier dawgIdentifier of user we connected to
+     */
     public void addConnection(DawgIdentifier dawgIdentifier){
         seenConnections.put(dawgIdentifier.getUsername(), dawgIdentifier.getUUID());
     }

@@ -22,7 +22,9 @@ public class KeyExchangePacket extends Packet {
     /**
      * Constructs the packet.
      *
+     * @param publicKey The public key being sent by the packet
      * @param secretKey The symmetric key being sent by the packet.
+     * @param dawgId The dawgId of the sender
      */
     public KeyExchangePacket(final PublicKey publicKey, final SecretKey secretKey, DawgIdentifier dawgId) {
         this.publicKeyBytes = SerializationUtils.serializeKey(publicKey);

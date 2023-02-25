@@ -105,6 +105,10 @@ public class KeyEntry {
         return (List<PrivateKey>)(List<?>) SerializationUtils.deserializeKeyList(this.privateKeyJson);
     }
 
+    /**
+     * Adds given key to existing key entry
+     * @param key Key that should be added to specific key json field
+     */
     public void addKey(final Key key){
         if (key instanceof SecretKey) {
             List<Key> existingKeyList = SerializationUtils.deserializeKeyList(this.symmetricKeyListJson);
@@ -125,18 +129,19 @@ public class KeyEntry {
     }
 
     /**
-     * Used to replace entire list of keys (when more than MAX_NUM_HISTORICAL_KEYS_TO_STORE are present)
+     * Replace entire list of keys (when more than MAX_NUM_HISTORICAL_KEYS_TO_STORE are present)
+     * @param keys List of keys of same type that should replace existing keys
      */
     public void replaceKeys(final List<Key> keys){
         Key key = keys.get(0);
         if (key instanceof SecretKey) {
             this.symmetricKeyListJson = SerializationUtils.serializeKeyList(keys);
-        }else if(key instanceof PublicKey){
+        }else if (key instanceof PublicKey){
             this.publicKeyJson = SerializationUtils.serializeKeyList(keys);
-        }else if(key instanceof PrivateKey){
+        }else if (key instanceof PrivateKey){
             this.privateKeyJson = SerializationUtils.serializeKeyList(keys);
         }
-        else{
+        else {
             throw new RuntimeException("Wrong key type");
         }
     }

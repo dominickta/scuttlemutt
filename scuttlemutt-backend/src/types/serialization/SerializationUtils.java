@@ -34,12 +34,11 @@ public class SerializationUtils {
     // used to indicate key type in serialized String form.
     private static final byte[] SERIALIZED_SECRETKEY_PREFIX_BYTES = "secretkey:".getBytes();
     private static final byte[] SERIALIZED_PUBLICKEY_PREFIX_BYTES = "publickey:".getBytes();
-
     private static final byte[] SERIALIZED_PRIVATEKEY_PREFIX_BYTES = "privatekey:".getBytes();
+
     public static String serializeKeyList(final List<Key> keyList) {
         // create a List to store the JSONs for each serialized Key.
         final List<String> keyJsonList = new ArrayList<String>();
-        System.out.println("SERIALIZING KEY LIST" + keyList);
         // stash the JSONs for the Keys in the List.
         for (final Key k : keyList) {
             keyJsonList.add(new String(SerializationUtils.serializeKey(k)));
@@ -58,23 +57,16 @@ public class SerializationUtils {
         try {
             // deserialize the serializedKeyList to a List<String>.
             final Type arrayListStringType = new TypeToken<ArrayList<String>>() {}.getType();
-            System.out.println("1");
-
             final List<String> keyJsonList = GSON.fromJson(serializedKeyList, arrayListStringType);
-            System.out.println("2");
             // convert the JSONs to Key objects + store them.
             final List<Key> keyList = new ArrayList<Key>();
-            System.out.println("3");
             for (final String json : keyJsonList) {
-                System.out.println("4");
                 keyList.add(deserializeKey(json.getBytes(StandardCharsets.UTF_8)));
             }
 
             // return the Key objects.
             return keyList;
         } catch (Exception e) {
-            System.out.println("ER");
-            System.out.println(e);
             return null;
         }
     }
@@ -142,19 +134,13 @@ public class SerializationUtils {
             // obtain and return the PrivateKey.
             try {
                 final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                System.out.println("a");
                 final EncodedKeySpec publicKeySpec = new PKCS8EncodedKeySpec(encodedKey);
-                System.out.println("b");
                 final PrivateKey deserializedKey;
-                System.out.println("c");
-                System.out.println(publicKeySpec);
                 deserializedKey = keyFactory.generatePrivate(publicKeySpec);
-                System.out.println("d");
                 return deserializedKey;
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                 // if there's an error obtaining the PublicKey spec or the RSA algorithm, an
                 // exception occurs.
-                System.out.println("ER2");
                 throw new RuntimeException(e);
             }
         }

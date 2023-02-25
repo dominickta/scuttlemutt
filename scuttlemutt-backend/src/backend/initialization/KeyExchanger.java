@@ -106,29 +106,38 @@ public class KeyExchanger {
      * returns the DawgIdentifier.
      *
      * NOTE:  This call will wait until a key is received from the specified sender.
-     * @param dawgId  The DawgIdentifier of the sender who we wish to receive a key from.  This ID should match the ID value stored
+     * @param senderDawgId  The DawgIdentifier of the sender who we wish to receive a key from.  This ID should match the ID value stored
      *                  for the sender in the IOManager.
      * @return a DawgIdentifier for the specified sender which contains the sender's public key.
      */
-    public DawgIdentifier receiveSecretKey(final DawgIdentifier dawgId, KeyExchangePacket packet) {
+    public DawgIdentifier receiveSecretKey(final DawgIdentifier senderDawgId, KeyExchangePacket packet) {
         // receive the SecretKey.
         final SecretKey otherSecretKey = (SecretKey) packet.getSecretKey();
         PublicKey senderPublicKey = packet.getPublicKey();
         SecretKey senderSecretKey = packet.getSecretKey();
         // at this point, we have keys from both parties.  let's determine which one should be used
         // for the connections by hashing them and choosing the one with the higher-value.
-        final SecretKey localSecretKey = this.secretKeysBeingExchanged.get(dawgId.getUsername());
+        final SecretKey localSecretKey = this.secretKeysBeingExchanged.get(senderDawgId.getUsername());
         final SecretKey chosenKey = localSecretKey.hashCode() < otherSecretKey.hashCode() ? otherSecretKey : localSecretKey;
 
 
-        this.secretKeysBeingExchanged.remove(dawgId.getUsername());
+        this.secretKeysBeingExchanged.remove(senderDawgId.getUsername());
 
         // store the keys
-        this.storageManager.storePublicKeyForUUID(dawgId.getUUID(), senderPublicKey);
-        this.storageManager.storeSecretKeyForUUID(dawgId.getUUID(), chosenKey);
-        this.storageManager.storeDawgIdentifier(dawgId);
+        this.storageManager.storePublicKeyForUUID(senderDawgId.getUUID(), senderPublicKey);
+        this.storageManager.storeSecretKeyForUUID(senderDawgId.getUUID(), chosenKey);
+        this.storageManager.storeDawgIdentifier(senderDawgId);
 
         // return the senders dawgIdentifier
-        return dawgId;
+        return senderDawgId;
+    }
+
+    /**
+     * **ONLY FOR TESTING PURPOSES**
+     * @param dawgIdName dawgId of recipient
+     * @param secretKey secretkey being sent
+     */
+    public void testAddSecretKey(final String dawgIdName, SecretKey secretKey){
+        this.secretKeysBeingExchanged.put(dawgIdName, secretKey);
     }
 }
