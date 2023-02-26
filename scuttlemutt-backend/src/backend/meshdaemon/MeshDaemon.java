@@ -31,13 +31,13 @@ public class MeshDaemon {
 
     /**
      * Constructs a new MeshDaemon.
-     * 
+     *
      * @param ioManager      The underlying IOManager.
      * @param storageManager The place to store messages + conversations meant for
      *                       us.
      */
     public MeshDaemon(final IOManager ioManager, final StorageManager storageManager,
-            final DawgIdentifier currentUser) {
+                      final DawgIdentifier currentUser) {
         // Shared state between input and output
         Set<Bark> seenBarks = new HashSet<>();
 
@@ -69,7 +69,7 @@ public class MeshDaemon {
 
     /**
      * Adds the given message to the outbound queue.
-     * 
+     *
      * @param contents  The message contents.
      * @param recipient The DawgIdentifier of who is receiving the message.
      * @param seqId     The sequence number for this message.

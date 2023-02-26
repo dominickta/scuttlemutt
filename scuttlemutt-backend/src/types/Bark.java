@@ -18,7 +18,7 @@ import crypto.Crypto;
 
 /**
  * Represents a "bark" (message) sent by the user.
- * 
+ *
  * All of the bark fields are encrypted. The header is the senders UUID
  * encrypted with the public key of the receiver. Only the receiver can decrypt
  * it to figure out which symmetric keys to use for
@@ -135,10 +135,10 @@ public class Bark {
     /**
      * The Bark object is for me if I can decrypt the BarkHeader with my
      * private (asymmetric) key.
-     * 
+     *
      * NOTE: The caller should call isForMe with the current user's private key
      * before calling any other getter methods.
-     * 
+     *
      * @param myPrivateKey the private half of my public/private keypair.
      * @return true if this packet is for me, false otherwise
      */
@@ -152,7 +152,7 @@ public class Bark {
 
     /**
      * Returns the uuid of the sender
-     * 
+     *
      * @throws Exception if decryption fails (see: Crypto.decrypt)
      * @param myPrivateKey the private key of the current user
      * @return the uuid of the sender
@@ -166,14 +166,14 @@ public class Bark {
     /**
      * Returns the contents of the Bark after decrypting them using the passed
      * in list of secret keys.
-     * 
+     *
      * This method will also trim off any filler characters used to pad the
      * message. If the decryption fails this will return null.
-     * 
+     *
      * NOTE: The caller should call isForMe with the current user's private key
      * before calling this method. If a packet is not for you, you will not be
      * able to decrypt it, and this method will throw a RuntimeException.
-     * 
+     *
      * @throws RuntimeException if decryption fails
      * @param keys A List<SecretKey> to try to decrypt the Bark with.
      * @return The decrypted contents of the Bark as a String, otherwise null.
@@ -187,11 +187,11 @@ public class Bark {
     /**
      * Tries to decrypt the sender field with the list of secret keys. Returns
      * null if that fails.
-     * 
+     *
      * NOTE: The caller should call isForMe with the current user's private key
      * before calling this method. If a packet is not for you, you will not be
      * able to decrypt it, and this method will throw a RuntimeException.
-     * 
+     *
      * @throws RuntimeException if decryption fails
      * @param keys the list of secret keys associated with the sender.
      * @return returns the DawgIdentifier of the sender, otherwise null
@@ -203,11 +203,11 @@ public class Bark {
     /**
      * Tries to decrypt the receiver field with the list of secret keys. Returns
      * null if that fails.
-     * 
+     *
      * NOTE: The caller should call isForMe with the current user's private key
      * before calling this method. If a packet is not for you, you will not be
      * able to decrypt it, and this method will throw a RuntimeException.
-     * 
+     *
      * @throws RuntimeException if decryption fails
      * @param keys the list of secret keys associated with the sender.
      * @return returns the DawgIdentifier of the receiver, otherwise null
@@ -220,11 +220,11 @@ public class Bark {
     /**
      * Tries to decrypt the orderNum field with the list of secret keys. Returns
      * null if that fails.
-     * 
+     *
      * NOTE: The caller should call isForMe with the current user's private key
      * before calling this method. If a packet is not for you, you will not be
      * able to decrypt it, and this method will throw a RuntimeException.
-     * 
+     *
      * @throws RuntimeException if decryption fails
      * @param keys the list of secret keys associated with the sender.
      * @return returns this Bark's order num, otherwise null
@@ -236,11 +236,11 @@ public class Bark {
     /**
      * Tries to decrypt the fillerCount field with the list of secret keys.
      * Returns null if that fails.
-     * 
+     *
      * NOTE: The caller should call isForMe with the current user's private key
      * before calling this method. If a packet is not for you, you will not be
      * able to decrypt it, and this method will throw a RuntimeException.
-     * 
+     *
      * @throws RuntimeException if decryption fails
      * @param keys the list of secret keys associated with the sender.
      * @return returns this Bark's filler count, otherwise null
@@ -298,7 +298,7 @@ public class Bark {
 
     /**
      * A simple helper function to encrypt an object to a JSON string as bytes
-     * 
+     *
      * @param obj the object to encrypt
      * @param key the key to encrypt the object with
      * @return the bytes of the encrypted object
@@ -317,7 +317,7 @@ public class Bark {
      * Try to decrypt the Bark's contents using the passed List of Keys. Since it is
      * most likely that the most recent key is the one used for encryption, we
      * iterate backwards through the List.
-     * 
+     *
      * @param <T>        The type of object to return if successful
      * @param keys       the list of secret keys to try
      * @param ciphertext the array of bytes to try decrypting

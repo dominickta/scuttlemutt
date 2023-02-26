@@ -19,8 +19,7 @@ public class DawgIdentifier {
      * Constructs a new DawgIdentifier.
      * 
      * @param username      The human-readable name for the user.
-     * @param userPublicKey The user's public key, provided during
-     *                      initialization.
+     * @param dawgId The user's UUID
      */
     public DawgIdentifier(final String username, final UUID dawgId) {
         this.username = username;

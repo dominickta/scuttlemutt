@@ -162,6 +162,11 @@ public class Scuttlemutt {
         return this.storageManager.lookupDawgIdentifierForUuid(uuid) != null;
     }
 
+    public DawgIdentifier getContactDawgId(final String senderId) {
+        return this.storageManager.lookupDawgIdentifierForUsername(senderId);
+    }
+
+
     public void addContact(final DawgIdentifier dawgIdentifier, final PublicKey publicKey, final SecretKey secretKey) {
         this.storageManager.storeDawgIdentifier(dawgIdentifier);
         this.storageManager.storePublicKeyForUUID(dawgIdentifier.getUUID(), publicKey);

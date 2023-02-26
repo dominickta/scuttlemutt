@@ -1,8 +1,12 @@
 package com.scuttlemutt.app
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.provider.Settings
 import android.util.Log
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import backend.initialization.KeyExchanger
 import backend.scuttlemutt.Scuttlemutt
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.scuttlemutt.app.backendimplementations.iomanager.EndpointIOManager
@@ -40,20 +44,27 @@ class SingletonScuttlemutt {
         @Volatile
         private var IOMANAGER: EndpointIOManager? = null
 
+        @Volatile
+        private var KEYEXCHANGER: KeyExchanger? = null
+
         // Should only be called by NavActivity
-        fun getInstance(context: Context, connectionsClient: ConnectionsClient): Scuttlemutt {
+        fun getInstance(context: Context, connectionsClient: ConnectionsClient, name: String): Scuttlemutt {
             if (INSTANCE == null) {
                 synchronized(this) {
                     if (INSTANCE == null) {
                         IOMANAGER = EndpointIOManager(connectionsClient)
-                        val dawgid: DawgIdentifier = MY_DAWG_ID;
+                        val uuid = UUID.nameUUIDFromBytes(name.toByteArray());
+                        val dawgid: DawgIdentifier = DawgIdentifier(name, uuid)
                         val appDb : AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, "scuttlemutt-app-database")
                             .fallbackToDestructiveMigration()
+                            .allowMainThreadQueries()
                             .build()
                         val storagem: StorageManager = RoomStorageManager(appDb)
-                        val mutt: Scuttlemutt = Scuttlemutt(IOMANAGER, dawgid, storagem)
+                        val mutt = Scuttlemutt(IOMANAGER, dawgid, storagem)
                         Log.d("SingletonScuttlemutt", "instantiating instance..: ${mutt.dawgIdentifier}")
                         INSTANCE = mutt
+                        val keyexchanger: KeyExchanger = KeyExchanger(IOMANAGER, storagem)
+                        KEYEXCHANGER = keyexchanger
                     }
                 }
             }
@@ -73,5 +84,14 @@ class SingletonScuttlemutt {
             assert(IOMANAGER != null)
             return IOMANAGER!!
         }
+
+
+        // Anything else can call this
+        fun getKeyExchanger(): KeyExchanger {
+            // If this assertion fails, some other thing getInstance() before NavActivity
+            assert(KEYEXCHANGER!= null)
+            return KEYEXCHANGER!!
+        }
+
     }
 }

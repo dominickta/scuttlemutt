@@ -30,16 +30,15 @@ public class MeshInput implements Runnable {
 
     /**
      * Constructs a new MeshInput.
-     * 
+     *
      * @param ioManager   The underlying IOManager.
      * @param queue       The queue of outgoing barks to forward
      * @param storage     A StorageManager to store Barks addressed to us.
-     * @param currentUser The DawgIdentifier for the current user.
      * @param seenBarks   A Set containing the Barks we have seen before.
      */
     public MeshInput(final IOManager ioManager, final BlockingQueue<Bark> queue,
-            final StorageManager storage, final PrivateKey myPrivateKey,
-            final Set<Bark> seenBarks) {
+                     final StorageManager storage, final PrivateKey myPrivateKey,
+                     final Set<Bark> seenBarks) {
         this.ioManager = ioManager;
         this.queue = queue;
         this.storage = storage;
@@ -66,6 +65,7 @@ public class MeshInput implements Runnable {
             if (!this.seenBarks.add(bark)) {
                 continue;
             }
+
             if (bark.isForMe(this.myPrivateKey)) {
                 // this is for us! let's create a plaintext Message object from
                 // the Bark and store it for later usage.

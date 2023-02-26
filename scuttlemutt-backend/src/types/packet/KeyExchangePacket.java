@@ -1,5 +1,9 @@
 package types.packet;
 
+import java.security.Key;
+
+import types.DawgIdentifier;
+import types.serialization.SerializationUtils;
 import java.security.PublicKey;
 
 import javax.crypto.SecretKey;
@@ -13,14 +17,19 @@ public class KeyExchangePacket extends Packet {
     private final byte[] publicKeyBytes;
     private final byte[] secretKeyBytes;
 
+    private final DawgIdentifier dawgId;
+
     /**
      * Constructs the packet.
      *
+     * @param publicKey The public key being sent by the packet
      * @param secretKey The symmetric key being sent by the packet.
+     * @param dawgId The dawgId of the sender
      */
-    public KeyExchangePacket(final PublicKey publicKey, final SecretKey secretKey) {
+    public KeyExchangePacket(final PublicKey publicKey, final SecretKey secretKey, DawgIdentifier dawgId) {
         this.publicKeyBytes = SerializationUtils.serializeKey(publicKey);
         this.secretKeyBytes = SerializationUtils.serializeKey(secretKey);
+        this.dawgId = dawgId;
     }
 
     public PublicKey getPublicKey() {
@@ -31,6 +40,10 @@ public class KeyExchangePacket extends Packet {
         return (SecretKey) SerializationUtils.deserializeKey(secretKeyBytes);
     }
 
+    public DawgIdentifier getDawgId(){
+        return this.dawgId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof KeyExchangePacket)) {
@@ -39,7 +52,8 @@ public class KeyExchangePacket extends Packet {
         KeyExchangePacket other = (KeyExchangePacket) o;
         boolean samePubKeys = this.getPublicKey().equals(other.getPublicKey());
         boolean sameSecKeys = this.getSecretKey().equals(other.getSecretKey());
-        return samePubKeys && sameSecKeys;
+        boolean sameDawgId = this.getDawgId().equals(other.getDawgId());
+        return samePubKeys && sameSecKeys && sameDawgId;
     }
 
     @Override

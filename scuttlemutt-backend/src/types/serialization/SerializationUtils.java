@@ -5,9 +5,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,11 +34,11 @@ public class SerializationUtils {
     // used to indicate key type in serialized String form.
     private static final byte[] SERIALIZED_SECRETKEY_PREFIX_BYTES = "secretkey:".getBytes();
     private static final byte[] SERIALIZED_PUBLICKEY_PREFIX_BYTES = "publickey:".getBytes();
+    private static final byte[] SERIALIZED_PRIVATEKEY_PREFIX_BYTES = "privatekey:".getBytes();
 
     public static String serializeKeyList(final List<Key> keyList) {
         // create a List to store the JSONs for each serialized Key.
         final List<String> keyJsonList = new ArrayList<String>();
-
         // stash the JSONs for the Keys in the List.
         for (final Key k : keyList) {
             keyJsonList.add(new String(SerializationUtils.serializeKey(k)));
@@ -56,7 +58,6 @@ public class SerializationUtils {
             // deserialize the serializedKeyList to a List<String>.
             final Type arrayListStringType = new TypeToken<ArrayList<String>>() {}.getType();
             final List<String> keyJsonList = GSON.fromJson(serializedKeyList, arrayListStringType);
-
             // convert the JSONs to Key objects + store them.
             final List<Key> keyList = new ArrayList<Key>();
             for (final String json : keyJsonList) {
@@ -79,6 +80,8 @@ public class SerializationUtils {
             return ArrayUtils.addAll(SERIALIZED_SECRETKEY_PREFIX_BYTES, encodedBytes);
         } else if (k instanceof PublicKey) {
             return ArrayUtils.addAll(SERIALIZED_PUBLICKEY_PREFIX_BYTES, encodedBytes);
+        } else if (k instanceof PrivateKey){
+            return ArrayUtils.addAll(SERIALIZED_PRIVATEKEY_PREFIX_BYTES, encodedBytes);
         }
 
         // unsupported key type, throw an exception.
@@ -112,6 +115,27 @@ public class SerializationUtils {
                 final EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedKey);
                 final PublicKey deserializedKey;
                 deserializedKey = keyFactory.generatePublic(publicKeySpec);
+                return deserializedKey;
+            } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+                // if there's an error obtaining the PublicKey spec or the RSA algorithm, an
+                // exception occurs.
+                throw new RuntimeException(e);
+            }
+        } else if (indexOf(serializedBytes, SERIALIZED_PRIVATEKEY_PREFIX_BYTES) != -1) {
+            // trim off the prefix.
+            final byte[] keyBytes = Arrays.copyOfRange(serializedBytes,
+                    SERIALIZED_PRIVATEKEY_PREFIX_BYTES.length,
+                    serializedBytes.length);
+
+            // get the base64 encoded key.
+            final byte[] encodedKey = Base64.getDecoder().decode(keyBytes);
+
+            // obtain and return the PrivateKey.
+            try {
+                final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                final EncodedKeySpec publicKeySpec = new PKCS8EncodedKeySpec(encodedKey);
+                final PrivateKey deserializedKey;
+                deserializedKey = keyFactory.generatePrivate(publicKeySpec);
                 return deserializedKey;
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                 // if there's an error obtaining the PublicKey spec or the RSA algorithm, an

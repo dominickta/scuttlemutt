@@ -24,7 +24,7 @@ public class TestUtils {
     }
 
     public static KeyExchangePacket generateRandomizedKeyExchangePacket() {
-        return new KeyExchangePacket(Crypto.ALICE_KEYPAIR.getPublic(), Crypto.DUMMY_SECRETKEY);
+        return new KeyExchangePacket(Crypto.ALICE_KEYPAIR.getPublic(), Crypto.DUMMY_SECRETKEY, generateRandomizedDawgIdentifier());
     }
 
     public static Bark generateRandomizedBark() {

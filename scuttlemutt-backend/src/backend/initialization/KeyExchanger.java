@@ -14,6 +14,13 @@ import storagemanager.StorageManager;
 import types.DawgIdentifier;
 import types.packet.KeyExchangePacket;
 
+import java.security.Key;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.crypto.SecretKey;
 
 /**
  * This class is used to exchange symmetric and asymmetric keys between
@@ -44,7 +51,7 @@ public class KeyExchanger {
 
     /**
      * Constructs the KeyExchanger.
-     * 
+     *
      * @param ioManager      The IOManager used to exchange keys.
      * @param storageManager A StorageManager used to store the keys received from
      *                       the other party.
@@ -60,22 +67,21 @@ public class KeyExchanger {
      * Exchanges a PublicKey and a SecretKey between two parties. The parties
      * each store the received public key and they converge on the same secret
      * key. This must be done over a secure channel.
-     * 
+     *
      * The sender must be able to decrypt messages encrypted using the public
      * key sent over this exchange.
      *
-     * @param recipientId The ID of the recipient who is receiving the key. This ID
-     *                    should match the ID value stored for the recipient in the
-     *                    IOManager.
      * @param myPublicKey The public key of the sender. This will be saved on the
      *                    receiving end and used to encrypt messages sent to the
      *                    sender.
+     * @param recipientName The name of the recipient who is recieving the key
+     * @param dawgId The dawgIdentifier of the sender
      */
-    public void sendKeys(final String recipientId, final PublicKey myPublicKey) {
+    public void sendKeys(final String recipientName, final PublicKey myPublicKey, DawgIdentifier dawgId) {
         final SecretKey secretKey = Crypto.generateSecretKey();
-        final KeyExchangePacket packet = new KeyExchangePacket(myPublicKey, secretKey);
+        final KeyExchangePacket packet = new KeyExchangePacket(myPublicKey, secretKey, dawgId);
         try {
-            this.ioManager.send(recipientId, packet);
+            this.ioManager.send(recipientName, packet);
         } catch (IOManagerException e) {
             // if we fail to send the KeyExchangePacket packet for some reason, an
             // IOManagerException is thrown.
@@ -83,38 +89,39 @@ public class KeyExchanger {
         }
 
         // store the SecretKey for later usage (ie. in `receiveKeys`)
-        this.secretKeysBeingExchanged.put(recipientId, secretKey);
+        this.secretKeysBeingExchanged.put(recipientName, secretKey);
     }
+
+
+    public DawgIdentifier receiveSecretKeyForNewContact(final String senderName, KeyExchangePacket packet) {
+        final DawgIdentifier senderDawgId = packet.getDawgId();
+        this.storageManager.storeDawgIdentifier(senderDawgId);
+        return this.receiveSecretKey(senderDawgId, packet);
+    }
+
 
     /**
      * Receives a secret (symmetric) key from the specified sender, creates a
      * DawgIdentifier for the sender using the key, stores and
      * returns the DawgIdentifier.
      *
-     * NOTE: This call will wait until a key is received from the specified sender.
-     * 
-     * @param senderId The ID of the sender who we wish to receive a key from. This
-     *                 ID should match the ID value stored
-     *                 for the sender in the IOManager.
-     * @return a DawgIdentifier for the specified sender which contains the sender's
-     *         public key.
+     * NOTE:  This call will wait until a key is received from the specified sender.
+     * @param senderDawgId  The DawgIdentifier of the sender who we wish to receive a key from.  This ID should match the ID value stored
+     *                  for the sender in the IOManager.
+     * @return a DawgIdentifier for the specified sender which contains the sender's public key.
      */
-    public DawgIdentifier receiveKeys(final String senderId) {
-        // create a DawgIdentifier to represent the other party.
-        final DawgIdentifier senderDawgId = new DawgIdentifier(senderId, UUID.randomUUID());
-
-        // block, waiting for the other device to send us a KeyExchangePacket
-        KeyExchangePacket packet = this.ioManager.singleDeviceReceive(senderId, KeyExchangePacket.class);
+    public DawgIdentifier receiveSecretKey(final DawgIdentifier senderDawgId, KeyExchangePacket packet) {
+        // receive the SecretKey.
+        final SecretKey otherSecretKey = (SecretKey) packet.getSecretKey();
         PublicKey senderPublicKey = packet.getPublicKey();
         SecretKey senderSecretKey = packet.getSecretKey();
+        // at this point, we have keys from both parties.  let's determine which one should be used
+        // for the connections by hashing them and choosing the one with the higher-value.
+        final SecretKey localSecretKey = this.secretKeysBeingExchanged.get(senderDawgId.getUsername());
+        final SecretKey chosenKey = localSecretKey.hashCode() < otherSecretKey.hashCode() ? otherSecretKey : localSecretKey;
 
-        // at this point, we have keys from both parties. let's determine which one
-        // should be used for the connections by hashing them and choosing the one with
-        // the higher-value.
-        final SecretKey localSecretKey = this.secretKeysBeingExchanged.get(senderId);
-        final SecretKey chosenKey = localSecretKey.hashCode() < senderSecretKey.hashCode() ? senderSecretKey
-                : localSecretKey;
-        this.secretKeysBeingExchanged.remove(senderId);
+
+        this.secretKeysBeingExchanged.remove(senderDawgId.getUsername());
 
         // store the keys
         this.storageManager.storePublicKeyForUUID(senderDawgId.getUUID(), senderPublicKey);
@@ -123,5 +130,14 @@ public class KeyExchanger {
 
         // return the senders dawgIdentifier
         return senderDawgId;
+    }
+
+    /**
+     * **ONLY FOR TESTING PURPOSES**
+     * @param dawgIdName dawgId of recipient
+     * @param secretKey secretkey being sent
+     */
+    public void testAddSecretKey(final String dawgIdName, SecretKey secretKey){
+        this.secretKeysBeingExchanged.put(dawgIdName, secretKey);
     }
 }

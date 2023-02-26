@@ -10,6 +10,8 @@ import javax.crypto.SecretKey;
 import org.junit.jupiter.api.Test;
 
 import crypto.Crypto;
+import types.DawgIdentifier;
+import types.TestUtils;
 
 public class KeyExchangePacketTest {
     @Test
@@ -17,7 +19,7 @@ public class KeyExchangePacketTest {
         // Successfully create a KeyExchangePacket object.
         PublicKey pubKey = Crypto.ALICE_KEYPAIR.getPublic();
         SecretKey secKey = Crypto.DUMMY_SECRETKEY;
-        new KeyExchangePacket(pubKey, secKey);
+        new KeyExchangePacket(pubKey, secKey, TestUtils.generateRandomizedDawgIdentifier());
     }
 
     @Test
@@ -26,7 +28,7 @@ public class KeyExchangePacketTest {
         SecretKey secKey = Crypto.DUMMY_SECRETKEY;
         
         // Successfully create a KeyExchangePacket object.
-        final KeyExchangePacket packet = new KeyExchangePacket(pubKey, secKey);
+        final KeyExchangePacket packet = new KeyExchangePacket(pubKey, secKey, TestUtils.generateRandomizedDawgIdentifier());
 
         // Obtain the packet contents.
         final PublicKey packetPublicKey = packet.getPublicKey();
@@ -41,10 +43,10 @@ public class KeyExchangePacketTest {
     public void testEquals_differentObjectsButSameKeys_returnsTrue() {
         PublicKey pubKey = Crypto.ALICE_KEYPAIR.getPublic();
         SecretKey secKey = Crypto.DUMMY_SECRETKEY;
-
+        DawgIdentifier dawgId = TestUtils.generateRandomizedDawgIdentifier();
         // Create two KeyExchangePacket objects with the same PublicKey.
-        final KeyExchangePacket packet1 = new KeyExchangePacket(pubKey, secKey);
-        final KeyExchangePacket packet2 = new KeyExchangePacket(pubKey, secKey);
+        final KeyExchangePacket packet1 = new KeyExchangePacket(pubKey, secKey, dawgId);
+        final KeyExchangePacket packet2 = new KeyExchangePacket(pubKey, secKey, dawgId);
 
         // Verify that the two KeyExchangePacket objects are equal.
         assertEquals(packet1, packet2);
@@ -58,10 +60,11 @@ public class KeyExchangePacketTest {
         SecretKey secKey2 = Crypto.OTHER_SECRETKEY;
 
         // Create four KeyExchangePacket objects with the different keys.
-        final KeyExchangePacket packet1 = new KeyExchangePacket(pubKey1, secKey1);
-        final KeyExchangePacket packet2 = new KeyExchangePacket(pubKey1, secKey2);
-        final KeyExchangePacket packet3 = new KeyExchangePacket(pubKey2, secKey1);
-        final KeyExchangePacket packet4 = new KeyExchangePacket(pubKey2, secKey2);
+        final KeyExchangePacket packet1 = new KeyExchangePacket(pubKey1, secKey1, TestUtils.generateRandomizedDawgIdentifier());
+        final KeyExchangePacket packet2 = new KeyExchangePacket(pubKey1, secKey2, TestUtils.generateRandomizedDawgIdentifier());
+        final KeyExchangePacket packet3 = new KeyExchangePacket(pubKey2, secKey1, TestUtils.generateRandomizedDawgIdentifier());
+        final KeyExchangePacket packet4 = new KeyExchangePacket(pubKey2, secKey2, TestUtils.generateRandomizedDawgIdentifier());
+        final KeyExchangePacket packet5 = new KeyExchangePacket(pubKey2, secKey2, TestUtils.generateRandomizedDawgIdentifier());
 
         // Verify that all KeyExchangePacket objects are different.
         assertNotEquals(packet1, packet2);
@@ -70,5 +73,6 @@ public class KeyExchangePacketTest {
         assertNotEquals(packet2, packet3);
         assertNotEquals(packet2, packet4);
         assertNotEquals(packet3, packet4);
+        assertNotEquals(packet4, packet5);
     }
 }

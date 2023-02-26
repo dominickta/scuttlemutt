@@ -201,8 +201,6 @@ abstract class ConnectionsActivity : AppCompatActivity() {
             for (grantResult in grantResults) {
                 if (grantResult == PackageManager.PERMISSION_DENIED) {
                     logW("Failed to request the permission " + permissions[i])
-                    Toast.makeText(this, "Failed to recieve permissions", Toast.LENGTH_LONG)
-                        .show()
                     finish()
                     return
                 }
@@ -537,7 +535,7 @@ abstract class ConnectionsActivity : AppCompatActivity() {
     }
 
     /** Represents a device we can talk to.  */
-    public class Endpoint(val id: String, val name: String) {
+    public class Endpoint(val id: String, val name: String, ) {
 
         override fun equals(obj: Any?): Boolean {
             if (obj is ConnectionsActivity.Endpoint) {
@@ -599,6 +597,7 @@ abstract class ConnectionsActivity : AppCompatActivity() {
             if (ContextCompat.checkSelfPermission(context!!, permission!!)
                 != PackageManager.PERMISSION_GRANTED
             ) {
+                Toast.makeText(context,"Failed to get permission for " + permission, Toast.LENGTH_LONG).show()
                 return false
             }
         }
