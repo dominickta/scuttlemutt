@@ -100,7 +100,7 @@ public class EndpointIOManager implements IOManager {
         }
     }
 
-    public KeyExchangePacket isSecretKey(Packet packet){
+    public KeyExchangePacket isKeyExchangePacket(Packet packet){
         if (packet.getClass() == KeyExchangePacket.class){
             return (KeyExchangePacket) packet;
         }

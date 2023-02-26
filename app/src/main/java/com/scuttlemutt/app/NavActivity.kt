@@ -101,7 +101,7 @@ class NavActivity() : ConnectionsActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "GETTING SCUTTLEMUTT INSTANCE")
-        // Set user name
+        // Set user name TODO: Replace "me" with user input username
         name = "me" + Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID)
         mutt = SingletonScuttlemutt.getInstance(this, this.mConnectionsClient!!, name)
         iom = SingletonScuttlemutt.getIOManager()
@@ -211,7 +211,7 @@ class NavActivity() : ConnectionsActivity() {
         if (payload?.type == Payload.Type.BYTES) {
             val buffer = payload?.asBytes()
             val packet = Packet.fromNetworkBytes(buffer)
-            val keyPacket = iom.isSecretKey(packet)
+            val keyPacket = iom.isKeyExchangePacket(packet);
             if(keyPacket != null){
                 if(!mutt.haveContact(keyPacket.dawgId.uuid)){
                     logD("NEW CONTACT: " + endpoint?.name)
@@ -224,8 +224,8 @@ class NavActivity() : ConnectionsActivity() {
             }
             var messageString = String(buffer!!)
             if (endpoint != null) {
-                messageString = "From " + endpoint.id + ": " + messageString
-                messageString = "From " + endpoint.name + ": " + messageString
+                messageString = "From id" + endpoint.id + ": " + messageString
+                messageString = "From name" + endpoint.name + ": " + messageString
             }
             logI(messageString, false)
             logD("RECIEVED MESSAGE")
@@ -257,8 +257,7 @@ class NavActivity() : ConnectionsActivity() {
     }
 
     override fun onEndpointConnected(endpoint: Endpoint?) {
-        //TODO: Maybe a message to say we've been connected?
-        logD("CONNECTED")
+        logD("CONNECTED to endpoint: " + endpoint?.name)
         Toast.makeText(this,"Connecting to" + endpoint?.id, Toast.LENGTH_LONG).show()
         setState(com.scuttlemutt.app.NavActivity.State.CONNECTED)
         iom.addAvailableConnection(endpoint?.id, endpoint?.name)
@@ -272,7 +271,6 @@ class NavActivity() : ConnectionsActivity() {
 
 
     override fun onEndpointDisconnected(endpoint: Endpoint?) {
-        //TODO: Maybe a message to say we've been disconnected?
         Toast.makeText(this,"Endpoints Disconnected", Toast.LENGTH_LONG).show()
         logD("DISCONNECTED")
         setState(com.scuttlemutt.app.NavActivity.State.SEARCHING)
