@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static types.Bark.MAX_MESSAGE_SIZE;
@@ -31,8 +30,8 @@ public class BarkTest {
         // that the RuntimeException is thrown.
         assertThrows(RuntimeException.class, () -> new Bark(oversizedMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
-                TestUtils.generateRandomizedDawgIdentifier(),
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY));
     }
@@ -42,8 +41,8 @@ public class BarkTest {
         // Successfully create a Bark object with the valid message String.
         final Bark b = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
-                TestUtils.generateRandomizedDawgIdentifier(),
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
         assertNotNull(b);
@@ -56,9 +55,9 @@ public class BarkTest {
         // create a Bark object with the valid message String.
         final Bark b = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
-                TestUtils.generateRandomizedDawgIdentifier(),
                 0L,
-                Crypto.ALICE_KEYPAIR.getPublic(),
+                Crypto.ALICE_KEYPAIR.getPrivate(),
+                Crypto.BOB_KEYPAIR.getPublic(),
                 validKey);
 
         // create the keyList. To make things a bit more difficult, make validKey not
@@ -70,7 +69,7 @@ public class BarkTest {
         keyList.add(otherKey);
 
         // call getContents().
-        final String contents = b.getContents(keyList);
+        final String contents = b.getContents(keyList, Crypto.ALICE_KEYPAIR.getPublic());
         assertEquals(validMessage, contents);
     }
 
@@ -79,9 +78,9 @@ public class BarkTest {
         // create a Bark object with the valid message String.
         final Bark b = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
-                TestUtils.generateRandomizedDawgIdentifier(),
                 0L,
-                Crypto.ALICE_KEYPAIR.getPublic(),
+                Crypto.ALICE_KEYPAIR.getPrivate(),
+                Crypto.BOB_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
 
         // create the keyList. To make things a bit more difficult, make validKey not
@@ -92,7 +91,28 @@ public class BarkTest {
         keyList.add(invalidKey);
 
         // assert that we were unable to successfully decrypt the contents.
-        assertThrows(RuntimeException.class, () -> b.getContents(keyList));
+        assertThrows(RuntimeException.class, () -> b.getContents(keyList, Crypto.ALICE_KEYPAIR.getPublic()));
+    }
+    
+    @Test
+    public void testGetContents_invalidSignature_throws() {
+        // create a Bark object with the valid message String.
+        final Bark b = new Bark(validMessage,
+                TestUtils.generateRandomizedDawgIdentifier(),
+                0L,
+                Crypto.BOB_KEYPAIR.getPrivate(),
+                Crypto.BOB_KEYPAIR.getPublic(),
+                Crypto.DUMMY_SECRETKEY);
+
+        // create the keyList. To make things a bit more difficult, make validKey not
+        // the last object.
+        // (this means that getContents() needs to iterate to the correct Key.)
+        final SecretKey invalidKey = Crypto.generateSecretKey();
+        final List<SecretKey> keyList = new ArrayList<>();
+        keyList.add(invalidKey);
+
+        // assert that we were unable to successfully decrypt the contents.
+        assertThrows(RuntimeException.class, () -> b.getContents(keyList, Crypto.ALICE_KEYPAIR.getPublic()));
     }
 
     @Test
@@ -100,8 +120,8 @@ public class BarkTest {
         // Create a Bark object with the valid message String.
         final Bark b = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
-                TestUtils.generateRandomizedDawgIdentifier(),
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
 
@@ -113,17 +133,16 @@ public class BarkTest {
     public void testEquals_sameContentsDifferentObjects_returnsFalse() {
         // Create two Bark objects with the same message String.
         DawgIdentifier alice = TestUtils.generateRandomizedDawgIdentifier();
-        DawgIdentifier bob = TestUtils.generateRandomizedDawgIdentifier();
         final Bark b1 = new Bark(validMessage,
                 alice,
-                bob,
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
         final Bark b2 = new Bark(validMessage,
                 alice,
-                bob,
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
 
@@ -136,8 +155,8 @@ public class BarkTest {
         // Create a Bark object for the test.
         final Bark b = new Bark(validMessage,
                 TestUtils.generateRandomizedDawgIdentifier(),
-                TestUtils.generateRandomizedDawgIdentifier(),
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
 
@@ -155,8 +174,8 @@ public class BarkTest {
     public void testIsForMe_BarkFromAliceToBob_isForBob_returnsTrue() {
         final Bark b = new Bark(validMessage,
                 new DawgIdentifier("alice", UUID.randomUUID()),
-                new DawgIdentifier("bob", UUID.randomUUID()),
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
         assertTrue(b.isForMe(Crypto.BOB_KEYPAIR.getPrivate()));
@@ -166,8 +185,8 @@ public class BarkTest {
     public void testIsForMe_BarkFromAliceToBob_isForAlice_returnsFalse() {
         final Bark b = new Bark(validMessage,
                 new DawgIdentifier("alice", UUID.randomUUID()),
-                new DawgIdentifier("bob", UUID.randomUUID()),
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
         assertFalse(b.isForMe(Crypto.ALICE_KEYPAIR.getPrivate()));
@@ -179,11 +198,11 @@ public class BarkTest {
         SecretKey secret = Crypto.DUMMY_SECRETKEY;
         final Bark b = new Bark(validMessage,
                 new DawgIdentifier("alice", UUID.randomUUID()),
-                new DawgIdentifier("bob", UUID.randomUUID()),
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 secret);
-        assertEquals(validMessage, b.getContents(List.of(secret)));
+        assertEquals(validMessage, b.getContents(List.of(secret), Crypto.ALICE_KEYPAIR.getPublic()));
     }
 
     @Test
@@ -192,70 +211,50 @@ public class BarkTest {
         SecretKey secret = Crypto.DUMMY_SECRETKEY;
         final Bark b = new Bark(validMessage,
                 new DawgIdentifier("alice", UUID.randomUUID()),
-                new DawgIdentifier("bob", UUID.randomUUID()),
                 0L,
+                Crypto.ALICE_KEYPAIR.getPrivate(),
                 Crypto.BOB_KEYPAIR.getPublic(),
                 secret);
-        assertThrows(RuntimeException.class, () -> b.getContents(List.of(Crypto.OTHER_SECRETKEY)));
+        assertThrows(RuntimeException.class, () -> b.getContents(List.of(Crypto.OTHER_SECRETKEY), Crypto.ALICE_KEYPAIR.getPublic()));
     }
 
     @Test
     public void testEquals_BarkFromAliceToBob_bobGetSender() {
         // alice sends message to bob, only bob can getSender
         DawgIdentifier alice = new DawgIdentifier("alice", UUID.randomUUID());
-        DawgIdentifier bob = new DawgIdentifier("bob", UUID.randomUUID());
         SecretKey secret = Crypto.DUMMY_SECRETKEY;
-        final Bark b = new Bark(validMessage, alice, bob, 0L, Crypto.BOB_KEYPAIR.getPublic(), secret);
-        assertEquals(alice, b.getSender(List.of(Crypto.DUMMY_SECRETKEY)));
+        final Bark b = new Bark(validMessage, alice, 0L, Crypto.ALICE_KEYPAIR.getPrivate(),
+                Crypto.BOB_KEYPAIR.getPublic(), secret);
+        assertEquals(alice, b.getSender(List.of(Crypto.DUMMY_SECRETKEY), Crypto.ALICE_KEYPAIR.getPublic()));
     }
 
     @Test
     public void testThrows_BarkFromAliceToBob_aliceGetSender() {
         // alice sends message to bob, only bob can getSender
         DawgIdentifier alice = new DawgIdentifier("alice", UUID.randomUUID());
-        DawgIdentifier bob = new DawgIdentifier("bob", UUID.randomUUID());
         SecretKey secret = Crypto.DUMMY_SECRETKEY;
-        final Bark b = new Bark(validMessage, alice, bob, 0L, Crypto.BOB_KEYPAIR.getPublic(), secret);
-        assertThrows(RuntimeException.class, () -> b.getSender(List.of(Crypto.OTHER_SECRETKEY)));
-    }
-
-    @Test
-    public void testEquals_BarkFromAliceToBob_bobGetReceiver() {
-        // alice sends message to bob, only bob can getReceiver
-        DawgIdentifier alice = new DawgIdentifier("alice", UUID.randomUUID());
-        DawgIdentifier bob = new DawgIdentifier("bob", UUID.randomUUID());
-        SecretKey secret = Crypto.DUMMY_SECRETKEY;
-        final Bark b = new Bark(validMessage, alice, bob, 0L, Crypto.BOB_KEYPAIR.getPublic(), secret);
-        assertEquals(bob, b.getReceiver(List.of(Crypto.DUMMY_SECRETKEY)));
-    }
-
-    @Test
-    public void testThrows_BarkFromAliceToBob_aliceGetReceiver() {
-        // alice sends message to bob, only bob can getReceiver
-        DawgIdentifier alice = new DawgIdentifier("alice", UUID.randomUUID());
-        DawgIdentifier bob = new DawgIdentifier("bob", UUID.randomUUID());
-        SecretKey secret = Crypto.DUMMY_SECRETKEY;
-        final Bark b = new Bark(validMessage, alice, bob, 0L, Crypto.BOB_KEYPAIR.getPublic(), secret);
-        assertThrows(RuntimeException.class, () -> b.getReceiver(List.of(Crypto.OTHER_SECRETKEY)));
+        final Bark b = new Bark(validMessage, alice, 0L, Crypto.ALICE_KEYPAIR.getPrivate(),
+                Crypto.BOB_KEYPAIR.getPublic(), secret);
+        assertThrows(RuntimeException.class, () -> b.getSender(List.of(Crypto.OTHER_SECRETKEY), Crypto.ALICE_KEYPAIR.getPublic()));
     }
 
     @Test
     public void testEquals_BarkFromAliceToBob_bobGetOrderNum() {
         // alice sends message to bob, only bob can getOrderNum
         DawgIdentifier alice = new DawgIdentifier("alice", UUID.randomUUID());
-        DawgIdentifier bob = new DawgIdentifier("bob", UUID.randomUUID());
         SecretKey secret = Crypto.DUMMY_SECRETKEY;
-        final Bark b = new Bark(validMessage, alice, bob, 0L, Crypto.BOB_KEYPAIR.getPublic(), secret);
-        assertEquals(0L, b.getOrderNum(List.of(Crypto.DUMMY_SECRETKEY)));
+        final Bark b = new Bark(validMessage, alice, 0L, Crypto.ALICE_KEYPAIR.getPrivate(),
+                Crypto.BOB_KEYPAIR.getPublic(), secret);
+        assertEquals(0L, b.getOrderNum(List.of(Crypto.DUMMY_SECRETKEY), Crypto.ALICE_KEYPAIR.getPublic()));
     }
 
     @Test
     public void testThrows_BarkFromAliceToBob_aliceGetOrderNum() {
         // alice sends message to bob, only bob can getOrderNum
         DawgIdentifier alice = new DawgIdentifier("alice", UUID.randomUUID());
-        DawgIdentifier bob = new DawgIdentifier("bob", UUID.randomUUID());
         SecretKey secret = Crypto.DUMMY_SECRETKEY;
-        final Bark b = new Bark(validMessage, alice, bob, 0L, Crypto.BOB_KEYPAIR.getPublic(), secret);
-        assertThrows(RuntimeException.class, () -> b.getOrderNum(List.of(Crypto.OTHER_SECRETKEY)));
+        final Bark b = new Bark(validMessage, alice, 0L, Crypto.ALICE_KEYPAIR.getPrivate(),
+                Crypto.BOB_KEYPAIR.getPublic(), secret);
+        assertThrows(RuntimeException.class, () -> b.getOrderNum(List.of(Crypto.OTHER_SECRETKEY), Crypto.ALICE_KEYPAIR.getPublic()));
     }
 }

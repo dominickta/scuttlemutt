@@ -79,7 +79,7 @@ public class EntryTypesTest {
 
         // create the entry.
         final KeyEntry ke = new KeyEntry(d.getUUID().toString(),
-                new String(SerializationUtils.serializeKey(k)), "", "");
+                new String(SerializationUtils.serializeKey(k)), GSON.toJson(new ArrayList<SecretKey>()), GSON.toJson(new ArrayList<SecretKey>()));
 
         // verify that the contents of the entry are as expected.
         assertEquals(new String(SerializationUtils.serializeKey(k)), ke.symmetricKeyListJson);
