@@ -13,6 +13,9 @@ import com.scuttlemutt.app.backendimplementations.storagemanager.message.Message
 import org.junit.Test;
 
 import java.security.Key;
+import java.util.ArrayList;
+
+import javax.crypto.SecretKey;
 
 import crypto.Crypto;
 import types.Bark;
@@ -80,8 +83,8 @@ public class EntryTypesTest {
 
         // verify that the contents of the entry are as expected.
         assertEquals(new String(SerializationUtils.serializeKey(k)), ke.symmetricKeyListJson);
-        assertEquals(GSON.toJson(new ArrayList<SecretKey>()), ke.publicKeyJson);
-        assertEquals(GSON.toJson(new ArrayList<SecretKey>()), ke.privateKeyJson);
+        assertEquals("", ke.publicKeyJson);
+        assertEquals("", ke.privateKeyJson);
         assertEquals(d.getUUID().toString(), ke.uuid);
     }
 
