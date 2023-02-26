@@ -1,6 +1,7 @@
 package backend.meshdaemon;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -54,8 +55,6 @@ public class MeshInput implements Runnable {
     }
 
     public void handleInput() {
-        // TODO: Add BarkPacket verification (e.g. crypto signatures)
-
         // Check if ioManager is connected so .call function in Iomanager doesn't fail
         BarkPacket barkPacket = ioManager.meshReceive(BarkPacket.class);
         List<Bark> barkList = barkPacket.getPacketBarks();
@@ -75,11 +74,12 @@ public class MeshInput implements Runnable {
                 // ordering number from the bark
                 final UUID senderId = bark.getSenderUUID(myPrivateKey);
                 final List<SecretKey> secretKeys = this.storage.lookupSecretKeysForUUID(senderId);
-                final DawgIdentifier sender = bark.getSender(secretKeys);
-                final String messageContents = bark.getContents(secretKeys);
+                final PublicKey senderPubKey = this.storage.lookupPublicKeyForUUID(senderId);
+                final DawgIdentifier sender = bark.getSender(secretKeys, senderPubKey);
+                final String messageContents = bark.getContents(secretKeys, senderPubKey);
 
                 // obtain the message ordering num from the Bark.
-                final Long messageOrderingNum = bark.getOrderNum(secretKeys);
+                final Long messageOrderingNum = bark.getOrderNum(secretKeys, senderPubKey);
 
                 // create + store the Message object.
                 final Message message = new Message(messageContents, messageOrderingNum, sender);

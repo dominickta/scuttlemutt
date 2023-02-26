@@ -30,8 +30,8 @@ public class TestUtils {
     public static Bark generateRandomizedBark() {
         return new Bark(RandomStringUtils.randomAlphanumeric(MAX_MESSAGE_SIZE),
                 generateRandomizedDawgIdentifier(),
-                generateRandomizedDawgIdentifier(),
                 r.nextLong(),
+                Crypto.BOB_KEYPAIR.getPrivate(),
                 Crypto.ALICE_KEYPAIR.getPublic(),
                 Crypto.DUMMY_SECRETKEY);
     }

@@ -1,6 +1,5 @@
 package types;
 
-import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -9,8 +8,7 @@ import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
+import com.google.common.primitives.Bytes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -24,62 +22,36 @@ import crypto.Crypto;
  * it to figure out which symmetric keys to use for
  */
 public class Bark {
-    private static final Gson GSON = new GsonBuilder().setLenient().create();
     // constants
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
 
     // stores the maximum number of characters allowed in a Bark.
-    public static final int UUID_SIZE = 36;
     public static final int MAX_MESSAGE_SIZE = 160;
-    public static final int PACKET_SIZE = UUID_SIZE + MAX_MESSAGE_SIZE;
 
+    // private fields
     /**
-     * The unique identifier that is automatially generated when a new Bark is
+     * The unique identifier that is automatically generated when a new Bark is
      * constructed. Two barks with the same fields may not be equal because of
      * their unique ids.
      */
     private final UUID uniqueId;
 
     /**
-     * The UUID of the sender, encrypted with the the receiver's public key.
+     * The UUID of the sender, encrypted with the receiver's public key.
      */
     private final byte[] encryptedHeader;
 
     /**
-     * The DawgIdentifier of the sender, encrypted with a shared secret key
-     * that only the sender and receiver know.
+     * The bark payload, signed with the sender's private key, appended to the
+     * bark header bytes, then encrypted with the shared secret key.
      */
-    private final byte[] encryptedSender;
-
-    /**
-     * The DawgIdentifier of the receiver, encrypted with a shared secret key
-     * that only the sender and receiver know.
-     */
-    private final byte[] encryptedReceiver;
-
-    /**
-     * The order number of this bark, encrypted with a shared secret key
-     * that only the sender and receiver know.
-     */
-    private final byte[] encryptedOrderNum;
-
-    /**
-     * The number of filler characters in this bark used to pad the message,
-     * encrypted with a shared secret key that only the sender and receiver know.
-     */
-    private final byte[] encryptedFillerCount;
-
-    /**
-     * The string payload of this bark (ie. the actual message), encrypted with
-     * a shared secret key that only the sender and receiver know.
-     */
-    private final byte[] encryptedContents;
+    private final byte[] encryptedPayload;
 
     /**
      * Constructs a new Bark.
      *
      * @param contents          The contents of the message.
      * @param sender            The DawgIdentifier of the sender of the message.
-     * @param receiver          The DawgIdentifier of the receiver of the message.
      * @param orderNum          The number of the message in the conversation order.
      * @param receiverPublicKey The public key of the receiver.
      * @param encryptionKey     The symmetric SecretKey used to encrypt the contents
@@ -87,32 +59,29 @@ public class Bark {
      */
     public Bark(String contents,
             final DawgIdentifier sender,
-            final DawgIdentifier receiver,
             final Long orderNum,
+            final PrivateKey senderPrivateKey,
             final PublicKey receiverPublicKey,
             final SecretKey encryptionKey) {
 
         // verify that the contents are less than the max message size.
         if (contents.length() > MAX_MESSAGE_SIZE) {
             throw new RuntimeException(
-                    "Attempted to create a Bark object with a message larger than the maximum size!" +
-                            "\tBark message length:  " + contents.length() + "\tMaximum size:  " + MAX_MESSAGE_SIZE);
+                    "Attempted to create a Bark object with a message larger " +
+                    "than the maximum size!\tBark message length:  " +
+                    contents.length() + "\tMaximum size:  " + MAX_MESSAGE_SIZE);
         }
         this.uniqueId = UUID.randomUUID();
 
-        // setup the filler chars.
-        int fillerCount = MAX_MESSAGE_SIZE - contents.length();
-        contents += RandomStringUtils.randomAlphanumeric(fillerCount);
-
         // encrypt the uuid with an asymmetric key (small size limit)
-        this.encryptedHeader = encryptAndSerialize(sender.getUUID(), receiverPublicKey);
+        byte[] headerBytes = GSON.toJson(sender.getUUID()).getBytes();
+        this.encryptedHeader = Crypto.encrypt(headerBytes, receiverPublicKey, Crypto.ASYMMETRIC_KEY_TYPE);
 
-        // encrypt the rest with the associated symmetric key
-        this.encryptedSender = encryptAndSerialize(sender, encryptionKey);
-        this.encryptedReceiver = encryptAndSerialize(receiver, encryptionKey);
-        this.encryptedOrderNum = encryptAndSerialize(orderNum, encryptionKey);
-        this.encryptedFillerCount = encryptAndSerialize(fillerCount, encryptionKey);
-        this.encryptedContents = encryptAndSerialize(contents, encryptionKey);
+        // construct the bark payload, sign the raw header bytes, encrypt both with the SecretKey.
+        byte[] payload = new BarkPayload(contents, sender, orderNum).toNetworkBytes();
+        byte[] payloadSignature = Crypto.sign(payload, senderPrivateKey);
+        byte[] bytes = Bytes.concat(payload, payloadSignature);
+        this.encryptedPayload = Crypto.encrypt(bytes, encryptionKey, Crypto.SYMMETRIC_KEY_TYPE);
     }
 
     /**
@@ -123,17 +92,13 @@ public class Bark {
     public Bark(Bark bark) {
         this.uniqueId = bark.uniqueId;
         this.encryptedHeader = bark.encryptedHeader;
-        this.encryptedSender = bark.encryptedSender;
-        this.encryptedReceiver = bark.encryptedReceiver;
-        this.encryptedOrderNum = bark.encryptedOrderNum;
-        this.encryptedFillerCount = bark.encryptedFillerCount;
-        this.encryptedContents = bark.encryptedContents;
+        this.encryptedPayload = bark.encryptedPayload;
     }
 
     // public methods
 
     /**
-     * The Bark object is for me if I can decrypt the BarkHeader with my
+     * The Bark object is for me if I can decrypt the header with my
      * private (asymmetric) key.
      *
      * NOTE: The caller should call isForMe with the current user's private key
@@ -175,13 +140,12 @@ public class Bark {
      * able to decrypt it, and this method will throw a RuntimeException.
      *
      * @throws RuntimeException if decryption fails
-     * @param keys A List<SecretKey> to try to decrypt the Bark with.
+     * @param secretKeys the list of secret keys associated with the sender.
+     * @param publicKey the sender's public key (used to verify signature)
      * @return The decrypted contents of the Bark as a String, otherwise null.
      */
-    public String getContents(final List<SecretKey> keys) {
-        // return the decrypted contents with the filler chars trimmed off.
-        String content = decryptAndDeserialize(keys, this.encryptedContents, String.class);
-        return content.substring(0, content.length() - getFillerCount(keys));
+    public String getContents(final List<SecretKey> secretKeys, final PublicKey publicKey) {
+        return decryptBarkPayload(secretKeys, publicKey).getContents();
     }
 
     /**
@@ -193,28 +157,12 @@ public class Bark {
      * able to decrypt it, and this method will throw a RuntimeException.
      *
      * @throws RuntimeException if decryption fails
-     * @param keys the list of secret keys associated with the sender.
+     * @param secretKeys the list of secret keys associated with the sender.
+     * @param publicKey the sender's public key (used to verify signature)
      * @return returns the DawgIdentifier of the sender, otherwise null
      */
-    public DawgIdentifier getSender(final List<SecretKey> keys) {
-        return decryptAndDeserialize(keys, this.encryptedSender, DawgIdentifier.class);
-    }
-
-    /**
-     * Tries to decrypt the receiver field with the list of secret keys. Returns
-     * null if that fails.
-     *
-     * NOTE: The caller should call isForMe with the current user's private key
-     * before calling this method. If a packet is not for you, you will not be
-     * able to decrypt it, and this method will throw a RuntimeException.
-     *
-     * @throws RuntimeException if decryption fails
-     * @param keys the list of secret keys associated with the sender.
-     * @return returns the DawgIdentifier of the receiver, otherwise null
-     */
-    public DawgIdentifier getReceiver(final List<SecretKey> keys) {
-        // TODO: This is tested but never used.
-        return decryptAndDeserialize(keys, this.encryptedReceiver, DawgIdentifier.class);
+    public DawgIdentifier getSender(final List<SecretKey> secretKeys, final PublicKey publicKey) {
+        return decryptBarkPayload(secretKeys, publicKey).getSender();
     }
 
     /**
@@ -226,28 +174,12 @@ public class Bark {
      * able to decrypt it, and this method will throw a RuntimeException.
      *
      * @throws RuntimeException if decryption fails
-     * @param keys the list of secret keys associated with the sender.
+     * @param secretKeys the list of secret keys associated with the sender.
+     * @param publicKey the sender's public key (used to verify signature)
      * @return returns this Bark's order num, otherwise null
      */
-    public Long getOrderNum(final List<SecretKey> keys) {
-        return decryptAndDeserialize(keys, this.encryptedOrderNum, Long.class);
-    }
-
-    /**
-     * Tries to decrypt the fillerCount field with the list of secret keys.
-     * Returns null if that fails.
-     *
-     * NOTE: The caller should call isForMe with the current user's private key
-     * before calling this method. If a packet is not for you, you will not be
-     * able to decrypt it, and this method will throw a RuntimeException.
-     *
-     * @throws RuntimeException if decryption fails
-     * @param keys the list of secret keys associated with the sender.
-     * @return returns this Bark's filler count, otherwise null
-     */
-    public Integer getFillerCount(final List<SecretKey> keys) {
-        // TODO: This is only ever used by getContents, consider making private
-        return decryptAndDeserialize(keys, this.encryptedFillerCount, Integer.class);
+    public Long getOrderNum(final List<SecretKey> secretKeys, final PublicKey publicKey) {
+        return decryptBarkPayload(secretKeys, publicKey).getOrderNum();
     }
 
     /**
@@ -291,61 +223,48 @@ public class Bark {
 
     @Override
     public String toString() {
-        return "encryptedContents:  " + Arrays.toString(this.encryptedContents) + "encryptedHeader:  "
-                + Arrays.toString(this.encryptedHeader) + "\tuniqueId:  "
-                + this.uniqueId.toString();
+        return "encryptedPayload:  " + Arrays.toString(this.encryptedPayload)
+                + "encryptedHeader:  " + Arrays.toString(this.encryptedHeader)
+                + "\tuniqueId:  " + this.uniqueId.toString();
     }
 
+    // private helpers
     /**
-     * A simple helper function to encrypt an object to a JSON string as bytes
-     *
-     * @param obj the object to encrypt
-     * @param key the key to encrypt the object with
-     * @return the bytes of the encrypted object
-     */
-    private byte[] encryptAndSerialize(Object obj, Key key) {
-        String keyType;
-        if (key instanceof PublicKey) {
-            keyType = Crypto.ASYMMETRIC_KEY_TYPE;
-        } else {
-            keyType = Crypto.SYMMETRIC_KEY_TYPE;
-        }
-        return Crypto.encrypt(GSON.toJson(obj).getBytes(), key, keyType);
-    }
-
-    /**
-     * Try to decrypt the Bark's contents using the passed List of Keys. Since it is
-     * most likely that the most recent key is the one used for encryption, we
+     * Try to decrypt the Bark's payload using the passed List of Keys. Since it
+     * is most likely that the most recent key is the one used for encryption, we
      * iterate backwards through the List.
-     *
-     * @param <T>        The type of object to return if successful
-     * @param keys       the list of secret keys to try
-     * @param ciphertext the array of bytes to try decrypting
-     * @param asType     the class of the type of the object to return
-     * @return either an instance of the decrypted object or empty
+     * 
+     * For security, we only return the payload if the attached signature is
+     * valid for the given public key.
+     * 
+     * @throws RuntimeException if decryption fails or the signature is invalid
+     * @param keys       the list of secret keys to try decrypting with
+     * @param publicKey  the public key of the sender, should match signature
+     * @return either an instance of BarkPayload or throws
      */
-    private <T> T decryptAndDeserialize(final List<SecretKey> keys, byte[] ciphertext, Class<T> asType) {
-        byte[] decryptedMessageBytes = new byte[0];
+    private BarkPayload decryptBarkPayload(final List<SecretKey> keys, PublicKey publicKey) {
+        byte[] bytes = new byte[0];
         for (int i = keys.size() - 1; i >= 0; i--) {
-            final SecretKey currentKey = keys.get(i);
-            decryptedMessageBytes = Crypto.decrypt(ciphertext, currentKey, Crypto.SYMMETRIC_KEY_TYPE);
+            final SecretKey key = keys.get(i);
+            bytes = Crypto.decrypt(this.encryptedPayload, key, Crypto.SYMMETRIC_KEY_TYPE);
 
             // if bytes is not null, decryption was successful: terminate
-            if (decryptedMessageBytes != null) {
+            if (bytes != null) {
                 break;
             }
         }
 
         // if we were never able to successfully decrypt the Bark, return empty
-        if (decryptedMessageBytes == null || decryptedMessageBytes.length == 0) {
+        if (bytes == null || bytes.length == 0) {
             throw new RuntimeException("could not decrypt");
         }
 
-        final String decryptedContents = new String(decryptedMessageBytes);
-        try {
-            return GSON.fromJson(decryptedContents, asType);
-        } catch (Exception e) {
-            throw new RuntimeException("could not deserialize");
+        int sigIndex = bytes.length - Crypto.ASYMMETRIC_KEY_SIZE / 8;
+        byte[] payload = Arrays.copyOfRange(bytes, 0, sigIndex);        
+        byte[] payloadSignature = Arrays.copyOfRange(bytes, sigIndex, bytes.length); 
+        if (Crypto.verify(payloadSignature, payload, publicKey)) {
+            return BarkPayload.fromNetworkBytes(payload);
         }
+        throw new RuntimeException("invalid signature");
     }
 }

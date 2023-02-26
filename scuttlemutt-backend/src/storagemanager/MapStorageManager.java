@@ -34,7 +34,6 @@ public class MapStorageManager implements StorageManager {
     private PrivateKey privateKey;
     private final Map<UUID, String> barkMap;
     private final Map<UUID, Message> messageMap;
-    private final Map<String, PublicKey> deviceMap;
     private final Map<UUID, PublicKey> publicKeyMap;
     private final Map<UUID, String> conversationMap;
     private final Map<UUID, List<SecretKey>> secretKeysMap;
@@ -46,7 +45,6 @@ public class MapStorageManager implements StorageManager {
         this.uuidToDawgIdentifierMap = new HashMap<UUID, String>();
         this.usernameToDawgIdentifierMap = new HashMap<String, String>();
         this.messageMap = new HashMap<>();
-        this.deviceMap = new HashMap<>();
         this.conversationMap = new HashMap<>();
         this.secretKeysMap = new HashMap<>();
         this.publicKeyMap = new HashMap<>();

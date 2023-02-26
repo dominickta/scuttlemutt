@@ -79,8 +79,9 @@ public class MeshDaemon {
         UUID recipientId = recipient.getUUID();
         final SecretKey recipientSecretKey = this.storageManager.lookupLatestSecretKeyForDawgIdentifier(recipientId);
         final PublicKey recipientPublicKey = this.storageManager.lookupPublicKeyForUUID(recipientId);
-        final Bark barkMessage = new Bark(contents, this.currentUser, recipient, seqId, recipientPublicKey,
-                recipientSecretKey);
+        final PrivateKey senderPrivateKey = this.storageManager.lookupPrivateKey();
+        final Bark barkMessage = new Bark(contents, this.currentUser,
+                seqId, senderPrivateKey, recipientPublicKey, recipientSecretKey);
 
         // create a plaintext object to represent the Message.
         final Message message = new Message(contents, seqId, this.currentUser);

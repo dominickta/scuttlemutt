@@ -76,7 +76,7 @@ public class MeshDaemonTest {
 
                 // check that the Bark queue was fed a Bark object containing the message.
                 final Bark sentBark = this.meshDaemonInternalBarkQueue.remove();
-                final String decryptedMessage = sentBark.getContents(List.of(this.conversationKey));
+                final String decryptedMessage = sentBark.getContents(List.of(this.conversationKey), Crypto.ALICE_KEYPAIR.getPublic());
                 assertEquals(messageContents, decryptedMessage);
 
                 // verify that the StorageManager stored the data for a Bark.
