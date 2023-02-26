@@ -57,10 +57,10 @@ public class EndpointIOManagerTest {
         this.ioManager = new EndpointIOManager(this.mockedConnectionsClient);
 
         // store otherDeviceId1/2 as valid connections for the IOManager.
-        final Set<String> validConns = new HashSet<String>();
-        validConns.add(this.otherDeviceId1);
-        validConns.add(this.otherDeviceId2);
-        this.ioManager.updateAvailableConnection(validConns);
+        this.ioManager.addAvailableConnection(this.otherDeviceId1,
+                this.otherDeviceId1);
+        this.ioManager.addAvailableConnection(this.otherDeviceId2,
+                this.otherDeviceId2);
     }
 
     /**
