@@ -99,7 +99,7 @@ public interface StorageManager {
      * @param id the UUID of the DawgIdentifier to look for
      * @return the most recently added SecretKey or null
      */
-    default SecretKey lookupLatestSecretKeyForDawgIdentifier(final UUID id) {
+    default SecretKey lookupLatestSecretKeyForUuid(final UUID id) {
         List<SecretKey> keys = this.lookupSecretKeysForUUID(id);
         return keys.get(keys.size() - 1);
     }
