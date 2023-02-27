@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
+import backend.initialization.KeyExchangeDaemon;
 import backend.iomanager.IOManager;
 import backend.meshdaemon.MeshDaemon;
 import crypto.Crypto;
@@ -30,6 +31,8 @@ public class Scuttlemutt {
     private final StorageManager storageManager;
     // Daemon controlling recieving and broadcasting of messages
     private final MeshDaemon meshDaemon;
+    // Daemon used to exchange keys between devices.
+    private final KeyExchangeDaemon keyExchangeDaemon;
 
     /*
      * Constructs a new Scuttlemutt object
@@ -46,8 +49,11 @@ public class Scuttlemutt {
             this.storageManager.storePublicKeyForUUID(dawgIdentifier.getUUID(), keys.getPublic());
         }
 
-        // keys must be initialized befor the mesh daemon is constructed.
+        // local keys must be initialized before the mesh daemon is constructed.
         this.meshDaemon = new MeshDaemon(this.ioManager, this.storageManager, this.dawgIdentifier);
+
+        // initialize KeyExchangeDaemon.
+        this.keyExchangeDaemon = new KeyExchangeDaemon(this.ioManager, this.storageManager, this.getPublicKey(), this.dawgIdentifier);
     }
 
     /**
@@ -166,7 +172,28 @@ public class Scuttlemutt {
         return this.storageManager.lookupDawgIdentifierForUsername(senderId);
     }
 
+    /**
+     * Exchanges keys with the specified user and stores a reference to it.
+     *
+     * @param otherDeviceId  The ID of the device with which we're exchanging keys.  The ID
+     *                       should be understandable to the IOManager.
+     */
+    public void exchangeKeys(final String otherDeviceId) {
+        this.keyExchangeDaemon.exchangeKeys(otherDeviceId);
+    }
 
+    /**
+     * Returns the current status for the Key exchange process with the device associated with the
+     * specified device ID String.
+     * @param otherDeviceId  The ID of the device with which we're looking up the exchange status
+     *                       for.  The ID should be understandable to the IOManager.
+     * @return  The current status for the Key exchange process with the specified device.
+     */
+    public KeyExchangeDaemon.KEY_EXCHANGE_STATUS getKeyExchangeStatus(final String otherDeviceId) {
+        return this.keyExchangeDaemon.getKeyExchangeStatus(otherDeviceId);
+    }
+
+    // TODO:  Delete this method when after integrating KeyExchangeDaemon.
     public void addContact(final DawgIdentifier dawgIdentifier, final PublicKey publicKey, final SecretKey secretKey) {
         this.storageManager.storeDawgIdentifier(dawgIdentifier);
         this.storageManager.storePublicKeyForUUID(dawgIdentifier.getUUID(), publicKey);

@@ -84,7 +84,7 @@ public class KeyExchangerTest {
         this.keyExchanger.testAddSecretKey(this.otherDeviceId, TestUtils.generateRandomizedKeyExchangePacket().getSecretKey());
         DawgIdentifier testDawgId = new DawgIdentifier(this.otherDeviceId, UUID.randomUUID());
         final DawgIdentifier dawgId = this.keyExchanger.receiveSecretKey(testDawgId, sentKePacket);
-        final SecretKey storedKey = this.storageManager.lookupLatestSecretKeyForDawgIdentifier(dawgId.getUUID());
+        final SecretKey storedKey = this.storageManager.lookupLatestSecretKeyForUuid(dawgId.getUUID());
         final PublicKey receivedPublicKey = this.storageManager.lookupPublicKeyForUUID(dawgId.getUUID());
         assertEquals(expectedKey, storedKey);
         assertEquals(Crypto.ALICE_KEYPAIR.getPublic(), sentPublicKey);
