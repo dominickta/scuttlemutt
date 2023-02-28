@@ -42,18 +42,10 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
     fun addMessage(msg: String) {
         viewModelScope.launch {
             withContext(Dispatchers.Default) {
-                try {
-                    mutt.sendMessage(msg, contactID)
-                    var msgs: MutableList<FrontEndMessage> =
-                        _currUiState.value!!.messages.toMutableList()
-                    msgs.add(0, FrontEndMessage("me", msg, "0"))
-                    _currUiState.postValue(ConversationUiState(contactName, msgs))
-
-                // if the message is too big, an exception will be thrown in the backend.
-                // we should handle this exception by displaying an error message.
-                } catch (exception:  IOManagerException) {
-                    Toast.makeText(getApplicationContext(), "Message too large!", Toast.LENGTH_LONG).show()
-                }
+                mutt.sendMessage(msg, contactID)
+                var msgs: MutableList<FrontEndMessage> = _currUiState.value!!.messages.toMutableList()
+                msgs.add(0, FrontEndMessage("me", msg, "0"))
+                _currUiState.postValue(ConversationUiState(contactName, msgs))
             }
         }
     }
