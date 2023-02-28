@@ -18,23 +18,50 @@ package com.scuttlemutt.app.profile
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
+import backend.scuttlemutt.Scuttlemutt
+import com.scuttlemutt.app.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import types.DawgIdentifier
+import java.lang.Math.abs
 
-class ProfileViewModel : ViewModel() {
-
-    private var userId: String = ""
-
-    fun setUserId(newUserId: String?) {
-        if (newUserId != userId) {
-            userId = newUserId ?: meProfile.userId
+class ProfileViewModelFactory (private val mutt: Scuttlemutt) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+            return ProfileViewModel(mutt) as T
         }
-        // Workaround for simplicity
-        _userData.value = if (userId == meProfile.userId || userId == meProfile.displayName) {
-            meProfile
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class ProfileViewModel(private val mutt: Scuttlemutt) : ViewModel() {
+
+    private val imgs: IntArray = intArrayOf(R.drawable.dog1, R.drawable.dog2, R.drawable.dog3)
+    private var username: String = ""
+
+    fun setUser(name: String) {
+        if (name != username) {
+            username = name
         } else {
-            colleagueProfile
+            return
+        }
+        viewModelScope.launch {
+            withContext(Dispatchers.Default) {
+                var dawgIdentifier: DawgIdentifier? = null
+                for (id in mutt.allContacts) {
+                    if (id.username == username) {
+                        dawgIdentifier = id
+                    }
+                }
+                _userData.postValue(ProfileScreenState(
+                    name = username,
+                    uuid = dawgIdentifier!!.uuid.toString(),
+                    photo = imgs[abs(username.hashCode()) % imgs.size],
+                ))
+            }
         }
     }
 
@@ -44,15 +71,7 @@ class ProfileViewModel : ViewModel() {
 
 @Immutable
 data class ProfileScreenState(
-    val userId: String,
-    @DrawableRes val photo: Int?,
     val name: String,
-    val status: String,
-    val displayName: String,
-    val position: String,
-    val twitter: String = "",
-    val timeZone: String?, // Null if me
-    val commonChannels: String? // Null if me
-) {
-    fun isMe() = userId == meProfile.userId
-}
+    val uuid: String,
+    @DrawableRes val photo: Int?,
+)

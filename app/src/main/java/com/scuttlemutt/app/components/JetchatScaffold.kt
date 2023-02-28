@@ -31,6 +31,7 @@ fun JetchatDrawer(
     viewModel: com.scuttlemutt.app.MainViewModel,
     activeChannel: String,
     drawerState: DrawerState = rememberDrawerState(initialValue = Closed),
+    onConnectionsClicked: () -> Unit,
     onProfileClicked: (String) -> Unit,
     onChatClicked: (String) -> Unit,
     content: @Composable () -> Unit
@@ -43,6 +44,7 @@ fun JetchatDrawer(
                     JetchatDrawerContent(
                         viewModel = viewModel,
                         activeChannel = activeChannel!!,
+                        onConnectionsClicked = onConnectionsClicked,
                         onProfileClicked = onProfileClicked,
                         onChatClicked = onChatClicked
                     )

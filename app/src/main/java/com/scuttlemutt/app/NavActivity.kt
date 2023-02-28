@@ -33,6 +33,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.core.os.bundleOf
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -68,14 +70,12 @@ class NavActivity() : ConnectionsActivity() {
     private lateinit var mutt: Scuttlemutt
 
 
-    private val SERVICE_ID = "com.scuttlemutt.app.service_id.meshing"
 
     /**
      * The state of the app. As the app changes states, the UI will update and advertising/discovery
      * will start/stop.
      */
-    private var mState: com.scuttlemutt.app.NavActivity.State =
-        com.scuttlemutt.app.NavActivity.State.UNKNOWN
+    private var mState: State = State.UNKNOWN
 
     private lateinit var iom: EndpointIOManager
 
@@ -91,7 +91,7 @@ class NavActivity() : ConnectionsActivity() {
      * This service id lets us find other nearby devices that are interested in the same thing. Our
      * sample does exactly one thing, so we hardcode the ID.
      */
-    override val serviceId = "com.google.location.nearby.apps.walkietalkie.automatic.SERVICE_ID"
+    override val serviceId = "com.scuttlemutt.app.service_id.meshing"
 
     override val strategy = Strategy.P2P_STAR
 
@@ -106,7 +106,7 @@ class NavActivity() : ConnectionsActivity() {
         mutt = SingletonScuttlemutt.getInstance(this, this.mConnectionsClient!!, name)
         iom = SingletonScuttlemutt.getIOManager()
         keyExchanger = SingletonScuttlemutt.getKeyExchanger()
-        viewModel = ViewModelProvider(this, MainViewModelFactory(mutt)).get(MainViewModel::class.java)
+        viewModel = ViewModelProvider(this, MainViewModelFactory(mutt, this)).get(MainViewModel::class.java)
         Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
         endpointUUID = mutt.dawgIdentifier.uuid.toString()
         // Turn off the decor fitting system windows, which allows us to handle insets,
@@ -152,6 +152,13 @@ class NavActivity() : ConnectionsActivity() {
                             viewModel = viewModel,
                             activeChannel = activeChannel!!,
                             drawerState = drawerState,
+                            onConnectionsClicked = {
+                                Log.d("NavActivity", "Navigating to nav_connections")
+                                findNavController().navigate(R.id.nav_connections)
+                                scope.launch {
+                                    drawerState.close()
+                                }
+                            },
                             onChatClicked = fun(channel: String) {
 //                                convViewModel.setChat(channel)
                                 viewModel.setChannel(channel)
@@ -176,6 +183,16 @@ class NavActivity() : ConnectionsActivity() {
                 }
             }
         )
+    }
+
+
+    private val _testLiveData = MutableLiveData<String>("Alice")
+    val testLiveData: LiveData<String> = _testLiveData
+    fun testPrint() {
+        Log.d(TAG, "navactivity printing!")
+    }
+    fun testChangeString(input: String) {
+        _testLiveData.value = input
     }
 
     override fun onStart() {
