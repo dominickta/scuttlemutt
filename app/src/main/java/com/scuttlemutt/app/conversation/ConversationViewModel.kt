@@ -9,19 +9,20 @@ import com.scuttlemutt.app.*
 import kotlinx.coroutines.*
 import types.DawgIdentifier
 import types.Message
+import java.lang.Math.abs
 import java.util.*
 
-class ConversationViewModelFactory (private val mainViewModel: MainViewModel, private val mutt: Scuttlemutt, private val initContactName: String) : ViewModelProvider.Factory {
+class ConversationViewModelFactory (private val mutt: Scuttlemutt, private val initContactName: String) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ConversationViewModel::class.java)) {
-            return ConversationViewModel(mainViewModel, mutt, initContactName) as T
+            return ConversationViewModel(mutt, initContactName) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 
-class ConversationViewModel(private val mainViewModel: MainViewModel, private val mutt: Scuttlemutt, initContactName: String) : ViewModel() {
+class ConversationViewModel(private val mutt: Scuttlemutt, initContactName: String) : ViewModel() {
 
     private val TAG = "ConversationViewModel"
 
@@ -40,7 +41,7 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
         viewModelScope.launch {
             withContext(Dispatchers.Default) {
                 mutt.sendMessage(msg, contactID)
-                var msgs: MutableList<FrontEndMessage> = _currUiState.value!!.messages.toMutableList()
+                val msgs: MutableList<FrontEndMessage> = _currUiState.value!!.messages.toMutableList()
                 msgs.add(0, FrontEndMessage("me", msg, "0"))
                 _currUiState.postValue(ConversationUiState(contactName, msgs))
             }
@@ -77,7 +78,7 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
                     }
                     continue
                 }
-                var msgs: MutableList<FrontEndMessage> = mutableListOf()
+                val msgs: MutableList<FrontEndMessage> = mutableListOf()
                 val backendMsgs : MutableList<Message>? = mutt.getMessagesForConversation(conv)
                 if (backendMsgs == null) {
                     if (_currUiState.value!!.messages.isNotEmpty()) {
@@ -86,13 +87,15 @@ class ConversationViewModel(private val mainViewModel: MainViewModel, private va
                     }
                     continue
                 }
+                val imgs: IntArray = intArrayOf(R.drawable.dog1, R.drawable.dog2, R.drawable.dog3)
                 for (m in backendMsgs) {
 //                    Log.d(TAG, "Message is $m")
                     msgs.add(0,
                         FrontEndMessage(
-                            author = conv.otherPerson.username,
+                            author = m.author.username,
                             content = m.plaintextMessage,
-                            timestamp = m.orderNum.toString()
+                            timestamp = m.orderNum.toString(),
+                            authorImage = imgs[abs(m.author.username.hashCode()) % imgs.size]
                         )
                     )
                 }

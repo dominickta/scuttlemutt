@@ -87,6 +87,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.scuttlemutt.app.FunctionalityNotAvailablePopup
 import com.scuttlemutt.app.R
+import types.Bark
 
 enum class InputSelector {
     NONE,
@@ -150,7 +151,8 @@ fun UserInput(
             )
             UserInputSelector(
                 onSelectorChange = { currentInputSelector = it },
-                sendMessageEnabled = textState.text.isNotBlank(),
+                numChars = textState.text.length,
+                sendMessageEnabled = textState.text.isNotBlank() && (textState.text.length <= Bark.MAX_MESSAGE_SIZE),
                 onMessageSent = {
                     onMessageSent(textState.text)
                     // Reset text field and close keyboard
@@ -245,6 +247,7 @@ fun FunctionalityNotAvailablePanel() {
 @Composable
 private fun UserInputSelector(
     onSelectorChange: (InputSelector) -> Unit,
+    numChars: Int,
     sendMessageEnabled: Boolean,
     onMessageSent: () -> Unit,
     currentInputSelector: InputSelector,
@@ -257,37 +260,6 @@ private fun UserInputSelector(
             .padding(start = 0.dp, end = 16.dp, top = 0.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-//        InputSelectorButton(
-//            onClick = { onSelectorChange(InputSelector.EMOJI) },
-//            icon = Icons.Outlined.Mood,
-//            selected = currentInputSelector == InputSelector.EMOJI,
-//            description = stringResource(id = R.string.emoji_selector_bt_desc)
-//        )
-//        InputSelectorButton(
-//            onClick = { onSelectorChange(InputSelector.DM) },
-//            icon = Icons.Outlined.AlternateEmail,
-//            selected = currentInputSelector == InputSelector.DM,
-//            description = stringResource(id = R.string.dm_desc)
-//        )
-//        InputSelectorButton(
-//            onClick = { onSelectorChange(InputSelector.PICTURE) },
-//            icon = Icons.Outlined.InsertPhoto,
-//            selected = currentInputSelector == InputSelector.PICTURE,
-//            description = stringResource(id = R.string.attach_photo_desc)
-//        )
-//        InputSelectorButton(
-//            onClick = { onSelectorChange(InputSelector.MAP) },
-//            icon = Icons.Outlined.Place,
-//            selected = currentInputSelector == InputSelector.MAP,
-//            description = stringResource(id = R.string.map_selector_desc)
-//        )
-//        InputSelectorButton(
-//            onClick = { onSelectorChange(InputSelector.PHONE) },
-//            icon = Icons.Outlined.Duo,
-//            selected = currentInputSelector == InputSelector.PHONE,
-//            description = stringResource(id = R.string.videochat_desc)
-//        )
-
         val border = if (!sendMessageEnabled) {
             BorderStroke(
                 width = 1.dp,
@@ -305,6 +277,13 @@ private fun UserInputSelector(
             disabledContentColor = disabledContentColor
         )
 
+        Text(
+            "$numChars/160 characters",
+            modifier = Modifier
+                .padding(horizontal = 10.dp),
+            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+        )
         // Send button
         Button(
             modifier = Modifier.height(36.dp),

@@ -34,20 +34,13 @@
     <string name="author_me">me</string>
     <string name="now">8:30 PM</string>
     <string name="members">%d members</string>
-    <string name="textfield_hint">Send a bark...</string>
+    <string name="textfield_hint">Send a bark…</string>
     <string name="emojis_label">Emojis</string>
     <string name="stickers_label">Stickers</string>
 
     <string name="message">Message</string>
-    <string name="edit_profile">Edit Profile</string>
     <string name="profile_error">There was an error loading the profile</string>
-    <string name="bio">Bio</string>
-    <string name="display_name">Display name</string>
-    <string name="status">Status</string>
-    <string name="timezone">Timezone</string>
-    <string name="twitter">Twitter</string>
-    <string name="common_channels">Channels in common</string>
-    <string name="lorem">Lorem or Ipsum</string>
+    <string name="uuid">UUID</string>
 
     <!-- Accessibility descriptions -->
 
