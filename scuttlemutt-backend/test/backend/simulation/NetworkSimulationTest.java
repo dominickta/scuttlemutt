@@ -223,8 +223,6 @@ public class NetworkSimulationTest {
         final Conversation conversation2 = device2.getConversation(device1.getDawgIdentifier());
         final List<Message> messages1 = device1.getMessagesForConversation(conversation1);
         final List<Message> messages2 = device2.getMessagesForConversation(conversation2);
-        System.err.println("m1\t" + messages1.get(0) + "\td1\t" + device1Label);
-        System.err.println("m2\t" + messages2.get(0) + "\td2\t" + device2Label);
         assertEquals(2, messages1.size());  // both messages should be present.
         assertEquals(2, messages2.size());
     }
