@@ -58,8 +58,8 @@ class ConversationFragment : Fragment() {
         super.onAttach(context)
         Log.d(TAG, "GETTING SCUTTLEMUTT INSTANCE")
         mutt = SingletonScuttlemutt.getInstance()
-        val activeChat = activityViewModel.activeContact.value ?: "" // Consider using safe args plugin
-        conversationViewModel = ViewModelProvider(requireActivity(), ConversationViewModelFactory(activityViewModel, mutt, activeChat)).get(ConversationViewModel::class.java)
+        val activeChat = activityViewModel.activeContact.value!!
+        conversationViewModel = ViewModelProvider(requireActivity(), ConversationViewModelFactory(mutt, activeChat)).get(ConversationViewModel::class.java)
         conversationViewModel.setChat(activeChat)
         Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
     }
@@ -85,7 +85,7 @@ class ConversationFragment : Fragment() {
                         uiState = currUiState!!,
                         navigateToProfile = { user ->
                             // Click callback
-                            val bundle = bundleOf("userId" to user)
+                            val bundle = bundleOf("name" to user)
                             findNavController().navigate(
                                 R.id.nav_profile,
                                 bundle
