@@ -195,8 +195,12 @@ public class KeyExchangeDaemon {
             final SecretKey chosenKey = localSecretKey.hashCode() < otherSecretKey.hashCode() ? otherSecretKey : localSecretKey;
 
             // store the Keys.
-            storageManager.storePublicKeyForUUID(otherDawgId.getUUID(), otherPublicKey);
             storageManager.storeSecretKeyForUUID(otherDawgId.getUUID(), chosenKey);
+
+            // only store the PublicKey if we don't already have one.
+            if (storageManager.lookupPublicKeyForUUID(otherDawgId.getUUID()) == null) {
+                storageManager.storePublicKeyForUUID(otherDawgId.getUUID(), otherPublicKey);
+            }
 
             // update the Thread's status to indicate that it completed successfully!
             this.currentStatus = KEY_EXCHANGE_STATUS.COMPLETED_SUCCESSFULLY;

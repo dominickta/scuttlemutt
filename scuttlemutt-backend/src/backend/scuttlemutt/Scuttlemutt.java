@@ -128,7 +128,16 @@ public class Scuttlemutt {
      * @return UUID of sent message
      */
     public UUID sendMessage(String message, DawgIdentifier dstDawgId) {
-        return this.meshDaemon.sendMessage(message, dstDawgId, 0L);
+        // compute the sequenceId for the message.
+        final Conversation c = this.getConversation(dstDawgId);
+        final long seqId;
+        if (c == null) {
+            seqId = 0;
+        } else {
+            seqId = this.getMessagesForConversation(c).size();
+        }
+
+        return this.meshDaemon.sendMessage(message, dstDawgId, seqId);
     }
 
     /**
