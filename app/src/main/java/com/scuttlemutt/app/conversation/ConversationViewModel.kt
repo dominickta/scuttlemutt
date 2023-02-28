@@ -3,10 +3,7 @@ import com.scuttlemutt.app.conversation.FrontEndMessage
 
 
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.*
-import androidx.test.core.app.ApplicationProvider.getApplicationContext
-import backend.iomanager.IOManagerException
 import backend.scuttlemutt.Scuttlemutt
 import com.scuttlemutt.app.*
 import kotlinx.coroutines.*

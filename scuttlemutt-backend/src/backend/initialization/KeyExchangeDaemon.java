@@ -196,8 +196,6 @@ public class KeyExchangeDaemon {
 
             // store the Keys.
             storageManager.storeSecretKeyForUUID(otherDawgId.getUUID(), chosenKey);
-
-            // only store the PublicKey if we don't already have one.
             storageManager.storePublicKeyForUUID(otherDawgId.getUUID(), otherPublicKey);
 
             // update the Thread's status to indicate that it completed successfully!
