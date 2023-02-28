@@ -158,21 +158,40 @@ public class NetworkSimulation {
     }
 
     /**
-     * Removes a connection between the two specified devices.I
+     * Removes a connection between the two specified devices.  Does not delete the contacts though.
      *
      * @param device1Label The label of one of the devices in the connection.
      * @param device2Label The label of the other device in the connection.
      */
     public void disconnectDevices(final String device1Label, final String device2Label) {
 
-        // delete the contacts from both devices.
-        final Scuttlemutt device1 = scuttlemuttMap.get(device1Label);
-        final Scuttlemutt device2 = scuttlemuttMap.get(device2Label);
-        device1.removeContact(device2.getDawgIdentifier());
-        device2.removeContact(device1.getDawgIdentifier());
-
         // remove the queues from the QueueIOManagers
         queueIOManagerMap.get(device1Label).disconnect(device2Label);
         queueIOManagerMap.get(device2Label).disconnect(device1Label);
+    }
+
+    /**
+     * Disconnects the specified device from all other devices on the network.
+     * @param deviceLabel  The label of the device being isolated on the network.
+     */
+    public void isolateDevice(final String deviceLabel) {
+        try {
+            // remove all connections on the specified device.
+            final QueueIOManager ioManager = queueIOManagerMap.get(deviceLabel);
+            final Set<String> connectionLabels = ioManager.availableConnections();
+            for (final String connection : connectionLabels) {
+                ioManager.disconnect(connection);
+            }
+
+            // remove any connections to the specified device from all other devices
+            // (if one is present).
+            for (final QueueIOManager otherIoManager : queueIOManagerMap.values()) {
+                if (otherIoManager.availableConnections().contains(deviceLabel)) {
+                    otherIoManager.disconnect(deviceLabel);
+                }
+            }
+        } catch (IOManagerException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

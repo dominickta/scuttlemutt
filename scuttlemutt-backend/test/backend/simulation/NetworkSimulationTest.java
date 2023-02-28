@@ -32,7 +32,7 @@ import types.packet.BarkPacket;
 
 public class NetworkSimulationTest {
     // test constants
-    public static final int NUM_DEVICES = 3; // NOTE: Value must be >= 2 for tests to run successfully.
+    public static final int NUM_DEVICES = 3; // NOTE: Value must be >= 3 for tests to run successfully.
 
     // test variables
     private List<String> deviceLabels;
@@ -145,7 +145,7 @@ public class NetworkSimulationTest {
             // reconnect device1 and device2.
             simulation.connectDevices(device1Label, device2Label);
 
-            // peek inside device1 and device2 and verify that they are disconnected
+            // peek inside device1 and device2 and verify that they are reconnected
             // (the number of input streams is < the number of devices on the network).
             connections1 = Whitebox.getInternalState(device1, "connections");
             connections2 = Whitebox.getInternalState(device2, "connections");
@@ -159,6 +159,96 @@ public class NetworkSimulationTest {
             final BarkPacket receivedPacket2 = device2.meshReceive(BarkPacket.class);
             assertEquals(this.barkPacket, receivedPacket1);
             assertEquals(this.barkPacket, receivedPacket2);
+
+        } catch (IOManagerException e) {
+            System.err.println("Unexpected error during test -- " + e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testSendMessage_twoDevicesDisconnected_messageSuccessfullySentOverMesh() {
+        try {
+            // get the QueueIOManagers for the devices.
+            final String device1Label = deviceLabels.get(0);
+            final String device2Label = deviceLabels.get(1);
+            final QueueIOManager device1IoManager = simulation.getQueueIOManager(device1Label);
+            final QueueIOManager device2IoManager = simulation.getQueueIOManager(device2Label);
+
+            // disconnect device1 and device2.
+            simulation.disconnectDevices(device1Label, device2Label);
+
+            // peek inside device1 and device2 and verify that they are disconnected
+            // (the number of input streams is < the number of devices on the network).
+            final Set<String> connections1 = Whitebox.getInternalState(device1IoManager, "connections");
+            final Set<String> connections2 = Whitebox.getInternalState(device2IoManager, "connections");
+            assertEquals(NUM_DEVICES - 2, connections1.size()); // there should be <NUM_DEVICES - self - disconnected
+            // devices> connections.
+            assertEquals(NUM_DEVICES - 2, connections2.size());
+
+            // send messages between device1 and device2
+            final String message1Text = RandomStringUtils.randomAlphanumeric(16);
+            final String message2Text = RandomStringUtils.randomAlphanumeric(16);
+            final Scuttlemutt device1 = simulation.getScuttlemutt(device1Label);
+            final Scuttlemutt device2 = simulation.getScuttlemutt(device2Label);
+            simulation.getScuttlemutt(device1Label).sendMessage(message1Text, device2.getDawgIdentifier());
+            simulation.getScuttlemutt(device2Label).sendMessage(message2Text, device1.getDawgIdentifier());
+
+            // get the messages received by each device.
+            final Conversation conversation1 = device1.getConversation(device2.getDawgIdentifier());
+            final Conversation conversation2 = device2.getConversation(device1.getDawgIdentifier());
+            final List<Message> messages1 = device1.getMessagesForConversation(conversation1);
+            final List<Message> messages2 = device2.getMessagesForConversation(conversation2);
+            assertEquals(2, messages1.size());  // both messages should be present.
+            assertEquals(2, messages2.size());
+
+        } catch (IOManagerException e) {
+            System.err.println("Unexpected error during test -- " + e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testSendMessage_toIsolatedDevice_deviceReconnectsToThirdDevice_messageSuccessfullySentOverMesh() {
+        try {
+            // get the QueueIOManagers for the devices.
+            final String device1Label = deviceLabels.get(0);
+            final String device2Label = deviceLabels.get(1);
+            final String device3Label = deviceLabels.get(2);
+            final QueueIOManager device1IoManager = simulation.getQueueIOManager(device1Label);
+            final QueueIOManager device2IoManager = simulation.getQueueIOManager(device2Label);
+
+            // disconnect device2 from all devices on the network.
+            simulation.isolateDevice(device2Label);
+
+            // peek inside device2 and verify that it is disconnected from _everything_ on the network.
+            final Set<String> connections2 = Whitebox.getInternalState(device2IoManager, "connections");
+            assertEquals(0, connections2.size());
+
+            // send messages between device1 and device2
+            final String messageText = RandomStringUtils.randomAlphanumeric(16);
+            final Scuttlemutt device1 = simulation.getScuttlemutt(device1Label);
+            final Scuttlemutt device2 = simulation.getScuttlemutt(device2Label);
+            simulation.getScuttlemutt(device1Label).sendMessage(messageText, device2.getDawgIdentifier());
+            simulation.getScuttlemutt(device2Label).sendMessage(messageText, device1.getDawgIdentifier());
+
+            // verify that the messages from each other were not received on either device.
+            final Conversation conversation1 = device1.getConversation(device2.getDawgIdentifier());
+            final Conversation conversation2 = device2.getConversation(device1.getDawgIdentifier());
+            List<Message> messages1 = device1.getMessagesForConversation(conversation1);
+            List<Message> messages2 = device2.getMessagesForConversation(conversation2);
+            assertEquals(1, messages1.size());  // only the sent message should be present.
+            assertEquals(1, messages2.size());
+
+            // reconnect device2 to device3.  device3 should then act as a conduit for the messages
+            // to get passed between device1 and device2.
+            simulation.connectDevices(device2Label, device3Label);
+
+            // get the messages received by each device again.
+            messages1 = device1.getMessagesForConversation(conversation1);
+            messages2 = device2.getMessagesForConversation(conversation2);
+            assertEquals(2, messages1.size());  // now both messages should be present.
+            assertEquals(2, messages2.size());
 
         } catch (IOManagerException e) {
             System.err.println("Unexpected error during test -- " + e);
