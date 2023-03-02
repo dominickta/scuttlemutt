@@ -39,7 +39,7 @@ public class MeshDaemon {
     public MeshDaemon(final IOManager ioManager, final StorageManager storageManager,
                       final DawgIdentifier currentUser) {
         // Shared state between input and output
-        Set<Bark> seenBarks = new HashSet<>();
+        Set<Bark> seenBarks = Collections.synchronizedSet(new HashSet<>());
 
         // grab the private key
         PrivateKey privateKey = storageManager.lookupPrivateKey();
