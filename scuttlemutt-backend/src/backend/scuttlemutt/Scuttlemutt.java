@@ -4,7 +4,9 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
@@ -54,6 +56,34 @@ public class Scuttlemutt {
 
         // initialize KeyExchangeDaemon.
         this.keyExchangeDaemon = new KeyExchangeDaemon(this.ioManager, this.storageManager, this.getPublicKey(), this.dawgIdentifier);
+    }
+
+
+    // Returns a map representing (untrusted connection name, authentication code)
+    public Map<String, String> getUntrustedConnections() {
+        Map<String, String> result = new HashMap<>();
+        result.put("alice.fwafsdfsas", "1234");
+        result.put("bob.fwafsdfsas", "5431");
+        result.put("charlie.fwafsdfsas", "4378");
+        return result;
+    }
+
+    // Returns a list of active trusted connections
+    public List<String> getTrustedConnections() {
+        List<String> result = new ArrayList();
+        result.add("Amanda");
+        result.add("John");
+        result.add("Justin");
+        result.add("Nick");
+        return result;
+    }
+
+    public void acceptUntrustedConnection(String endpointName) {
+        return;
+    }
+
+    public void rejectUntrustedConnection(String endpointName) {
+        return;
     }
 
     /**
