@@ -28,19 +28,20 @@ import types.Message;
  * StorageManager class which interfaces with Android's Room DB for a backend.
  */
 public class RoomStorageManager implements StorageManager {
-    public static final DawgIdentifier MY_DAWG_ID = new DawgIdentifier("me", UUID.fromString("22df6593-676e-4c8c-a9d9-48d43c03cc8e"));
-
     private static final Gson GSON = new GsonBuilder().setLenient().create();
 
     private final AppDatabase appDb;
+    private final DawgIdentifier myDawgId;
 
     /**
      * Constructs a RoomStorageManager object.
      * @param appDb  The AppDatabase object used for Room storage.  NOTE:  This object depends upon
      *               a Context object, so it _must_ be created at the activity level and passed in.
+     * @param myDawgId  The DawgIdentifier for our device.
      */
-    public RoomStorageManager(final AppDatabase appDb) {
+    public RoomStorageManager(final AppDatabase appDb, final DawgIdentifier myDawgId) {
         this.appDb = appDb;
+        this.myDawgId = myDawgId;
     }
 
     @Override
@@ -100,7 +101,7 @@ public class RoomStorageManager implements StorageManager {
     @Override
     public PrivateKey lookupPrivateKey() {
         // lookup the KeyEntry.
-        final KeyEntry ke = this.appDb.keyDao().findByUuid(MY_DAWG_ID.getUUID().toString());
+        final KeyEntry ke = this.appDb.keyDao().findByUuid(myDawgId.getUUID().toString());
 
         // return the key if it was found.  otherwise, return null.
         if(ke != null){
@@ -189,7 +190,7 @@ public class RoomStorageManager implements StorageManager {
         // lookup to see if we're already storing a List of Keys for this UUID.  if we are storing
         // a List of Keys, we'll want to store an updated List of the Keys.
         final List<Key> keyList;
-        final KeyEntry existingKeyEntry = this.appDb.keyDao().findByUuid(MY_DAWG_ID.getUUID().toString());
+        final KeyEntry existingKeyEntry = this.appDb.keyDao().findByUuid(myDawgId.getUUID().toString());
         if (existingKeyEntry != null) {
             keyList = (List<Key>)(List<?>) existingKeyEntry.getPublicKeys();
             if (keyList.size() == StorageManager.MAX_NUM_HISTORICAL_KEYS_TO_STORE) {
@@ -206,7 +207,7 @@ public class RoomStorageManager implements StorageManager {
             keyList.add(key);
 
             // construct a KeyEntry containing the new Key + store it.
-            final KeyEntry newKeyEntry = new KeyEntry(MY_DAWG_ID.getUUID(), keyList);
+            final KeyEntry newKeyEntry = new KeyEntry(myDawgId.getUUID(), keyList);
             this.appDb.keyDao().insertKeyEntry(newKeyEntry);
         }
 
@@ -298,7 +299,7 @@ public class RoomStorageManager implements StorageManager {
     @Override
     public PrivateKey deletePrivateKey() {
         // lookup the KeyEntry.
-        final KeyEntry ke = this.appDb.keyDao().findByUuid(MY_DAWG_ID.getUUID().toString());
+        final KeyEntry ke = this.appDb.keyDao().findByUuid(myDawgId.getUUID().toString());
 
         // delete the json field on the KeyEntry
         final KeyEntry updatedKe = new KeyEntry(ke.uuid, ke.symmetricKeyListJson, ke.publicKeyJson, GSON.toJson(new ArrayList<SecretKey>()));
