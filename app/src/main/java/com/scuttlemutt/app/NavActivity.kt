@@ -50,15 +50,11 @@ import com.scuttlemutt.app.connection.ConnectionsActivity
 import com.scuttlemutt.app.conversation.BackPressHandler
 import com.scuttlemutt.app.conversation.LocalBackPressedDispatcher
 import com.scuttlemutt.app.databinding.ContentMainBinding
-import kotlinx.coroutines.delay
+import crypto.Crypto
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import types.DawgIdentifier
-import types.packet.BarkPacket
-import types.packet.KeyExchangePacket
 import types.packet.Packet
+import java.lang.Math.abs
 import java.util.*
-import javax.crypto.SecretKey
 
 
 /**
@@ -97,13 +93,25 @@ class NavActivity() : ConnectionsActivity() {
 
     override val TAG = "NavActivity"
 
+    // We decided to use random names from a pre-defined list, rather than
+    // allow users to pick their own names. This was a simple solution given the time we had.
+    private val dawg_names = arrayOf("max", "luna", "milo", "bella", "cooper", "buddy", "lola", "leo")
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "GETTING SCUTTLEMUTT INSTANCE")
-        // Set user name TODO: Replace "me" with user input username
-        name = "me" + Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID)
+        // Set user name based off device ID and a human-readable dog name
+        val deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID)
+        name = dawg_names[abs(deviceId.hashCode()) % dawg_names.size] + "#" + deviceId
         mutt = SingletonScuttlemutt.getInstance(this, this.mConnectionsClient!!, name)
+        if (!mutt.haveContact(mutt.dawgIdentifier.uuid)) {
+            Log.d(TAG, "Adding myself because I'm not in the database yet")
+            val myKeyPair = Crypto.generateKeyPair()
+            val mySecretKey = Crypto.generateSecretKey()
+            mutt.addContact(mutt.dawgIdentifier, myKeyPair.public, mySecretKey)
+            mutt.sendMessage("This is a conversation with yourself! Feel free to add notes here or whatever else.", mutt.dawgIdentifier)
+        }
         iom = SingletonScuttlemutt.getIOManager()
         keyExchanger = SingletonScuttlemutt.getKeyExchanger()
         viewModel = ViewModelProvider(this, MainViewModelFactory(mutt, this)).get(MainViewModel::class.java)

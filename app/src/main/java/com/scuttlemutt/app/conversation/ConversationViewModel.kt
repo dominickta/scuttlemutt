@@ -59,7 +59,6 @@ class ConversationViewModel(private val mutt: Scuttlemutt, initContactName: Stri
         barkUpdater?.cancel() // ? is a Kotlin safe call
         barkUpdater = viewModelScope.launch(Dispatchers.Default) {
             Log.d(TAG, "Starting barkupdater")
-            initContacts()
             Log.d(TAG, "looping contacts")
             val contactNames: MutableList<String> = mutableListOf()
             for (id in mutt.allContacts) {
@@ -104,27 +103,6 @@ class ConversationViewModel(private val mutt: Scuttlemutt, initContactName: Stri
                     Log.d(TAG, "Set new barks for: $contactName")
                 }
             }
-        }
-    }
-    private fun initContacts() {
-        if (!mutt.haveContact(mutt.dawgIdentifier.uuid)) {
-            Log.d(TAG, "Adding myself because I'm not in the database yet")
-            mutt.addContact(mutt.dawgIdentifier, MyKeyPair.public, MyKey) // add myself
-            mutt.sendMessage("talking to myself", mutt.dawgIdentifier)
-        }
-        if (!mutt.haveContact(ADawgTag.uuid)) {
-            Log.d(TAG, "Adding ADawg because not in the database yet")
-            mutt.addContact(ADawgTag, AKeyPair.public, AKey)
-            mutt.sendMessage("hey ADawg, this is me", ADawgTag)
-        }
-        if (!mutt.haveContact(BDawgTag.uuid)) {
-            Log.d(TAG, "Adding BDawg because not in the database yet")
-            mutt.addContact(BDawgTag, BKeyPair.public, BKey)
-            mutt.sendMessage("hey BDawg, this is me", BDawgTag)
-        }
-        if (!mutt.haveContact(CDawgTag.uuid)) {
-            Log.d(TAG, "Adding CDawg because not in the database yet")
-            mutt.addContact(CDawgTag, CKeyPair.public, CKey)
         }
     }
 
