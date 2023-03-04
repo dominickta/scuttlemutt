@@ -91,36 +91,16 @@ fun ConnectionContent(
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
         ) {
-//            DiscoveredConnections(mainViewModel)
-//            PendingConnections()
-//            EstablishedConnections()
-            UntrustedConnections(untrustedConnections!!, {str -> mainViewModel.acceptUntrustedConnection(str)}, {str -> mainViewModel.rejectUntrustedConnection(str)})
+//            UntrustedConnections(untrustedConnections!!, {str -> mainViewModel.acceptUntrustedConnection(str)}, {str -> mainViewModel.rejectUntrustedConnection(str)})
             TrustedConnections(trustedConnections!!)
         }
     }
 }
 
-//@Composable
-//fun DiscoveredConnections(
-//    mainViewModel: MainViewModel
-//) {
-//    GroupHeader(name = "Discovered Connections")
-//    Text(
-//        text = "Tap to start connection",
-//        style = MaterialTheme.typography.bodySmall,
-//        modifier = Modifier.padding(start = 16.dp)
-//    )
-//    val icon = Icons.Outlined.WifiFind
-//    val liveString = mainViewModel.mainLiveData.observeAsState().value!!
-//    GroupItem(name = liveString, icon)
-//    GroupItem(name = "Bob", icon, Modifier.clickable (onClick = {mainViewModel.updateLiveString("Bob")}))
-//    GroupItem(name = "Charlie", icon, Modifier.clickable (onClick = {mainViewModel.updateLiveString("Charlie")}))
-//}
-
 @Composable
 fun TrustedConnections(trustedConns: List<String>) {
     GroupHeader(name = "Trusted Connections")
-    val icon = Icons.Outlined.Pending
+    val icon = Icons.Outlined.Wifi
     for (conn in trustedConns) {
         GroupItem(name = conn, icon)
     }
@@ -168,15 +148,6 @@ fun AuthCode(code: String, onAccept : () -> Unit, onReject : () -> Unit) {
         )
     }
 }
-
-//@Composable
-//fun EstablishedConnections() {
-//    GroupHeader(name = "Established Connections")
-//    val icon = Icons.Outlined.Wifi
-//    GroupItem(name = "Greg", icon)
-//    GroupItem(name = "Hanna", icon)
-//    GroupItem(name = "Isabelle", icon)
-//}
 
 @Composable
 fun GroupHeader(name: String) {

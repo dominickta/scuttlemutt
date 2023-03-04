@@ -13,6 +13,7 @@ import javax.crypto.SecretKey;
 
 import backend.initialization.KeyExchangeDaemon;
 import backend.iomanager.IOManager;
+import backend.iomanager.IOManagerException;
 import backend.meshdaemon.MeshDaemon;
 import crypto.Crypto;
 import storagemanager.StorageManager;
@@ -70,12 +71,11 @@ public class Scuttlemutt {
 
     // Returns a list of active trusted connections
     public List<String> getTrustedConnections() {
-        List<String> result = new ArrayList();
-        result.add("Amanda");
-        result.add("John");
-        result.add("Justin");
-        result.add("Nick");
-        return result;
+        try {
+            return new ArrayList<>(ioManager.availableConnections());
+        } catch (IOManagerException e) {
+            return null;
+        }
     }
 
     public void acceptUntrustedConnection(String endpointName) {
