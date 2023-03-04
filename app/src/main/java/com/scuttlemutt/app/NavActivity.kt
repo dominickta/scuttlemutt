@@ -228,17 +228,8 @@ class NavActivity() : ConnectionsActivity() {
         if (payload?.type == Payload.Type.BYTES) {
             val buffer = payload?.asBytes()
             val packet = Packet.fromNetworkBytes(buffer)
-            val keyPacket = iom.isKeyExchangePacket(packet);
-            if(keyPacket != null){
-                if(!mutt.haveContact(keyPacket.dawgId.uuid)){
-                    logD("NEW CONTACT: " + endpoint?.name)
-                    iom.addConnection(keyExchanger.receiveSecretKeyForNewContact(endpoint?.name, keyPacket))
-                }else {
-                    iom.addConnection(keyExchanger.receiveSecretKey(keyPacket.dawgId, keyPacket))
-                }
-            }else {
-                iom.addReceivedMessage(endpoint?.name, packet)
-            }
+            iom.addReceivedMessage(endpoint?.name, packet)
+
             var messageString = String(buffer!!)
             if (endpoint != null) {
                 messageString = "From id" + endpoint.id + ": " + messageString
@@ -280,7 +271,7 @@ class NavActivity() : ConnectionsActivity() {
         iom.addAvailableConnection(endpoint?.id, endpoint?.name)
         if(mutt.getContactDawgId(endpoint?.name) == null){
             Toast.makeText(this,"Exchanging keys...", Toast.LENGTH_LONG).show()
-            keyExchanger.sendKeys(endpoint?.name, mutt.publicKey, mutt.dawgIdentifier);
+            mutt.exchangeKeys(endpoint?.name)
 
         }
         Toast.makeText(this,"Ready to talk!", Toast.LENGTH_LONG).show()
@@ -338,7 +329,6 @@ class NavActivity() : ConnectionsActivity() {
             com.scuttlemutt.app.NavActivity.State.SEARCHING -> {
                 logD("Changed to Searching from " + oldState)
                 disconnectFromAllEndpoints()
-                iom.removeAllAvailableConnections()
                 startDiscovering()
                 logD("Start Discovering from state change")
                 startAdvertising()
