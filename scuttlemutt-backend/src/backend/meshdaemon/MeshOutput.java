@@ -17,7 +17,7 @@ import java.util.concurrent.BlockingQueue;
  * block (it will probably block).
  */
 public class MeshOutput implements Runnable {
-    // Number of unique devices that each packet must be broadcasted to
+    // Number of unique devices that each packet must be broadcasted to before being dropped.
     public static final int NUM_REBROADCAST_BEFORE_DROP = 2;
 
     private static final long RETRY_SLEEP_MILLIS = 100;

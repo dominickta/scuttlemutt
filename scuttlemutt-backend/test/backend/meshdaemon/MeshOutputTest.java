@@ -29,8 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests for:
  * - Sending single a bark
  * - Sending multiple barks, in order
- *
- * NOTE: Assumes
  */
 public class MeshOutputTest {
     // Max should be strictly larger than min.
