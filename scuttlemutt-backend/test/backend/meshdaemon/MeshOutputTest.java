@@ -29,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests for:
  * - Sending single a bark
  * - Sending multiple barks, in order
+ *
+ * NOTE: Assumes
  */
 public class MeshOutputTest {
     // Max should be strictly larger than min.
@@ -36,7 +38,7 @@ public class MeshOutputTest {
     private final int MAX_MULTIPACKET_COUNT = 20;
 
     private QueueIOManager ioManager;
-    private BlockingQueue<Packet> outputQueue;
+    private Set<BlockingQueue<Packet>> outputQueues;
 
     private BlockingQueue<Bark> meshQueue;
     private Set<Bark> seenBarks;
@@ -47,11 +49,15 @@ public class MeshOutputTest {
      */
     @BeforeEach
     public void setup() {
-        // Set up test IOManager
         this.ioManager = new QueueIOManager();
-        final String connectionLabel = "Connection-" + RandomStringUtils.randomAlphanumeric(15);
-        this.outputQueue = new LinkedBlockingQueue<>(); // Only care about IOManager input
-        this.ioManager.connect(connectionLabel, new LinkedBlockingQueue<>(), outputQueue);
+        this.outputQueues = new HashSet<>(); // Only care about IOManager outputs
+
+        for (int i = 0; i < MeshOutput.NUM_REBROADCAST_BEFORE_DROP; i++) {
+            String connectionLabel = "Connection" + i + "-" + RandomStringUtils.randomAlphanumeric(15);
+            BlockingQueue outputQueue = new LinkedBlockingQueue<>();
+            this.outputQueues.add(outputQueue);
+            this.ioManager.connect(connectionLabel, new LinkedBlockingQueue<>(), outputQueue);
+        }
 
         this.meshQueue = new LinkedBlockingQueue<>();
         this.seenBarks = new HashSet<>();
@@ -73,7 +79,9 @@ public class MeshOutputTest {
         this.meshOutput.handleOutput();
 
         // Check that the bark made is through
-        assertEquals(barkPacket, this.outputQueue.poll());
+        for (BlockingQueue<Packet> outputQueue : this.outputQueues) {
+            assertEquals(barkPacket, outputQueue.poll());
+        }
 
         // Check that the bark made is through
         assertTrue(seenBarks.contains(bark));
@@ -81,7 +89,7 @@ public class MeshOutputTest {
 
     /**
      * Tests that a bunch of barks will be passed through and converted to barkPackets.
-     * Ordering should be retained, all messages should go through, and seenBarks should 
+     * Ordering should be retained, all messages should go through, and seenBarks should
      * be updated for all.
      */
     @Test
@@ -118,7 +126,9 @@ public class MeshOutputTest {
         // Check that all bark packets made it through, in order
         for (BarkPacket barkPacket : packets) {
             assertTrue(this.seenBarks.contains(barkPacket.packetBarks.get(0)));
-            assertEquals(barkPacket, this.outputQueue.poll());
+            for (BlockingQueue<Packet> outputQueue : this.outputQueues) {
+                assertEquals(barkPacket, outputQueue.poll());
+            }
         }
     }
 }
