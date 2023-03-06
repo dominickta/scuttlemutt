@@ -1,8 +1,6 @@
 package com.scuttlemutt.app
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.provider.Settings
 import android.util.Log
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -11,11 +9,8 @@ import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.scuttlemutt.app.backendimplementations.iomanager.EndpointIOManager
 import com.scuttlemutt.app.backendimplementations.storagemanager.AppDatabase
 import com.scuttlemutt.app.backendimplementations.storagemanager.RoomStorageManager
-import com.scuttlemutt.app.backendimplementations.storagemanager.RoomStorageManager.MY_DAWG_ID
-import crypto.Crypto
 import storagemanager.StorageManager
 import types.DawgIdentifier
-import java.security.KeyPair
 import java.util.*
 
 /*
@@ -55,7 +50,7 @@ class SingletonScuttlemutt {
                             .fallbackToDestructiveMigration()
                             .allowMainThreadQueries()
                             .build()
-                        val storagem: StorageManager = RoomStorageManager(appDb)
+                        val storagem: StorageManager = RoomStorageManager(appDb, dawgid)
                         val mutt = Scuttlemutt(IOMANAGER, dawgid, storagem)
                         Log.d("SingletonScuttlemutt", "instantiating instance..: ${mutt.dawgIdentifier}")
                         INSTANCE = mutt

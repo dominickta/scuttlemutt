@@ -59,7 +59,8 @@ public class RoomStorageManagerTest {
         this.appDb = Room.inMemoryDatabaseBuilder(context, AppDatabase.class)
                 .allowMainThreadQueries()
                 .build();
-        this.storageManager = new RoomStorageManager(this.appDb);
+        final DawgIdentifier myDawgId = TestUtils.generateRandomizedDawgIdentifier();
+        this.storageManager = new RoomStorageManager(this.appDb, myDawgId);
     }
 
     @After
