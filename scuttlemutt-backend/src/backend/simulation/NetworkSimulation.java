@@ -11,10 +11,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.crypto.SecretKey;
 
+import backend.initialization.KeyExchangeDaemon;
 import backend.iomanager.IOManagerException;
 import backend.iomanager.QueueIOManager;
 import backend.scuttlemutt.Scuttlemutt;
-import crypto.Crypto;
 import storagemanager.MapStorageManager;
 import storagemanager.StorageManager;
 import types.DawgIdentifier;
@@ -141,13 +141,6 @@ public class NetworkSimulation {
             throw new UnsupportedOperationException("Cannot connect a device to itself!");
         }
 
-        // save (a)symmetric keys for the connection in both devices.
-        final SecretKey secretKey = Crypto.generateSecretKey();
-        final Scuttlemutt device1 = scuttlemuttMap.get(device1Label);
-        final Scuttlemutt device2 = scuttlemuttMap.get(device2Label);
-        device1.addContact(device2.getDawgIdentifier(), device2.getPublicKey(), secretKey);
-        device2.addContact(device1.getDawgIdentifier(), device1.getPublicKey(), secretKey);
-        
         // Build queues to connect devices
         final BlockingQueue<Packet> q1to2 = new LinkedBlockingQueue<Packet>();
         final BlockingQueue<Packet> q2to1 = new LinkedBlockingQueue<Packet>();
@@ -155,22 +148,27 @@ public class NetworkSimulation {
         // add the queues to the QueueIOManagers
         queueIOManagerMap.get(device1Label).connect(device2Label, q1to2, q2to1);
         queueIOManagerMap.get(device2Label).connect(device1Label, q2to1, q1to2);
+
+        // exchange keys between the two devices if that has not happened yet.
+        final Scuttlemutt device1 = scuttlemuttMap.get(device1Label);
+        final Scuttlemutt device2 = scuttlemuttMap.get(device2Label);
+        device1.exchangeKeys(device2Label);
+        device2.exchangeKeys(device1Label);
+
+        // wait for the key exchange to complete between the two devices...
+        while (device1.getKeyExchangeStatus(device2Label)
+                != KeyExchangeDaemon.KEY_EXCHANGE_STATUS.COMPLETED_SUCCESSFULLY);
+        while (device2.getKeyExchangeStatus(device1Label)
+                != KeyExchangeDaemon.KEY_EXCHANGE_STATUS.COMPLETED_SUCCESSFULLY);
     }
 
     /**
-     * Removes a connection between the two specified devices.I
+     * Removes a connection between the two specified devices.  Does not delete the contacts though.
      *
      * @param device1Label The label of one of the devices in the connection.
      * @param device2Label The label of the other device in the connection.
      */
     public void disconnectDevices(final String device1Label, final String device2Label) {
-
-        // delete the contacts from both devices.
-        final Scuttlemutt device1 = scuttlemuttMap.get(device1Label);
-        final Scuttlemutt device2 = scuttlemuttMap.get(device2Label);
-        device1.removeContact(device2.getDawgIdentifier());
-        device2.removeContact(device1.getDawgIdentifier());
-
         // remove the queues from the QueueIOManagers
         queueIOManagerMap.get(device1Label).disconnect(device2Label);
         queueIOManagerMap.get(device2Label).disconnect(device1Label);
