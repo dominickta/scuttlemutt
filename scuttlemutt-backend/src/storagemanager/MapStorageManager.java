@@ -3,10 +3,10 @@ package storagemanager;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
@@ -41,13 +41,13 @@ public class MapStorageManager implements StorageManager {
     private final Map<String, String> usernameToDawgIdentifierMap;
 
     public MapStorageManager() {
-        this.barkMap = new HashMap<>();
-        this.uuidToDawgIdentifierMap = new HashMap<UUID, String>();
-        this.usernameToDawgIdentifierMap = new HashMap<String, String>();
-        this.messageMap = new HashMap<>();
-        this.conversationMap = new HashMap<>();
-        this.secretKeysMap = new HashMap<>();
-        this.publicKeyMap = new HashMap<>();
+        this.barkMap = new ConcurrentHashMap<>();
+        this.uuidToDawgIdentifierMap = new ConcurrentHashMap<UUID, String>();
+        this.usernameToDawgIdentifierMap = new ConcurrentHashMap<String, String>();
+        this.messageMap = new ConcurrentHashMap<>();
+        this.conversationMap = new ConcurrentHashMap<>();
+        this.secretKeysMap = new ConcurrentHashMap<>();
+        this.publicKeyMap = new ConcurrentHashMap<>();
         this.privateKey = null;
     }
 
