@@ -3,7 +3,10 @@ import com.scuttlemutt.app.conversation.FrontEndMessage
 
 
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.*
+import androidx.test.core.app.ApplicationProvider.getApplicationContext
+import backend.iomanager.IOManagerException
 import backend.scuttlemutt.Scuttlemutt
 import com.scuttlemutt.app.*
 import kotlinx.coroutines.*
@@ -40,9 +43,16 @@ class ConversationViewModel(private val mutt: Scuttlemutt, initContactName: Stri
     fun addMessage(msg: String) {
         viewModelScope.launch {
             withContext(Dispatchers.Default) {
-                mutt.sendMessage(msg, contactID)
-                val msgs: MutableList<FrontEndMessage> = _currUiState.value!!.messages.toMutableList()
-                msgs.add(0, FrontEndMessage("me", msg, "0"))
+                var message = msg
+                try {
+                    mutt.sendMessage(msg, contactID)
+                }catch (exception: RuntimeException) {
+                    message = "Message too big, message not sent. RuntimeException thrown"
+                }
+                mutt.sendMessage(message, contactID)
+                val msgs: MutableList<FrontEndMessage> =
+                    _currUiState.value!!.messages.toMutableList()
+                msgs.add(0, FrontEndMessage("me", message, "0"))
                 _currUiState.postValue(ConversationUiState(contactName, msgs))
             }
         }
