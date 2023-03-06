@@ -39,7 +39,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import backend.initialization.KeyExchanger
 import com.scuttlemutt.app.backendimplementations.iomanager.EndpointIOManager
 import backend.scuttlemutt.Scuttlemutt
 import com.google.android.gms.nearby.connection.ConnectionInfo
@@ -75,7 +74,6 @@ class NavActivity() : ConnectionsActivity() {
 
     private lateinit var iom: EndpointIOManager
 
-    private lateinit var keyExchanger: KeyExchanger
     /**
      * Name of the user - ScuttleMutt.DawgIdentifier.username
      */
@@ -113,7 +111,6 @@ class NavActivity() : ConnectionsActivity() {
             mutt.sendMessage("This is a conversation with yourself! Feel free to add notes here or whatever else.", mutt.dawgIdentifier)
         }
         iom = SingletonScuttlemutt.getIOManager()
-        keyExchanger = SingletonScuttlemutt.getKeyExchanger()
         viewModel = ViewModelProvider(this, MainViewModelFactory(mutt, this)).get(MainViewModel::class.java)
         Log.d(TAG, "My name is ${mutt.dawgIdentifier}")
         endpointUUID = mutt.dawgIdentifier.uuid.toString()
