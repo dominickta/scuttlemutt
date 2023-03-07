@@ -46,10 +46,10 @@ class ConversationViewModel(private val mutt: Scuttlemutt, initContactName: Stri
                 var message = msg
                 try {
                     mutt.sendMessage(msg, contactID)
-                }catch (exception: RuntimeException) {
+                } catch (exception: RuntimeException) {
                     message = "Message too big, message not sent. RuntimeException thrown"
+                    mutt.sendMessage(message, contactID)
                 }
-                mutt.sendMessage(message, contactID)
                 val msgs: MutableList<FrontEndMessage> =
                     _currUiState.value!!.messages.toMutableList()
                 msgs.add(0, FrontEndMessage("me", message, "0"))

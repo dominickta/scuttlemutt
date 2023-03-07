@@ -16,6 +16,7 @@
 
 package com.scuttlemutt.app
 
+import android.os.SystemClock.sleep
 import android.util.Log
 import androidx.lifecycle.*
 import backend.scuttlemutt.Scuttlemutt
@@ -45,6 +46,7 @@ class MainViewModelFactory (private val mutt: Scuttlemutt, private val navActivi
 class MainViewModel(private val mutt: Scuttlemutt, private val navActivity: NavActivity) : ViewModel() {
     private val TAG = "MainViewModel"
 
+    /* Side Drawer Contact List State */
     // Map of (username, total # of chat messages in convo when last clicked)
     private val convSizes : MutableMap<String, Int> = mutableMapOf()
     // Map of (username, # of new chat messages since last clicked)
@@ -58,6 +60,14 @@ class MainViewModel(private val mutt: Scuttlemutt, private val navActivity: NavA
     val drawerShouldBeOpened = _drawerShouldBeOpened.asStateFlow()
 
     private var contactListUpdater: Job
+
+    /* Connections State */
+    private val _untrustedConnections : MutableLiveData<Map<String, String>> = MutableLiveData(mapOf())
+    val untrustedConnections: LiveData<Map<String, String>> = _untrustedConnections
+    private val _trustedConnections : MutableLiveData<List<String>> = MutableLiveData(listOf())
+    val trustedConnections: LiveData<List<String>> = _trustedConnections
+
+    private var connectionsUpdater: Job
 
     init {
         contactListUpdater = viewModelScope.launch(Dispatchers.Default){
@@ -94,6 +104,21 @@ class MainViewModel(private val mutt: Scuttlemutt, private val navActivity: NavA
                 _allContactNames.postValue(contactNames)
             }
         }
+
+        connectionsUpdater = viewModelScope.launch(Dispatchers.Default){
+            while (coroutineContext.isActive) {
+                _untrustedConnections.postValue(mutt.untrustedConnections)
+                _trustedConnections.postValue(mutt.trustedConnections)
+                sleep(500)
+            }
+        }
+    }
+
+    fun acceptUntrustedConnection(endpointName: String) {
+        mutt.acceptUntrustedConnection(endpointName);
+    }
+    fun rejectUntrustedConnection(endpointName: String) {
+        mutt.rejectUntrustedConnection(endpointName);
     }
 
     val mainLiveData = navActivity.testLiveData

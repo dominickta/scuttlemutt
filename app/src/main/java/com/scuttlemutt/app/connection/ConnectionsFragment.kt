@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +35,6 @@ class ConnectionsFragment : Fragment()  {
     private val mainViewModel: MainViewModel by activityViewModels()
 
     private lateinit var mutt: Scuttlemutt
-
     override fun onAttach(context: Context) {
         super.onAttach(context)
         mutt = SingletonScuttlemutt.getInstance()
@@ -62,6 +62,8 @@ fun ConnectionContent(
     mainViewModel: MainViewModel,
     onNavIconPressed: () -> Unit = { }
 ) {
+    val untrustedConnections by mainViewModel.untrustedConnections.observeAsState()
+    val trustedConnections by mainViewModel.trustedConnections.observeAsState()
     Column(modifier = Modifier
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)
@@ -89,42 +91,29 @@ fun ConnectionContent(
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
         ) {
-            DiscoveredConnections(mainViewModel)
-            PendingConnections()
-            EstablishedConnections()
+//            UntrustedConnections(untrustedConnections!!, {str -> mainViewModel.acceptUntrustedConnection(str)}, {str -> mainViewModel.rejectUntrustedConnection(str)})
+            TrustedConnections(trustedConnections!!)
         }
     }
 }
 
 @Composable
-fun DiscoveredConnections(
-    mainViewModel: MainViewModel
-) {
-    GroupHeader(name = "Discovered Connections")
-    Text(
-        text = "Tap to start connection",
-        style = MaterialTheme.typography.bodySmall,
-        modifier = Modifier.padding(start = 16.dp)
-    )
-    val icon = Icons.Outlined.WifiFind
-    val liveString = mainViewModel.mainLiveData.observeAsState().value!!
-    GroupItem(name = liveString, icon)
-    GroupItem(name = "Bob", icon, Modifier.clickable (onClick = {mainViewModel.updateLiveString("Bob")}))
-    GroupItem(name = "Charlie", icon, Modifier.clickable (onClick = {mainViewModel.updateLiveString("Charlie")}))
+fun TrustedConnections(trustedConns: List<String>) {
+    GroupHeader(name = "Trusted Connections")
+    val icon = Icons.Outlined.Wifi
+    for (conn in trustedConns) {
+        GroupItem(name = conn, icon)
+    }
 }
 
 @Composable
-fun PendingConnections() {
-    GroupHeader(name = "Pending Connections")
+fun UntrustedConnections(untrustedConns: Map<String, String>, onAccept: (String) -> Unit, onReject: (String) -> Unit) {
+    GroupHeader(name = "Untrusted Connections")
     val icon = Icons.Outlined.Pending
-    val onAccept = {} // TODO: call acceptConnection(endpoint)
-    val onReject = {} // TODO: call rejectConnection(endpoint)
-    GroupItem(name = "Danielle", icon)
-    AuthCode("0358", onAccept, onReject)
-    GroupItem(name = "Erica", icon)
-    AuthCode("8763", onAccept, onReject)
-    GroupItem(name = "Fred", icon)
-    AuthCode("5894", onAccept, onReject)
+    for (conn in untrustedConns) {
+        GroupItem(name = conn.key, icon)
+        AuthCode(conn.value, {onAccept(conn.key)}, {onReject(conn.key)})
+    }
 }
 
 @Composable
@@ -158,15 +147,6 @@ fun AuthCode(code: String, onAccept : () -> Unit, onReject : () -> Unit) {
             contentDescription = null
         )
     }
-}
-
-@Composable
-fun EstablishedConnections() {
-    GroupHeader(name = "Established Connections")
-    val icon = Icons.Outlined.Wifi
-    GroupItem(name = "Greg", icon)
-    GroupItem(name = "Hanna", icon)
-    GroupItem(name = "Isabelle", icon)
 }
 
 @Composable

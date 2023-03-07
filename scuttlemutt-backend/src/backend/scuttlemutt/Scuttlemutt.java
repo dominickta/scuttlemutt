@@ -4,13 +4,16 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
 import backend.initialization.KeyExchangeDaemon;
 import backend.iomanager.IOManager;
+import backend.iomanager.IOManagerException;
 import backend.meshdaemon.MeshDaemon;
 import crypto.Crypto;
 import storagemanager.StorageManager;
@@ -54,6 +57,33 @@ public class Scuttlemutt {
 
         // initialize KeyExchangeDaemon.
         this.keyExchangeDaemon = new KeyExchangeDaemon(this.ioManager, this.storageManager, this.getPublicKey(), this.dawgIdentifier);
+    }
+
+
+    // Returns a map representing (untrusted connection name, authentication code)
+    public Map<String, String> getUntrustedConnections() {
+        Map<String, String> result = new HashMap<>();
+        result.put("alice.fwafsdfsas", "1234");
+        result.put("bob.fwafsdfsas", "5431");
+        result.put("charlie.fwafsdfsas", "4378");
+        return result;
+    }
+
+    // Returns a list of active trusted connections
+    public List<String> getTrustedConnections() {
+        try {
+            return new ArrayList<>(ioManager.availableConnections());
+        } catch (IOManagerException e) {
+            return null;
+        }
+    }
+
+    public void acceptUntrustedConnection(String endpointName) {
+        return;
+    }
+
+    public void rejectUntrustedConnection(String endpointName) {
+        return;
     }
 
     /**

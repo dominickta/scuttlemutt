@@ -135,12 +135,7 @@ public class EndpointIOManager implements IOManager {
      * @throws IOManagerException if connection not currently connected
      */
     public void removeAvailableConnection(String connectionName) throws IOManagerException {
-        if(currentConnections.containsKey(connectionName)) {
-            this.currentConnections.remove(connectionName);
-        }else {
-            throw new IOManagerException("Connection to be removed not found in current connections");
-        }
-
+        this.currentConnections.remove(connectionName);
     }
 
     public void removeAllAvailableConnections(){
