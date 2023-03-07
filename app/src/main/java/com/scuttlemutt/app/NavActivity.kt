@@ -87,7 +87,7 @@ class NavActivity() : ConnectionsActivity() {
      */
     override val serviceId = "com.scuttlemutt.app.service_id.meshing"
 
-    override val strategy = Strategy.P2P_STAR
+    override val strategy = Strategy.P2P_CLUSTER
 
     override val TAG = "NavActivity"
 
@@ -249,7 +249,7 @@ class NavActivity() : ConnectionsActivity() {
         // We found an advertiser!
         Toast.makeText(this,"Endpoint " + endpoint?.name + " Discovered", Toast.LENGTH_LONG).show()
         logD("Endpoint Discovered")
-        stopDiscovering()
+       // stopDiscovering()
         connectToEndpoint(endpoint!!)
     }
 
@@ -261,7 +261,7 @@ class NavActivity() : ConnectionsActivity() {
         // We accept the connection immediately.
         // TODO: Put some verification with IOManager here.
         // For now, dummy method that just returns true
-        if (verifyConnection()) {
+        if (verifyConnection() && !iom.availableConnections().contains(endpoint?.name)) {
             acceptConnection(endpoint)
         } else {
             rejectConnection(endpoint)
@@ -333,15 +333,15 @@ class NavActivity() : ConnectionsActivity() {
         when (newState) {
             com.scuttlemutt.app.NavActivity.State.SEARCHING -> {
                 logD("Changed to Searching from " + oldState)
-                disconnectFromAllEndpoints()
+               // disconnectFromAllEndpoints()
                 startDiscovering()
                 logD("Start Discovering from state change")
                 startAdvertising()
                 logD("Start Advertising from state change")
             }
             com.scuttlemutt.app.NavActivity.State.CONNECTED -> {
-                stopDiscovering()
-                stopAdvertising()
+               // stopDiscovering()
+               // stopAdvertising()
             }
             com.scuttlemutt.app.NavActivity.State.UNKNOWN -> stopAllEndpoints()
             else -> {}
