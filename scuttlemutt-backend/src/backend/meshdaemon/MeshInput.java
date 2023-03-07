@@ -2,6 +2,7 @@ package backend.meshdaemon;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,7 @@ import java.util.concurrent.BlockingQueue;
 import javax.crypto.SecretKey;
 
 import backend.iomanager.IOManager;
+import backend.iomanager.IOManagerException;
 import storagemanager.StorageManager;
 import types.Bark;
 import types.Conversation;
@@ -22,12 +24,19 @@ import types.packet.BarkPacket;
  * Monitors the incoming requests from the IOManager.
  */
 public class MeshInput implements Runnable {
+    // flag to declare if we're in "demo mode".  if we are, the code is adjusted so that we can only
+    // receive from one user, and that user is printed to the error console.
+    private static final boolean DEMO_MODE = false;
+
     // class variables
     private final IOManager ioManager;
     private final StorageManager storage;
     private final BlockingQueue<Bark> queue;
     private final PrivateKey myPrivateKey;
     private final Set<Bark> seenBarks;
+
+    // for demo only.
+    private String demoOnlyUsernameReceive;
 
     /**
      * Constructs a new MeshInput.
@@ -45,6 +54,16 @@ public class MeshInput implements Runnable {
         this.storage = storage;
         this.myPrivateKey = myPrivateKey;
         this.seenBarks = seenBarks;
+
+        // demo-only codepath
+        if (DEMO_MODE) {
+            try {
+                this.demoOnlyUsernameReceive = (new ArrayList<String>(ioManager.availableConnections()).get(0));
+                System.err.println("can only recv from:  " + this.demoOnlyUsernameReceive);
+            } catch (IOManagerException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -55,8 +74,16 @@ public class MeshInput implements Runnable {
     }
 
     public void handleInput() {
-        // Check if ioManager is connected so .call function in Iomanager doesn't fail
-        BarkPacket barkPacket = ioManager.meshReceive(BarkPacket.class);
+        BarkPacket barkPacket;
+        // normal-only codepath
+        if (!DEMO_MODE) {
+            barkPacket = ioManager.meshReceive(BarkPacket.class);
+
+        // demo-only codepath
+        } else {
+            barkPacket = ioManager.singleDeviceReceive(this.demoOnlyUsernameReceive, BarkPacket.class);
+        }
+
         List<Bark> barkList = barkPacket.getPacketBarks();
 
         for (Bark bark : barkList) {
