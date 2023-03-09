@@ -1,5 +1,7 @@
 package backend.simulation;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -39,6 +41,16 @@ public class NetworkSimulationCLI {
      */
     public static void main(String[] args) {
         final Scanner s = new Scanner(System.in);
+
+        // redirect error output away from the console so that the CLI is not interrupted by
+        // erroneous clutter.
+        final OutputStream dummyOutputStream = new OutputStream() {
+            @Override
+            public void write(int b) {
+            }
+        };
+        final PrintStream dummyPrintStream = new PrintStream(dummyOutputStream);
+        System.setErr(dummyPrintStream);
 
         // get the desired number of devices on the network.
         System.out.println(
