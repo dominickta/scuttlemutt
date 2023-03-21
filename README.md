@@ -14,7 +14,7 @@ This repo should only be opened in Android Studio.  The Gradle files for the pro
 
 ## Contributor information
 
-Since Scuttlemutt was developed over a 10-week period as a class project, certain elements were sourced from external sources online.
+This is a project inspired by the [Scuttlebutt](https://scuttlebutt.nz/) project. Since Scuttlemutt was developed over a 10-week period as a class project, certain elements were sourced from external sources online.
 
 These sources include:
 - [NearbyConnectionsWalkieTalkie Android demo](https://github.com/android/connectivity-samples/tree/main/NearbyConnectionsWalkieTalkie):  Our NearbyConnections API-based Android networking code has elements taken from this demo code provided by Google.
